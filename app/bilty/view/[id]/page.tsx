@@ -4,14 +4,52 @@ import { db } from "@/lib/firebase"
 import { doc, getDoc } from "firebase/firestore"
 import Link from "next/link"
 
+interface BiltyData {
+  id: string;
+  biltyNo?: string;
+  truckNo?: string;
+  from?: string;
+  to?: string;
+  consignorName?: string;
+  consignorGst?: string;
+  consigneeName?: string;
+  consigneeGst?: string;
+  transporterId?: string;
+  invoiceNo?: string;
+  ewayNo?: string;
+  grossValue?: string;
+  totalPackages?: string;
+  specialInstruction?: string;
+  items?: Array<{
+    quantity?: string;
+    goodsDescription?: string;
+    hsnCode?: string;
+    weight?: string;
+    chargedWeight?: string;
+    rate?: string;
+  }>;
+  charges?: {
+    freight?: number;
+    pf?: number;
+    lc?: number;
+    bc?: number;
+    total?: number;
+    cgst?: number;
+    sgst?: number;
+    igst?: number;
+    advance?: number;
+    grandTotal?: number;
+  };
+}
+
 export default async function ViewSingleBiltyPage({ params }: { params: { id: string } }) {
   const biltyId = params.id
-  let bilty = null
+  let bilty: BiltyData | null = null
   try {
     const docRef = doc(db, "bilties", biltyId)
     const docSnap = await getDoc(docRef)
     if (docSnap.exists()) {
-      bilty = { id: docSnap.id, ...docSnap.data() }
+      bilty = { id: docSnap.id, ...docSnap.data() } as BiltyData
     }
   } catch (error) {
     // handle error or show not found
@@ -40,7 +78,6 @@ export default async function ViewSingleBiltyPage({ params }: { params: { id: st
             <div className="mb-2">Gross Value: {bilty.grossValue}</div>
             <div className="mb-2">Total Packages: {bilty.totalPackages}</div>
             <div className="mb-2">Special Instruction: {bilty.specialInstruction}</div>
-            <div className="mb-2">Status: {bilty.status}</div>
             <h3 className="font-semibold mt-4">Items</h3>
             <table className="w-full border mt-2 mb-4">
               <thead>

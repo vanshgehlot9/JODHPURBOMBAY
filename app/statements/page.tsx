@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import React, { useState } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
@@ -6,40 +6,49 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { BookOpen, Download, Search, Calendar, User, X, TrendingUp } from "lucide-react";
+import { FileText, Download, Search, Calendar, User, X, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-interface LedgerRow {
+interface StatementRow {
   date: string;
-  voucherType: string;
   particulars: string;
   debit: number;
   credit: number;
   balance: number;
 }
 
-interface LedgerSummary {
-  openingBalance: number;
+interface StatementSummary {
   totalDebit: number;
   totalCredit: number;
-  closingBalance: number;
+  netBalance: number;
 }
 
-const LedgerPage = () => {
+export default function StatementsPage() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
+  const [statementType, setStatementType] = useState("Client Statement");
   const [party, setParty] = useState("");
-  const [rows, setRows] = useState<LedgerRow[]>([]);
-  const [summary, setSummary] = useState<LedgerSummary | null>(null);
+  const [rows, setRows] = useState<StatementRow[]>([]);
+  const [summary, setSummary] = useState<StatementSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
   const { toast } = useToast();
 
-  const fetchLedger = async () => {
+  const STATEMENT_TYPES = [
+    'Client Statement',
+    'Cartage Paid Bilty',
+    'Receipt List',
+    'Delivery Receipt (GST-wise)',
+    'Cash Delivery',
+    'Party Report',
+  ];
+
+  const generateStatement = async () => {
     if (!from || !to) {
       toast({
         title: "Validation Error",
@@ -55,26 +64,25 @@ const LedgerPage = () => {
       const params = new URLSearchParams();
       if (from) params.append("from", from);
       if (to) params.append("to", to);
+      if (statementType) params.append("type", statementType);
       if (party) params.append("party", party);
-      const res = await fetch(`/api/ledger?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch ledger");
+
+      const res = await fetch(`/api/statement?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch statement");
+      
       const data = await res.json();
-      setRows(
-        (data.data || []).map((row: any) => ({
-          ...row,
-          date: row.date ? new Date(row.date).toLocaleDateString() : "",
-        }))
-      );
+      setRows(data.data || []);
       setSummary(data.summary);
+      
       toast({
         title: "Success",
-        description: "Ledger generated successfully",
+        description: "Statement generated successfully",
       });
     } catch (e: any) {
       setError(e.message || "Unknown error");
       toast({
         title: "Error",
-        description: e.message || "Failed to generate ledger",
+        description: e.message || "Failed to generate statement",
         variant: "destructive",
       });
     } finally {
@@ -86,7 +94,7 @@ const LedgerPage = () => {
     if (rows.length === 0) {
       toast({
         title: "No Data",
-        description: "Please generate a ledger first",
+        description: "Please generate a statement first",
         variant: "destructive",
       });
       return;
@@ -97,16 +105,17 @@ const LedgerPage = () => {
       const params = new URLSearchParams();
       if (from) params.append("from", from);
       if (to) params.append("to", to);
+      if (statementType) params.append("type", statementType);
       if (party) params.append("party", party);
       
-      const res = await fetch(`/api/ledger/export?${params.toString()}`);
+      const res = await fetch(`/api/statement/export?${params.toString()}`);
       if (!res.ok) throw new Error("Export failed");
       
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `ledger_${party ? party.replace(/\s+/g, '_') : 'all'}_${from}_${to}.xlsx`;
+      a.download = `statement_${statementType.replace(/\s+/g, '_')}_${from}_${to}.xlsx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -114,12 +123,12 @@ const LedgerPage = () => {
       
       toast({
         title: "Success",
-        description: "Ledger exported successfully",
+        description: "Statement exported successfully",
       });
     } catch (e: any) {
       toast({
         title: "Export Error",
-        description: e.message || "Failed to export ledger",
+        description: e.message || "Failed to export statement",
         variant: "destructive",
       });
     } finally {
@@ -130,6 +139,7 @@ const LedgerPage = () => {
   const clearFilters = () => {
     setFrom("");
     setTo("");
+    setStatementType("Client Statement");
     setParty("");
     setRows([]);
     setSummary(null);
@@ -140,21 +150,21 @@ const LedgerPage = () => {
     <div className="flex min-h-screen bg-gray-50/50">
       <Sidebar />
       <div className="flex-1 flex flex-col">
-        <Header title="Ledger" subtitle="Generate and view account ledgers" />
-        <main className="flex-1 p-6 space-y-6">
+        <Header title="Financial Statements" subtitle="Generate and view financial statements" />
+        <main className="flex-1 p-3 sm:p-6 space-y-4 sm:space-y-6">
           {/* Filters Card */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                Ledger Filters
+                <BarChart3 className="h-5 w-5" />
+                Statement Generator
               </CardTitle>
               <CardDescription>
-                Configure parameters to generate your ledger
+                Configure parameters to generate financial statements
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="from" className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
@@ -180,6 +190,24 @@ const LedgerPage = () => {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Statement Type
+                  </Label>
+                  <Select value={statementType} onValueChange={setStatementType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATEMENT_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="party" className="flex items-center gap-2">
                     <User className="h-4 w-4" />
                     Party (Optional)
@@ -193,10 +221,10 @@ const LedgerPage = () => {
                 </div>
               </div>
               <Separator />
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={fetchLedger} disabled={loading}>
+              <div className="flex flex-col sm:flex-row flex-wrap gap-2">
+                <Button onClick={generateStatement} disabled={loading}>
                   <Search className="h-4 w-4 mr-2" />
-                  {loading ? "Generating..." : "Generate Ledger"}
+                  {loading ? "Generating..." : "Generate Statement"}
                 </Button>
                 <Button variant="outline" onClick={handleExport} disabled={rows.length === 0 || exportOpen}>
                   <Download className="h-4 w-4 mr-2" />
@@ -227,22 +255,15 @@ const LedgerPage = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Ledger Summary
+                  <BarChart3 className="h-5 w-5" />
+                  Statement Summary
                 </CardTitle>
                 <CardDescription>
-                  Account overview from {from} to {to}
-                  {party && ` for ${party}`}
+                  Financial overview for {statementType} from {from} to {to}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="text-center p-4 bg-gray-50 rounded-lg border">
-                    <div className="text-2xl font-bold text-gray-600">
-                      ₹{summary.openingBalance.toFixed(2)}
-                    </div>
-                    <div className="text-sm text-gray-600">Opening Balance</div>
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                   <div className="text-center p-4 bg-red-50 rounded-lg border">
                     <div className="text-2xl font-bold text-red-600">
                       ₹{summary.totalDebit.toFixed(2)}
@@ -257,9 +278,9 @@ const LedgerPage = () => {
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg border">
                     <div className="text-2xl font-bold text-blue-600">
-                      ₹{summary.closingBalance.toFixed(2)}
+                      ₹{summary.netBalance.toFixed(2)}
                     </div>
-                    <div className="text-sm text-blue-600">Closing Balance</div>
+                    <div className="text-sm text-blue-600">Net Balance</div>
                   </div>
                 </div>
               </CardContent>
@@ -270,18 +291,17 @@ const LedgerPage = () => {
           {rows.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Ledger Details</CardTitle>
+                <CardTitle>Statement Details</CardTitle>
                 <CardDescription>
-                  {rows.length} transactions found
+                  {rows.length} transactions found for {statementType}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="rounded-md border">
+                <div className="rounded-md border overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead>Date</TableHead>
-                        <TableHead>Voucher Type</TableHead>
                         <TableHead>Particulars</TableHead>
                         <TableHead className="text-right">Debit</TableHead>
                         <TableHead className="text-right">Credit</TableHead>
@@ -292,9 +312,6 @@ const LedgerPage = () => {
                       {rows.map((row, index) => (
                         <TableRow key={index}>
                           <TableCell>{row.date}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{row.voucherType}</Badge>
-                          </TableCell>
                           <TableCell>{row.particulars}</TableCell>
                           <TableCell className="text-right">
                             {row.debit > 0 && (
@@ -307,9 +324,7 @@ const LedgerPage = () => {
                             )}
                           </TableCell>
                           <TableCell className="text-right font-medium">
-                            <Badge variant={row.balance >= 0 ? "default" : "destructive"}>
-                              ₹{row.balance.toFixed(2)}
-                            </Badge>
+                            ₹{row.balance.toFixed(2)}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -319,10 +334,27 @@ const LedgerPage = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* Empty State */}
+          {rows.length === 0 && !loading && !error && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Statement Generated</h3>
+                  <p className="text-gray-500 mb-4">
+                    Select date range and statement type to generate your financial statement
+                  </p>
+                  <Button onClick={generateStatement} disabled={!from || !to}>
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Generate Statement
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </main>
       </div>
     </div>
   );
-};
-
-export default LedgerPage;
+}

@@ -50,9 +50,6 @@ export async function RecentBilties() {
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Badge variant={bilty.status === "delivered" ? "default" : "secondary"}>
-                    {bilty.status || "pending"}
-                  </Badge>
                   <div className="flex space-x-1">
                     <Button variant="ghost" size="icon">
                       <Eye className="h-4 w-4" />

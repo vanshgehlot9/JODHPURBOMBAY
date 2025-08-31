@@ -11,7 +11,10 @@ const nextConfig = {
   },
   experimental: {
     serverComponentsExternalPackages: ["firebase-admin"],
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
+  // Performance optimizations
+  swcMinify: true,
 }
 
 export default nextConfig

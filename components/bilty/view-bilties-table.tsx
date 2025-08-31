@@ -149,14 +149,13 @@ export function ViewBiltiesTable() {
                 <TableHead>Consignee</TableHead>
                 <TableHead>Route</TableHead>
                 <TableHead>Amount</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredBilties.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     <div className="flex flex-col items-center gap-2">
                       <FileText className="h-8 w-8 text-gray-400" />
                       <p className="text-muted-foreground">No bilties found</p>
@@ -175,11 +174,6 @@ export function ViewBiltiesTable() {
                     </TableCell>
                     <TableCell>₹{bilty.charges?.grandTotal?.toFixed(2) || "0.00"}</TableCell>
                     <TableCell>
-                      <Badge variant={bilty.status === "delivered" ? "default" : "secondary"}>
-                        {bilty.status || "pending"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" className="h-8 w-8 p-0">
@@ -190,6 +184,17 @@ export function ViewBiltiesTable() {
                           <DropdownMenuItem onClick={() => window.open(`/api/bilty/${bilty.id}/pdf`, "_blank")}>
                             <Eye className="mr-2 h-4 w-4" />
                             View PDF
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = `/api/bilty/${bilty.id}/pdf`;
+                            link.download = `bilty_${bilty.biltyNo}_3copies.pdf`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Download PDF
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => (window.location.href = `/bilty/edit/${bilty.id}`)}>
                             <Edit className="mr-2 h-4 w-4" />

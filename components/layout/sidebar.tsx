@@ -30,7 +30,7 @@ const navigation = [
   { name: "Payment Reminder", href: "/payment-reminder", icon: Bell },
   { name: "E-way Bill", href: "/eway-bill", icon: Receipt },
   { name: "Ledger", href: "/ledger", icon: BookOpen },
-  { name: "Statement", href: "/statement", icon: BarChart3 },
+  { name: "Statement", href: "/statements", icon: BarChart3 },
   { name: "Challan", href: "/challan", icon: Truck },
   { name: "Export Data", href: "/export", icon: Download },
 ]

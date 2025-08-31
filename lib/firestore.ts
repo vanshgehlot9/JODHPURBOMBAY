@@ -104,14 +104,19 @@ export async function getBilties(filters?: {
   dateTo?: Date
   limit?: number
 }): Promise<Bilty[]> {
-  let q = query(collection(db, "bilties"), orderBy("createdAt", "desc"))
+  let q = query(collection(db, "bilties"))
 
+  // Apply status filter first if provided
   if (filters?.status) {
     q = query(q, where("status", "==", filters.status))
   }
 
+  // Apply date range filter if provided
   if (filters?.dateFrom && filters?.dateTo) {
-    q = query(q, where("biltyDate", ">=", filters.dateFrom), where("biltyDate", "<=", filters.dateTo))
+    q = query(q, where("biltyDate", ">=", filters.dateFrom), where("biltyDate", "<=", filters.dateTo), orderBy("biltyDate", "desc"))
+  } else {
+    // Only order by createdAt if no date range filter is applied
+    q = query(q, orderBy("createdAt", "desc"))
   }
 
   if (filters?.limit) {

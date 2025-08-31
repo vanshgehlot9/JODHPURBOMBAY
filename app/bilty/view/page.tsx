@@ -8,7 +8,7 @@ export default function ViewBiltiesPage() {
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Header title="View Bilties" subtitle="Manage and view all bilty documents" />
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-3 sm:p-6">
           <ViewBiltiesTable />
         </main>
       </div>

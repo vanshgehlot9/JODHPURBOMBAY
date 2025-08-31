@@ -1,6 +1,17 @@
 'use client';
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { FileText, Download, Search, Calendar, User, X, BarChart3 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const STATEMENT_TYPES = [
   'Client Statement',
@@ -25,7 +36,7 @@ interface StatementSummary {
   netBalance: number;
 }
 
-const StatementPage = () => {
+export default function StatementPage() {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [type, setType] = useState(STATEMENT_TYPES[0]);
@@ -35,9 +46,18 @@ const StatementPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [exportOpen, setExportOpen] = useState(false);
-  const router = useRouter();
+  const { toast } = useToast();
 
   const fetchStatement = async () => {
+    if (!from || !to) {
+      toast({
+        title: "Validation Error",
+        description: "Please select both from and to dates",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
@@ -49,226 +69,267 @@ const StatementPage = () => {
       const res = await fetch(`/api/statement?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch statement');
       const data = await res.json();
-      setRows(
-        (data.data || []).map((row: any) => ({
-          ...row,
-          date: row.date ? new Date(row.date).toLocaleDateString() : '',
-        }))
-      );
+      setRows(data.data || []);
       setSummary(data.summary);
+      toast({
+        title: "Success",
+        description: "Statement generated successfully",
+      });
     } catch (e: any) {
       setError(e.message || 'Unknown error');
+      toast({
+        title: "Error",
+        description: e.message || 'Failed to generate statement',
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  React.useEffect(() => {
-    fetchStatement();
-    // eslint-disable-next-line
-  }, [from, to, type, party]);
+  const handleExport = async () => {
+    if (rows.length === 0) {
+      toast({
+        title: "No Data",
+        description: "Please generate a statement first",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  const handleCancel = () => {
-    router.push('/');
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleExportExcel = async () => {
+    setExportOpen(true);
     try {
       const params = new URLSearchParams();
       if (from) params.append('from', from);
       if (to) params.append('to', to);
       if (type) params.append('type', type);
       if (party) params.append('party', party);
+      
       const res = await fetch(`/api/statement/export?${params.toString()}`);
-      if (!res.ok) throw new Error('Failed to export statement');
+      if (!res.ok) throw new Error('Export failed');
+      
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'statement.xlsx';
+      a.download = `statement_${type.replace(/\s+/g, '_')}_${from}_${to}.xlsx`;
       document.body.appendChild(a);
       a.click();
-      a.remove();
       window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Success",
+        description: "Statement exported successfully",
+      });
     } catch (e: any) {
-      alert(e.message || 'Failed to export statement');
+      toast({
+        title: "Export Error",
+        description: e.message || 'Failed to export statement',
+        variant: "destructive",
+      });
+    } finally {
+      setExportOpen(false);
     }
   };
 
-  const handleExportPDF = async () => {
-    if (typeof window === 'undefined') return;
-    const jsPDF = (await import('jspdf')).default;
-    const doc = new jsPDF();
-    doc.text('Statement', 10, 10);
-    let y = 20;
-    doc.text(['Date', 'Particulars', 'Debit', 'Credit', 'Balance'].join(' | '), 10, y);
-    y += 8;
-    rows.forEach((row) => {
-      doc.text([
-        row.date,
-        row.particulars,
-        row.debit ? `₹${row.debit.toFixed(2)}` : '',
-        row.credit ? `₹${row.credit.toFixed(2)}` : '',
-        `₹${row.balance.toFixed(2)}`
-      ].join(' | '), 10, y);
-      y += 8;
-      if (y > 270) {
-        doc.addPage();
-        y = 10;
-      }
-    });
-    y += 8;
-    doc.text(`Total Debit: ₹${summary?.totalDebit.toFixed(2) || '0.00'}`, 10, y);
-    y += 8;
-    doc.text(`Total Credit: ₹${summary?.totalCredit.toFixed(2) || '0.00'}`, 10, y);
-    y += 8;
-    doc.text(`Net Balance: ₹${summary?.netBalance.toFixed(2) || '0.00'}`, 10, y);
-    doc.save('statement.pdf');
+  const clearFilters = () => {
+    setFrom('');
+    setTo('');
+    setType(STATEMENT_TYPES[0]);
+    setParty('');
+    setRows([]);
+    setSummary(null);
+    setError('');
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Statement</h1>
-        <button
-          className="bg-gray-500 text-white px-4 py-1 rounded"
-          onClick={handleCancel}
-        >
-          Cancel
-        </button>
-      </div>
-      {/* Filters */}
-      <div className="mb-6 flex flex-wrap gap-4 items-center">
-        <input
-          type="date"
-          className="border rounded px-2 py-1"
-          value={from}
-          onChange={e => setFrom(e.target.value)}
-          placeholder="From Date"
-        />
-        <input
-          type="date"
-          className="border rounded px-2 py-1"
-          value={to}
-          onChange={e => setTo(e.target.value)}
-          placeholder="To Date"
-        />
-        <input
-          type="text"
-          className="border rounded px-2 py-1"
-          value={party}
-          onChange={e => setParty(e.target.value)}
-          placeholder="Party (optional)"
-        />
-        {/* Statement Type Tabs */}
-        <div className="flex gap-2">
-          {STATEMENT_TYPES.map((t) => (
-            <button
-              key={t}
-              type="button"
-              className={`px-3 py-1 rounded border ${type === t ? 'bg-blue-600 text-white' : 'bg-white text-gray-700'}`}
-              onClick={() => setType(t)}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-      </div>
-      {/* Export/Print Dropdown */}
-      <div className="mb-4 flex gap-2 print:hidden relative">
-        <button
-          className="bg-green-600 text-white px-4 py-1 rounded"
-          onClick={() => setExportOpen((v) => !v)}
-          type="button"
-        >
-          Export ▼
-        </button>
-        {exportOpen && (
-          <div className="absolute z-20 bg-white border rounded shadow mt-10 left-0 min-w-[120px]">
-            <button
-              className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-              onClick={() => { setExportOpen(false); handleExportExcel(); }}
-              type="button"
-            >
-              Excel
-            </button>
-            <button
-              className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-              onClick={() => { setExportOpen(false); handleExportPDF(); }}
-              type="button"
-            >
-              PDF
-            </button>
-          </div>
-        )}
-        <button
-          className="bg-gray-700 text-white px-4 py-1 rounded"
-          onClick={handlePrint}
-        >
-          Print
-        </button>
-      </div>
-      {/* Loading/Error/Empty */}
-      {loading ? (
-        <div className="mb-4">
-          <div className="animate-pulse h-8 bg-gray-200 rounded w-1/2 mb-2" />
-          <div className="animate-pulse h-8 bg-gray-200 rounded w-full mb-2" />
-          <div className="animate-pulse h-8 bg-gray-200 rounded w-full mb-2" />
-        </div>
-      ) : error ? (
-        <div className="mb-4 text-red-600">{error}</div>
-      ) : rows.length === 0 ? (
-        <div className="mb-4 text-gray-500 flex flex-col items-center">
-          <span className="text-4xl mb-2">📄</span>
-          No data found for the selected filters.
-        </div>
-      ) : null}
-      {/* Main Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full border">
-          <thead className="sticky top-0 bg-white z-10">
-            <tr className="bg-gray-100">
-              <th className="px-4 py-2 border">Date</th>
-              <th className="px-4 py-2 border">Particulars</th>
-              <th className="px-4 py-2 border">Debit</th>
-              <th className="px-4 py-2 border">Credit</th>
-              <th className="px-4 py-2 border">Balance</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, idx) => (
-              <tr key={idx}>
-                <td className="px-4 py-2 border">{row.date}</td>
-                <td className="px-4 py-2 border">{row.particulars}</td>
-                <td className="px-4 py-2 border text-right">{row.debit ? `₹${row.debit.toFixed(2)}` : ''}</td>
-                <td className="px-4 py-2 border text-right">{row.credit ? `₹${row.credit.toFixed(2)}` : ''}</td>
-                <td className="px-4 py-2 border text-right">₹{row.balance.toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {/* Summary Totals */}
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gray-50 p-4 rounded shadow">
-          <div className="text-gray-500">Total Debit</div>
-          <div className="font-bold">₹{summary ? summary.totalDebit.toFixed(2) : '0.00'}</div>
-        </div>
-        <div className="bg-gray-50 p-4 rounded shadow">
-          <div className="text-gray-500">Total Credit</div>
-          <div className="font-bold">₹{summary ? summary.totalCredit.toFixed(2) : '0.00'}</div>
-        </div>
-        <div className="bg-gray-50 p-4 rounded shadow">
-          <div className="text-gray-500">Net Balance</div>
-          <div className="font-bold">₹{summary ? summary.netBalance.toFixed(2) : '0.00'}</div>
-        </div>
+    <div className="flex min-h-screen bg-gray-50/50">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <Header title="Statements" subtitle="Generate and view financial statements" />
+        <main className="flex-1 p-6 space-y-6">
+          {/* Filters Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Statement Filters
+              </CardTitle>
+              <CardDescription>
+                Configure parameters to generate your statement
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="from" className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    From Date
+                  </Label>
+                  <Input
+                    id="from"
+                    type="date"
+                    value={from}
+                    onChange={(e) => setFrom(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="to" className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    To Date
+                  </Label>
+                  <Input
+                    id="to"
+                    type="date"
+                    value={to}
+                    onChange={(e) => setTo(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Statement Type
+                  </Label>
+                  <Select value={type} onValueChange={setType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATEMENT_TYPES.map((t) => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="party" className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Party (Optional)
+                  </Label>
+                  <Input
+                    id="party"
+                    placeholder="Enter party name"
+                    value={party}
+                    onChange={(e) => setParty(e.target.value)}
+                  />
+                </div>
+              </div>
+              <Separator />
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={fetchStatement} disabled={loading}>
+                  <Search className="h-4 w-4 mr-2" />
+                  {loading ? 'Generating...' : 'Generate Statement'}
+                </Button>
+                <Button variant="outline" onClick={handleExport} disabled={rows.length === 0 || exportOpen}>
+                  <Download className="h-4 w-4 mr-2" />
+                  {exportOpen ? 'Exporting...' : 'Export to Excel'}
+                </Button>
+                <Button variant="outline" onClick={clearFilters}>
+                  <X className="h-4 w-4 mr-2" />
+                  Clear Filters
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Error Display */}
+          {error && (
+            <Card className="border-red-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 text-red-600">
+                  <X className="h-4 w-4" />
+                  <span>{error}</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Summary Card */}
+          {summary && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Statement Summary</CardTitle>
+                <CardDescription>
+                  Financial overview for {type} from {from} to {to}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-red-50 rounded-lg border">
+                    <div className="text-2xl font-bold text-red-600">
+                      ₹{summary.totalDebit.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-red-600">Total Debit</div>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg border">
+                    <div className="text-2xl font-bold text-green-600">
+                      ₹{summary.totalCredit.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-green-600">Total Credit</div>
+                  </div>
+                  <div className="text-center p-4 bg-blue-50 rounded-lg border">
+                    <div className="text-2xl font-bold text-blue-600">
+                      ₹{summary.netBalance.toFixed(2)}
+                    </div>
+                    <div className="text-sm text-blue-600">Net Balance</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Results Table */}
+          {rows.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Statement Details</CardTitle>
+                <CardDescription>
+                  {rows.length} transactions found
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Particulars</TableHead>
+                        <TableHead className="text-right">Debit</TableHead>
+                        <TableHead className="text-right">Credit</TableHead>
+                        <TableHead className="text-right">Balance</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {rows.map((row, index) => (
+                        <TableRow key={index}>
+                          <TableCell>{row.date}</TableCell>
+                          <TableCell>{row.particulars}</TableCell>
+                          <TableCell className="text-right">
+                            {row.debit > 0 && (
+                              <Badge variant="destructive">₹{row.debit.toFixed(2)}</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {row.credit > 0 && (
+                              <Badge variant="default">₹{row.credit.toFixed(2)}</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            ₹{row.balance.toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </main>
       </div>
     </div>
   );
-};
-
-export default StatementPage;
+}
