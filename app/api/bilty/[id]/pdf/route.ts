@@ -24,37 +24,31 @@ export async function GET(
   const pageHeight = 297;
   const copyHeight = pageHeight / 3;
 
-  // Layout configuration - positions in mm (adjusted for your pre-printed pad)
+  // Layout configuration - positions in mm (precisely matched to old software)
   const layout = {
-    // Header section
-    companyHeaderY: 8,
+    // Copy specific adjustments
+    firstCopyYOffset: 0,
+    secondCopyYOffset: 99, // 1/3 of page
+    thirdCopyYOffset: 198, // 2/3 of page
+    copyHeight: 99, // 297/3 = 99mm per copy
     
-    // Top right fields
-    biltyNoX: 170,
-    biltyNoY: 8,
-    dateX: 170,
-    dateY: 15,
-    truckNoX: 170,
-    truckNoY: 22,
-    fromX: 170,
-    fromY: 29,
-    toX: 170,
-    toY: 36,
+    // Top right fields (Bilty No, Date, Truck No, From, To)
+    biltyNoX: 175, biltyNoY: 13.5,
+    dateX: 175, dateY: 20.5,
+    truckNoX: 175, truckNoY: 27.5,
+    fromX: 175, fromY: 34.5,
+    toX: 175, toY: 41.5,
     
-    // Consignor/Consignee section
-    consignorX: 15,
-    consignorY: 45,
-    consigneeX: 105,
-    consigneeY: 45,
+    // Consignor/Consignee section (exact positions from old software)
+    consignorX: 15, consignorY: 42,
+    consigneeX: 105, consigneeY: 42,
     
-    // GST Numbers
-    consignorGstX: 15,
-    consignorGstY: 52,
-    consigneeGstX: 105,
-    consigneeGstY: 52,
+    // GST Numbers (positioned precisely below names)
+    consignorGstX: 15, consignorGstY: 49,
+    consigneeGstX: 105, consigneeGstY: 49,
     
-    // Table headers and items
-    itemsStartY: 62,
+    // Table headers and items (precise columns from image)
+    itemsStartY: 60,
     packagesX: 15,
     descriptionX: 35,
     weightActualX: 135,
@@ -62,22 +56,23 @@ export async function GET(
     rateX: 170,
     freightToX: 185,
     
-    // Charges section (right side)
-    chargesStartY: 62,
+    // Charges section (right side vertical, exact spacing from image)
     chargesValueX: 185,
-    freightY: 62,
-    pfY: 68,
-    lcY: 74,
-    bcY: 80,
-    totalY: 86,
-    cgstY: 92,
-    sgstY: 98,
-    advAmtY: 104,
-    grandTotalY: 110,
+    freightY: 60,
+    pfY: 66,
+    lcY: 72,
+    bcY: 78,
+    totalY: 84,
+    cgstY: 90,
+    sgstY: 96,
+    advAmtY: 102,
+    grandTotalY: 108,
     
     // Bottom section
-    gvY: 85,
-    termsY: 95,
+    gvY: 84,
+    invoiceNoX: 15,
+    ewayNoX: 85,
+    bottomTextY: 93,
   };
 
   const pdf = new jsPDF({
@@ -90,127 +85,170 @@ export async function GET(
     const biltyDate = bilty.biltyDate instanceof Timestamp 
       ? bilty.biltyDate.toDate() 
       : new Date(bilty.biltyDate);
-    const formattedDate = biltyDate.toLocaleDateString('en-GB');
+    const formattedDate = biltyDate.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
 
-    // Company header removed - already printed on pad
+    // Company header already printed on pad - no need to add it
     
-    // Top right fields (Bilty No, Date, etc.)
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "normal");
-    pdf.text(`${bilty.biltyNo || ''}`, layout.biltyNoX, yOffset + layout.biltyNoY);
-    pdf.text(`${formattedDate}`, layout.dateX, yOffset + layout.dateY);
-    pdf.text(`${bilty.truckNo || ''}`, layout.truckNoX, yOffset + layout.truckNoY);
-    pdf.text(`${bilty.from || ''}`, layout.fromX, yOffset + layout.fromY);
-    pdf.text(`${bilty.to || ''}`, layout.toX, yOffset + layout.toY);
-
-    // Consignor section (left side)
+    // Top right fields (Bilty No, Date, etc.) - positioned precisely
     pdf.setFontSize(9);
-    pdf.text(bilty.consignorName || '', layout.consignorX, yOffset + layout.consignorY);
+    pdf.setFont("helvetica", "normal");
+    // Right align bilty number, date, truck number etc.
+    pdf.text(`${bilty.biltyNo || ''}`, layout.biltyNoX, yOffset + layout.biltyNoY, { align: 'right' });
+    pdf.text(`${formattedDate}`, layout.dateX, yOffset + layout.dateY, { align: 'right' });
+    pdf.text(`${bilty.truckNo || ''}`, layout.truckNoX, yOffset + layout.truckNoY, { align: 'right' });
+    pdf.text(`${bilty.from || ''}`, layout.fromX, yOffset + layout.fromY, { align: 'right' });
+    pdf.text(`${bilty.to || ''}`, layout.toX, yOffset + layout.toY, { align: 'right' });
+
+    // Consignor section (left box)
+    pdf.setFontSize(9);
+    const consignorName = (bilty.consignorName || '').toUpperCase();
+    pdf.text(consignorName, layout.consignorX, yOffset + layout.consignorY);
+    
     if (bilty.consignorGst) {
-      pdf.text(`${bilty.consignorGst}`, layout.consignorGstX, yOffset + layout.consignorGstY);
+      pdf.setFontSize(8);
+      pdf.text(`GSTIN: ${bilty.consignorGst}`, layout.consignorGstX, yOffset + layout.consignorGstY);
     }
 
-    // Consignee section (right side)
-    pdf.text(bilty.consigneeName || '', layout.consigneeX, yOffset + layout.consigneeY);
+    // Consignee section (right box)
+    pdf.setFontSize(9);
+    const consigneeName = (bilty.consigneeName || '').toUpperCase();
+    pdf.text(consigneeName, layout.consigneeX, yOffset + layout.consigneeY);
+    
     if (bilty.consigneeGst) {
-      pdf.text(`${bilty.consigneeGst}`, layout.consigneeGstX, yOffset + layout.consigneeGstY);
+      pdf.setFontSize(8);
+      pdf.text(`GSTIN: ${bilty.consigneeGst}`, layout.consigneeGstX, yOffset + layout.consigneeGstY);
     }
 
-    // Items table
+    // Items table - precise alignment
     let itemY = yOffset + layout.itemsStartY;
     pdf.setFontSize(8);
     
     if (bilty.items && bilty.items.length > 0) {
       bilty.items.forEach((item: any) => {
-        if (itemY > yOffset + copyHeight - 30) return;
+        // Don't print items beyond copy area
+        if (itemY > yOffset + layout.copyHeight - 20) return;
         
         // Packages
         pdf.text((item.quantity || '').toString(), layout.packagesX, itemY);
         
-        // Description
-        const description = (item.goodsDescription || '').substring(0, 20);
-        pdf.text(description, layout.descriptionX, itemY);
+        // Description - wrap if needed
+        const description = item.goodsDescription || '';
+        pdf.text(description.substring(0, 25), layout.descriptionX, itemY);
         
-        // Weight Actual
-        pdf.text((item.weight || '').toString(), layout.weightActualX, itemY);
+        // Weight Actual - right aligned
+        pdf.text((item.weight || '').toString(), layout.weightActualX, itemY, { align: 'right' });
         
-        // Weight Charged
-        pdf.text((item.chargedWeight || '').toString(), layout.weightChargedX, itemY);
+        // Weight Charged - right aligned
+        pdf.text((item.chargedWeight || '').toString(), layout.weightChargedX, itemY, { align: 'right' });
         
-        // Rate
-        pdf.text(item.rate || '', layout.rateX, itemY);
+        // Rate - right aligned
+        pdf.text((item.rate || '').toString(), layout.rateX, itemY, { align: 'right' });
         
-        // Freight To (calculated)
-        const freightAmount = (parseFloat(item.rate || '0') * parseFloat(item.chargedWeight || '0')) / 100;
-        pdf.text(freightAmount.toFixed(0), layout.freightToX, itemY);
+        // Freight - right aligned with proper calculation
+        const freightAmount = ((parseFloat(item.rate || '0') * parseFloat(item.chargedWeight || '0')) / 100).toFixed(2);
+        pdf.text(freightAmount, layout.freightToX, itemY, { align: 'right' });
         
-        itemY += 4;
+        itemY += 5; // Spacing between items
       });
     }
 
-    // Total packages
+    // Total packages in bold at the bottom of packages column
     if (bilty.totalPackages) {
+      pdf.setFontSize(8);
       pdf.setFont("helvetica", "bold");
-      pdf.text(`${bilty.totalPackages}`, layout.packagesX, itemY + 2);
+      pdf.text(`Total: ${bilty.totalPackages}`, layout.packagesX, itemY + 3);
       pdf.setFont("helvetica", "normal");
     }
 
-    // Charges section (right side vertical list)
-    pdf.setFontSize(9);
-    
+    // Charges section - precisely right-aligned
     if (bilty.charges) {
       const charges = bilty.charges;
+      pdf.setFontSize(8);
+      
+      // Format numbers with 2 decimal places and right-align
+      const formatAmount = (value: number | string) => {
+        return parseFloat(value?.toString() || '0').toFixed(2);
+      };
       
       // Right-align all charge values
-      pdf.text(`${charges.freight || 0}`, layout.chargesValueX, yOffset + layout.freightY, { align: 'right' });
-      pdf.text(`${charges.pf || 0}`, layout.chargesValueX, yOffset + layout.pfY, { align: 'right' });
-      pdf.text(`${charges.lc || 0}`, layout.chargesValueX, yOffset + layout.lcY, { align: 'right' });
-      pdf.text(`${charges.bc || 0}`, layout.chargesValueX, yOffset + layout.bcY, { align: 'right' });
-      pdf.text(`${charges.total || 0}`, layout.chargesValueX, yOffset + layout.totalY, { align: 'right' });
+      pdf.text(`${formatAmount(charges.freight || 0)}`, layout.chargesValueX, yOffset + layout.freightY, { align: 'right' });
+      pdf.text(`${formatAmount(charges.pf || 0)}`, layout.chargesValueX, yOffset + layout.pfY, { align: 'right' });
+      pdf.text(`${formatAmount(charges.lc || 0)}`, layout.chargesValueX, yOffset + layout.lcY, { align: 'right' });
+      pdf.text(`${formatAmount(charges.bc || 0)}`, layout.chargesValueX, yOffset + layout.bcY, { align: 'right' });
+      
+      // Total with bold
+      pdf.setFont("helvetica", "bold");
+      pdf.text(`${formatAmount(charges.total || 0)}`, layout.chargesValueX, yOffset + layout.totalY, { align: 'right' });
+      pdf.setFont("helvetica", "normal");
       
       // GST
       if (charges.cgst || charges.sgst) {
-        pdf.text(`${charges.cgst || 0}`, layout.chargesValueX, yOffset + layout.cgstY, { align: 'right' });
-        pdf.text(`${charges.sgst || 0}`, layout.chargesValueX, yOffset + layout.sgstY, { align: 'right' });
+        pdf.text(`${formatAmount(charges.cgst || 0)}`, layout.chargesValueX, yOffset + layout.cgstY, { align: 'right' });
+        pdf.text(`${formatAmount(charges.sgst || 0)}`, layout.chargesValueX, yOffset + layout.sgstY, { align: 'right' });
       }
       
-      // Advance Amount (if any)
+      // Advance Amount
       if (charges.advance) {
-        pdf.text(`${charges.advance}`, layout.chargesValueX, yOffset + layout.advAmtY, { align: 'right' });
+        pdf.text(`${formatAmount(charges.advance)}`, layout.chargesValueX, yOffset + layout.advAmtY, { align: 'right' });
       }
       
-      // Grand Total
-      pdf.setFontSize(10);
+      // Grand Total in bold and slightly larger
+      pdf.setFontSize(9);
       pdf.setFont("helvetica", "bold");
-      pdf.text(`${charges.grandTotal || 0}`, layout.chargesValueX, yOffset + layout.grandTotalY, { align: 'right' });
+      pdf.text(`${formatAmount(charges.grandTotal || 0)}`, layout.chargesValueX, yOffset + layout.grandTotalY, { align: 'right' });
       pdf.setFont("helvetica", "normal");
     }
 
-    // G.V. (Goods Value) if available
+    // G.V. (Goods Value) centered
     if (bilty.goodsValue) {
       pdf.setFontSize(8);
-      pdf.text(`${bilty.goodsValue}`, pageWidth / 2, yOffset + layout.gvY, { align: 'center' });
+      pdf.text(`G.V.: ${bilty.goodsValue}`, pageWidth / 2, yOffset + layout.gvY, { align: 'center' });
     }
 
-    // Invoice and E-way numbers at bottom if available
-    if (bilty.invoiceNo || bilty.ewayNo) {
-      pdf.setFontSize(7);
-      const bottomY = yOffset + copyHeight - 8;
-      let infoText = '';
-      if (bilty.invoiceNo) infoText += `Inv: ${bilty.invoiceNo}`;
-      if (bilty.ewayNo) infoText += (infoText ? ' | ' : '') + `E-Way: ${bilty.ewayNo}`;
-      pdf.text(infoText, 15, bottomY);
+    // Invoice and E-way numbers at bottom
+    pdf.setFontSize(7);
+    if (bilty.invoiceNo) {
+      pdf.text(`Inv. No: ${bilty.invoiceNo}`, layout.invoiceNoX, yOffset + layout.bottomTextY);
+    }
+    
+    if (bilty.ewayNo) {
+      pdf.text(`E-Way: ${bilty.ewayNo}`, layout.ewayNoX, yOffset + layout.bottomTextY);
     }
   }
 
-  drawBiltyCopy(0);
-  drawBiltyCopy(copyHeight);
-  drawBiltyCopy(copyHeight * 2);
+  // Draw the three copies with precise offsets
+  drawBiltyCopy(layout.firstCopyYOffset);
+  drawBiltyCopy(layout.secondCopyYOffset);
+  drawBiltyCopy(layout.thirdCopyYOffset);
 
-  pdf.setDrawColor(224, 224, 224);
-  pdf.setLineWidth(0.1);
-  pdf.line(0, copyHeight, pageWidth, copyHeight);
-  pdf.line(0, copyHeight * 2, pageWidth, copyHeight * 2);
+  // Add clear copy separation lines
+  pdf.setDrawColor(160, 160, 160);  // Darker gray for better visibility
+  pdf.setLineWidth(0.3);            // Slightly thicker line
+  
+  // Add dotted/dashed line between copies for easy tearing
+  const dashLength = 2;
+  const gapLength = 1;
+  
+  // First separator line (between copy 1 and 2)
+  for (let x = 0; x < pageWidth; x += (dashLength + gapLength)) {
+    pdf.line(x, layout.copyHeight, x + dashLength, layout.copyHeight);
+  }
+  
+  // Second separator line (between copy 2 and 3)
+  for (let x = 0; x < pageWidth; x += (dashLength + gapLength)) {
+    pdf.line(x, layout.copyHeight * 2, x + dashLength, layout.copyHeight * 2);
+  }
+  
+  // Add copy labels in the margins
+  pdf.setFontSize(6);
+  pdf.setFont("helvetica", "italic");
+  pdf.text("CONSIGNOR'S COPY", 5, layout.copyHeight - 2);
+  pdf.text("CONSIGNEE'S COPY", 5, layout.copyHeight * 2 - 2);
+  pdf.text("CARRIER'S COPY", 5, pageHeight - 2);
 
   const pdfBuffer = Buffer.from(pdf.output('arraybuffer'));
 
