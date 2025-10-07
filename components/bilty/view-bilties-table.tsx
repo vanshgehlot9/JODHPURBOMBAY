@@ -7,7 +7,22 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Search, Download, Eye, Edit, Trash2, MoreHorizontal, FileText } from "lucide-react"
+import { 
+  Search, 
+  Download, 
+  Eye, 
+  Edit, 
+  Trash2, 
+  MoreHorizontal, 
+  FileText, 
+  Filter,
+  SortAsc,
+  SortDesc,
+  Calendar,
+  MapPin,
+  Truck,
+  Users
+} from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface Bilty {
@@ -29,7 +44,23 @@ export function ViewBiltiesTable() {
   const [filteredBilties, setFilteredBilties] = useState<Bilty[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [sortBy, setSortBy] = useState<"biltyNo" | "biltyDate" | "grandTotal">("biltyDate")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
   const { toast } = useToast()
+
+  const handleSort = (column: "biltyNo" | "biltyDate" | "grandTotal") => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+    } else {
+      setSortBy(column)
+      setSortOrder("desc")
+    }
+  }
+
+  const getSortIcon = (column: "biltyNo" | "biltyDate" | "grandTotal") => {
+    if (sortBy !== column) return null
+    return sortOrder === "asc" ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
+  }
 
   useEffect(() => {
     fetchBilties()
@@ -43,9 +74,30 @@ export function ViewBiltiesTable() {
         bilty.consigneeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         bilty.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
         bilty.to.toLowerCase().includes(searchTerm.toLowerCase()),
-    )
+    ).sort((a, b) => {
+      let aValue: any, bValue: any
+      
+      switch (sortBy) {
+        case "biltyNo":
+          aValue = a.biltyNo
+          bValue = b.biltyNo
+          break
+        case "biltyDate":
+          aValue = new Date(a.biltyDate).getTime()
+          bValue = new Date(b.biltyDate).getTime()
+          break
+        case "grandTotal":
+          aValue = a.charges?.grandTotal || 0
+          bValue = b.charges?.grandTotal || 0
+          break
+        default:
+          return 0
+      }
+      
+      return sortOrder === "asc" ? aValue - bValue : bValue - aValue
+    })
     setFilteredBilties(filtered)
-  }, [searchTerm, bilties])
+  }, [searchTerm, bilties, sortBy, sortOrder])
 
   const fetchBilties = async () => {
     try {
@@ -112,112 +164,293 @@ export function ViewBiltiesTable() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <CardTitle>Bilty Documents</CardTitle>
-            <CardDescription>
-              {filteredBilties.length} of {bilties.length} bilties
-            </CardDescription>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search bilties..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 w-64"
-              />
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-500 rounded-lg">
+                <FileText className="h-6 w-6 text-white" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-blue-600">Total Bilties</p>
+                <p className="text-2xl font-bold text-blue-900">{bilties.length}</p>
+              </div>
             </div>
-            <Button onClick={handleExport} variant="outline">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-500 rounded-lg">
+                <Truck className="h-6 w-6 text-white" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-green-600">This Month</p>
+                <p className="text-2xl font-bold text-green-900">
+                  {bilties.filter(b => {
+                    const date = new Date(b.biltyDate)
+                    const now = new Date()
+                    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear()
+                  }).length}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-500 rounded-lg">
+                <Users className="h-6 w-6 text-white" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-purple-600">Unique Clients</p>
+                <p className="text-2xl font-bold text-purple-900">
+                  {new Set(bilties.map(b => b.consignorName)).size}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200">
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-orange-500 rounded-lg">
+                <MapPin className="h-6 w-6 text-white" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-orange-600">Routes</p>
+                <p className="text-2xl font-bold text-orange-900">
+                  {new Set(bilties.map(b => `${b.from}-${b.to}`)).size}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Table */}
+      <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
+        <CardHeader className="bg-gradient-to-r from-gray-50/50 to-transparent border-b border-gray-100">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <CardTitle className="text-xl flex items-center gap-2">
+                <FileText className="h-5 w-5 text-blue-600" />
+                Bilty Documents
+              </CardTitle>
+              <CardDescription>
+                {filteredBilties.length} of {bilties.length} bilties
+                {searchTerm && ` matching "${searchTerm}"`}
+              </CardDescription>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search bilties, clients, routes..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 w-full sm:w-80 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+              <Button onClick={handleExport} variant="outline" className="hover:bg-blue-50">
+                <Download className="h-4 w-4 mr-2" />
+                Export All
+              </Button>
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Bilty No</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Consignor</TableHead>
-                <TableHead>Consignee</TableHead>
-                <TableHead>Route</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredBilties.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    <div className="flex flex-col items-center gap-2">
-                      <FileText className="h-8 w-8 text-gray-400" />
-                      <p className="text-muted-foreground">No bilties found</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredBilties.map((bilty) => (
-                  <TableRow key={bilty.id}>
-                    <TableCell className="font-medium">#{bilty.biltyNo}</TableCell>
-                    <TableCell>{formatDate(bilty.biltyDate)}</TableCell>
-                    <TableCell>{bilty.consignorName}</TableCell>
-                    <TableCell>{bilty.consigneeName}</TableCell>
-                    <TableCell>
-                      {bilty.from} → {bilty.to}
-                    </TableCell>
-                    <TableCell>₹{bilty.charges?.grandTotal?.toFixed(2) || "0.00"}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => window.open(`/api/bilty/${bilty.id}/pdf`, "_blank")}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            View PDF
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => {
-                            const link = document.createElement('a');
-                            link.href = `/api/bilty/${bilty.id}/pdf`;
-                            link.download = `bilty_${bilty.biltyNo}_3copies.pdf`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                          }}>
-                            <Download className="mr-2 h-4 w-4" />
-                            Download PDF
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => (window.location.href = `/bilty/edit/${bilty.id}`)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => window.open(`/api/bilty/${bilty.id}/ewaybill`, "_blank")}>
-                            <FileText className="mr-2 h-4 w-4" />
-                            E-way Bill
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDelete(bilty.id)} className="text-red-600">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
+        </CardHeader>
+        <CardContent className="p-0">
+          {filteredBilties.length === 0 ? (
+            <div className="text-center py-16">
+              <FileText className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                {searchTerm ? "No matching bilties found" : "No bilties created yet"}
+              </h3>
+              <p className="text-gray-500 mb-6">
+                {searchTerm 
+                  ? "Try adjusting your search terms or clear the search to see all bilties"
+                  : "Get started by creating your first bilty document"
+                }
+              </p>
+              {!searchTerm && (
+                <Button onClick={() => window.location.href = '/bilty/create'} className="bg-blue-600 hover:bg-blue-700">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Create First Bilty
+                </Button>
               )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50/50 hover:bg-gray-50/50 border-b border-gray-200">
+                    <TableHead 
+                      className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => handleSort("biltyNo")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Bilty No
+                        {getSortIcon("biltyNo")}
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => handleSort("biltyDate")}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Date
+                        {getSortIcon("biltyDate")}
+                      </div>
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        Consignor
+                      </div>
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700">Consignee</TableHead>
+                    <TableHead className="font-semibold text-gray-700">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        Route
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => handleSort("grandTotal")}
+                    >
+                      <div className="flex items-center gap-2">
+                        Amount
+                        {getSortIcon("grandTotal")}
+                      </div>
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700">Status</TableHead>
+                    <TableHead className="font-semibold text-gray-700 text-center">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredBilties.map((bilty) => (
+                    <TableRow 
+                      key={bilty.id} 
+                      className="hover:bg-blue-50/30 transition-colors border-b border-gray-100 group"
+                    >
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          #{bilty.biltyNo}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-gray-400" />
+                          {formatDate(bilty.biltyDate)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-[150px] truncate font-medium text-gray-900">
+                          {bilty.consignorName}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-[150px] truncate text-gray-600">
+                          {bilty.consigneeName}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1 text-sm">
+                          <span className="font-medium text-blue-600">{bilty.from}</span>
+                          <span className="text-gray-400">→</span>
+                          <span className="font-medium text-purple-600">{bilty.to}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-semibold text-green-600">
+                          ₹{bilty.charges?.grandTotal?.toFixed(2) || "0.00"}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant="outline" 
+                          className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                        >
+                          Active
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-100"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem 
+                              onClick={() => window.open(`/bilty/view/${bilty.id}`, "_blank")}
+                              className="hover:bg-blue-50"
+                            >
+                              <Eye className="mr-2 h-4 w-4 text-blue-600" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => window.open(`/api/bilty/${bilty.id}/pdf`, "_blank")}
+                              className="hover:bg-green-50"
+                            >
+                              <FileText className="mr-2 h-4 w-4 text-green-600" />
+                              View PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = `/api/bilty/${bilty.id}/pdf`;
+                              link.download = `bilty_${bilty.biltyNo}_3copies.pdf`;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }} className="hover:bg-purple-50">
+                              <Download className="mr-2 h-4 w-4 text-purple-600" />
+                              Download PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => (window.location.href = `/bilty/edit/${bilty.id}`)}
+                              className="hover:bg-orange-50"
+                            >
+                              <Edit className="mr-2 h-4 w-4 text-orange-600" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => window.open(`/api/bilty/${bilty.id}/ewaybill`, "_blank")}
+                              className="hover:bg-yellow-50"
+                            >
+                              <FileText className="mr-2 h-4 w-4 text-yellow-600" />
+                              E-way Bill
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleDelete(bilty.id)}
+                              className="hover:bg-red-50 text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   )
 }

@@ -1,5 +1,5 @@
 // Simple test to generate a PDF with sample data
-const jsPDF = require('jspdf');
+const { jsPDF } = require('jspdf');
 
 const pdf = new jsPDF({
   unit: 'mm',
@@ -62,16 +62,20 @@ function drawBiltyCopy(yOffset) {
     packagesX: 15, descriptionX: 35,
     weightActualX: 135, weightChargedX: 155,
     rateX: 170, freightToX: 185,
-    chargesValueX: 185,
-    freightY: 62, pfY: 68, lcY: 74, bcY: 80,
-    totalY: 86, cgstY: 92, sgstY: 98,
-    grandTotalY: 110
+    chargesValueX: 193,  // 153 + 42 - 2 for seamless alignment with table
+    freightY: 65, pfY: 67.2, lcY: 69.4, bcY: 71.6,
+    totalY: 73.8, cgstY: 76, sgstY: 78.2,
+    grandTotalY: 80.4
   };
 
-  // Company header
+  // Company header (properly centered in available space)
   pdf.setFontSize(12);
   pdf.setFont("helvetica", "bold");
-  pdf.text('Jodhpur Bombay Road Carrier', pageWidth / 2, yOffset + layout.companyHeaderY, { align: 'center' });
+  // Calculate proper center position avoiding right box (starts at X=170)
+  const rightBoxX = 170;
+  const leftAreaWidth = rightBoxX - 10; // Available space for header
+  const headerCenterX = leftAreaWidth / 2 + 5; // True center of left area
+  pdf.text('Jodhpur Bombay Road Carrier', headerCenterX, yOffset + layout.companyHeaderY, { align: 'center' });
   
   // Top right fields
   pdf.setFontSize(10);
@@ -108,17 +112,32 @@ function drawBiltyCopy(yOffset) {
   // Charges
   pdf.setFontSize(9);
   const charges = sampleBilty.charges;
-  pdf.text(charges.freight.toString(), layout.chargesValueX, yOffset + layout.freightY, { align: 'right' });
+  
+  // Calculate freight from items
+  const calculatedFreight = sampleBilty.items.reduce((total, item) => {
+    return total + (parseFloat(item.rate) * parseFloat(item.chargedWeight) / 100);
+  }, 0);
+  
+  // Calculate totals properly
+  const calculatedTotal = calculatedFreight + charges.pf + charges.lc + charges.bc;
+  const totalGst = charges.cgst + charges.sgst + (charges.igst || 0);
+  const calculatedGrandTotal = calculatedTotal + totalGst - (charges.advance || 0);
+  
+  pdf.text(calculatedFreight.toFixed(2), layout.chargesValueX, yOffset + layout.freightY, { align: 'right' });
   pdf.text(charges.pf.toString(), layout.chargesValueX, yOffset + layout.pfY, { align: 'right' });
   pdf.text(charges.lc.toString(), layout.chargesValueX, yOffset + layout.lcY, { align: 'right' });
   pdf.text(charges.bc.toString(), layout.chargesValueX, yOffset + layout.bcY, { align: 'right' });
-  pdf.text(charges.total.toString(), layout.chargesValueX, yOffset + layout.totalY, { align: 'right' });
+  
+  pdf.setFont("helvetica", "bold");
+  pdf.text(calculatedTotal.toFixed(2), layout.chargesValueX, yOffset + layout.totalY, { align: 'right' });
+  pdf.setFont("helvetica", "normal");
+  
   pdf.text(charges.cgst.toString(), layout.chargesValueX, yOffset + layout.cgstY, { align: 'right' });
   pdf.text(charges.sgst.toString(), layout.chargesValueX, yOffset + layout.sgstY, { align: 'right' });
   
   pdf.setFontSize(10);
   pdf.setFont("helvetica", "bold");
-  pdf.text(charges.grandTotal.toString(), layout.chargesValueX, yOffset + layout.grandTotalY, { align: 'right' });
+  pdf.text(calculatedGrandTotal.toFixed(2), layout.chargesValueX, yOffset + layout.grandTotalY, { align: 'right' });
   pdf.setFont("helvetica", "normal");
 }
 

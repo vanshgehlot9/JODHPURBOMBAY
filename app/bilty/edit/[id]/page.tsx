@@ -3,16 +3,16 @@ import { Header } from "@/components/layout/header"
 import { db } from "@/lib/firebase"
 import { doc, getDoc, updateDoc } from "firebase/firestore"
 import { redirect } from "next/navigation"
-import { useState } from "react"
+import { Bilty } from "@/lib/firestore"
 
 export default async function EditBiltyPage({ params }: { params: { id: string } }) {
   const biltyId = params.id
-  let bilty = null
+  let bilty: Bilty | null = null
   try {
     const docRef = doc(db, "bilties", biltyId)
     const docSnap = await getDoc(docRef)
     if (docSnap.exists()) {
-      bilty = { id: docSnap.id, ...docSnap.data() }
+      bilty = { id: docSnap.id, ...docSnap.data() } as Bilty
     }
   } catch (error) {
     // handle error or show not found
@@ -28,12 +28,33 @@ export default async function EditBiltyPage({ params }: { params: { id: string }
     const truckNo = formData.get("truckNo") as string
     const from = formData.get("from") as string
     const to = formData.get("to") as string
-    // Add more fields as needed
+    const consignorName = formData.get("consignorName") as string
+    const consignorGst = formData.get("consignorGst") as string
+    const consigneeName = formData.get("consigneeName") as string
+    const consigneeGst = formData.get("consigneeGst") as string
+    const transporterId = formData.get("transporterId") as string
+    const invoiceNo = formData.get("invoiceNo") as string
+    const ewayNo = formData.get("ewayNo") as string
+    const ewayDate = formData.get("ewayDate") as string
+    const grossValue = formData.get("grossValue") as string
+    const totalPackages = formData.get("totalPackages") as string
+    const specialInstruction = formData.get("specialInstruction") as string
+    
     await updateDoc(doc(db, "bilties", biltyId), {
       truckNo,
       from,
       to,
-      // Add more fields as needed
+      consignorName,
+      consignorGst,
+      consigneeName,
+      consigneeGst,
+      transporterId,
+      invoiceNo,
+      ewayNo,
+      ewayDate,
+      grossValue: grossValue ? Number(grossValue) : 0,
+      totalPackages,
+      specialInstruction,
     })
     redirect(`/bilty/view/${biltyId}`)
   }
@@ -85,6 +106,10 @@ export default async function EditBiltyPage({ params }: { params: { id: string }
               <div>
                 <label className="block mb-1 font-medium">Eway No</label>
                 <input name="ewayNo" defaultValue={bilty.ewayNo} className="border rounded px-2 py-1 w-full" />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Eway Date</label>
+                <input name="ewayDate" type="date" defaultValue={bilty.ewayDate} className="border rounded px-2 py-1 w-full" />
               </div>
               <div>
                 <label className="block mb-1 font-medium">Gross Value</label>

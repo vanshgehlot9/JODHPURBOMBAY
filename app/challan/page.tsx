@@ -1,7 +1,5 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { collection, getDocs, orderBy, query } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import Link from "next/link";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
@@ -16,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface Challan {
   id: string;
-  challanNo: string;
+  challanNo: number;
   date: string;
   truckNo: string;
   from: string;
@@ -39,26 +37,26 @@ export default function ChallanListPage() {
   useEffect(() => {
     const filtered = challans.filter(
       (challan) =>
-        challan.challanNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        challan.truckNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        challan.ownerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        challan.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        challan.to.toLowerCase().includes(searchTerm.toLowerCase())
+        challan.challanNo.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (challan.truckNo && challan.truckNo.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (challan.ownerName && challan.ownerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (challan.from && challan.from.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (challan.to && challan.to.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     setFilteredChallans(filtered);
   }, [searchTerm, challans]);
 
   const fetchChallans = async () => {
     try {
-      const q = query(collection(db, "challans"), orderBy("createdAt", "desc"));
-      const snapshot = await getDocs(q);
-      const challanData = snapshot.docs.map(doc => ({ 
-        id: doc.id, 
-        ...doc.data() 
-      } as Challan));
+      const response = await fetch('/api/challan');
+      if (!response.ok) {
+        throw new Error('Failed to fetch challans');
+      }
+      const challanData = await response.json();
       setChallans(challanData);
       setFilteredChallans(challanData);
     } catch (error) {
+      console.error('Error fetching challans:', error);
       toast({
         title: "Error",
         description: "Failed to fetch challans",

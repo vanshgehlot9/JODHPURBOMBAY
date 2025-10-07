@@ -54,9 +54,9 @@ export async function GET(
     rateX: 140,
     amountX: 160,
     
-    // Charges positioning (from bottom of copy)
+    // Charges positioning (from bottom of copy) - SEAMLESS ALIGNMENT
     chargesFromBottom: 35,
-    chargesValueX: 170,
+    chargesValueX: 193,  // 153 + 42 - 2 for seamless table continuation
   };
 
   // Create PDF with A4 size
@@ -74,10 +74,14 @@ export async function GET(
       : new Date(bilty.biltyDate);
     const formattedDate = biltyDate.toLocaleDateString('en-GB');
 
-    // Company Header (centered, top)
+    // Company Header (properly centered in available space)
     pdf.setFontSize(14);
     pdf.setFont("helvetica", "bold");
-    pdf.text('JODHPUR BOMBAY ROAD CARRIER', pageWidth / 2, yOffset + layout.companyHeaderY, { align: 'center' });
+    // Calculate proper center position avoiding right box (starts at X=160)
+    const rightBoxX = 160;
+    const leftAreaWidth = rightBoxX - 10; // Available space for header
+    const headerCenterX = leftAreaWidth / 2 + 5; // True center of left area
+    pdf.text('JODHPUR BOMBAY ROAD CARRIER', headerCenterX, yOffset + layout.companyHeaderY, { align: 'center' });
     
     // Truck No (right side of header)
     pdf.setFontSize(11);
@@ -166,31 +170,39 @@ export async function GET(
     if (bilty.charges) {
       const charges = bilty.charges;
       
-      // Freight
-      pdf.text(`${charges.freight || 0}`, layout.chargesValueX, chargesY, { align: 'right' });
+      // Calculate freight from items if not set
+      const calculatedFreight = charges.freight || (bilty.items ? 
+        bilty.items.reduce((total: number, item: any) => {
+          const rate = parseFloat(item.rate || "0");
+          const chargedWeight = parseFloat(item.chargedWeight || item.weight || "0");
+          return total + (rate * chargedWeight / 100);
+        }, 0) : 0);
       
-      // P.F.
-      pdf.text(`${charges.pf || 0}`, layout.chargesValueX, chargesY + 4, { align: 'right' });
+      // Calculate totals
+      const calculatedTotal = calculatedFreight + (charges.pf || 0) + (charges.lc || 0) + (charges.bc || 0);
+      const totalGst = (charges.cgst || 0) + (charges.sgst || 0) + (charges.igst || 0);
+      const calculatedGrandTotal = calculatedTotal + totalGst - (charges.advance || 0);
       
-      // L.C.
-      pdf.text(`${charges.lc || 0}`, layout.chargesValueX, chargesY + 8, { align: 'right' });
+      // REWRITTEN WITH EXACT ALIGNMENT - spacing matches labels exactly
+      const chargesData = [
+        { value: calculatedFreight, bold: false },
+        { value: charges.pf || 0, bold: false },
+        { value: charges.lc || 0, bold: false },
+        { value: charges.bc || 0, bold: false },
+        { value: calculatedTotal, bold: true },
+        { value: charges.cgst || 0, bold: false },
+        { value: charges.sgst || 0, bold: false },
+        { value: calculatedGrandTotal, bold: true }
+      ];
       
-      // B.C.
-      pdf.text(`${charges.bc || 0}`, layout.chargesValueX, chargesY + 12, { align: 'right' });
+      // Fill values with EXACT spacing (2.2mm between items)
+      chargesData.forEach((item, i) => {
+        const yPos = chargesY + (i * 2.2);  // EXACT same spacing as labels
+        pdf.setFont("helvetica", item.bold ? "bold" : "normal");
+        pdf.text(item.value.toFixed(2), layout.chargesValueX, yPos, { align: 'right' });
+      });
       
-      // Total (before GST)
-      pdf.text(`${charges.total || 0}`, layout.chargesValueX, chargesY + 16, { align: 'right' });
-      
-      // GST
-      if (charges.cgst || charges.sgst || charges.igst) {
-        const totalGst = (charges.cgst || 0) + (charges.sgst || 0) + (charges.igst || 0);
-        pdf.text(`${totalGst}`, layout.chargesValueX, chargesY + 20, { align: 'right' });
-      }
-      
-      // Grand Total (most prominent)
-      pdf.setFontSize(12);
-      pdf.setFont("helvetica", "bold");
-      pdf.text(`${charges.grandTotal || 0}`, layout.chargesValueX, chargesY + 25, { align: 'right' });
+      pdf.setFont("helvetica", "normal"); // Reset font
     }
 
     // Additional info (invoice, eway bill) - small text at bottom

@@ -6,6 +6,7 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
+  setDoc,
   query,
   where,
   orderBy,
@@ -52,6 +53,7 @@ export interface Bilty {
   transporterId?: string
   invoiceNo?: string
   ewayNo?: string
+  ewayDate?: string
   grossValue?: number
   items: BiltyItem[]
   charges: BiltyCharges
@@ -228,7 +230,7 @@ export async function getNextChallanNumber(): Promise<number> {
   const counterDoc = await getDoc(counterRef);
 
   if (!counterDoc.exists()) {
-    await updateDoc(counterRef, { value: 1 });
+    await setDoc(counterRef, { value: 1 });
     return 1;
   }
 
@@ -236,6 +238,18 @@ export async function getNextChallanNumber(): Promise<number> {
   const nextValue = currentValue + 1;
   await updateDoc(counterRef, { value: increment(1) });
   return nextValue;
+}
+
+// Get a single challan by ID
+export async function getChallan(id: string): Promise<any | null> {
+  const docRef = doc(db, "challans", id);
+  const docSnap = await getDoc(docRef);
+  
+  if (docSnap.exists()) {
+    return { id: docSnap.id, ...docSnap.data() };
+  } else {
+    return null;
+  }
 }
 
 // Create a new challan
@@ -250,4 +264,19 @@ export async function createChallan(
   };
   const docRef = await addDoc(collection(db, "challans"), newChallan);
   return { id: docRef.id, challanNo };
+}
+
+// Get all challans
+export async function getAllChallans(): Promise<any[]> {
+  try {
+    const q = query(collection(db, "challans"), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+  } catch (error) {
+    console.error("Error fetching challans:", error);
+    throw error;
+  }
 }

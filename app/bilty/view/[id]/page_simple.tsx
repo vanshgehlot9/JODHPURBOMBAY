@@ -17,7 +17,6 @@ interface BiltyData {
   transporterId?: string;
   invoiceNo?: string;
   ewayNo?: string;
-  ewayDate?: string;
   grossValue?: string;
   totalPackages?: string;
   specialInstruction?: string;
@@ -134,12 +133,6 @@ export default async function ViewSingleBiltyPage({ params }: { params: { id: st
                   <div className="text-sm font-medium text-gray-600 mb-1">E-way No</div>
                   <div className="text-gray-900 font-mono text-sm bg-gray-50 px-2 py-1 rounded">
                     {bilty.ewayNo || 'N/A'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-600 mb-1">E-way Bill Date</div>
-                  <div className="text-gray-900 text-sm bg-blue-50 px-2 py-1 rounded border border-blue-200">
-                    {bilty.ewayDate ? new Date(bilty.ewayDate).toLocaleDateString('en-IN') : 'N/A'}
                   </div>
                 </div>
                 <div>

@@ -1,76 +1,275 @@
-import React, { Suspense } from "react";
-import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+'use client';
 
-async function fetchChallan(id: string) {
-  const docRef = doc(db, "challans", id);
-  const docSnap = await getDoc(docRef);
-  if (!docSnap.exists()) return null;
-  return { id: docSnap.id, ...docSnap.data() };
-}
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { Download, Eye } from 'lucide-react';
 
-async function ChallanView({ id }: { id: string }) {
-  const challan = await fetchChallan(id);
-  if (!challan) return <div className="p-8">Challan not found.</div>;
+export default function ViewChallan({ params }: { params: { id: string } }) {
+  const [challanData, setChallanData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchChallanData();
+  }, []);
+
+  const fetchChallanData = async () => {
+    try {
+      const response = await fetch(`/api/challan/${params.id}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch challan data');
+      }
+      
+      const data = await response.json();
+      setChallanData(data);
+    } catch (error) {
+      console.error('Error fetching challan:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch challan data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    try {
+      const response = await fetch(`/api/challan/${params.id}/pdf`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `challan-${challanData?.challanNumber || params.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: "Success",
+        description: "PDF downloaded successfully",
+      });
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download PDF",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleViewPdf = async () => {
+    try {
+      const response = await fetch(`/api/challan/${params.id}/pdf`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate PDF');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      
+      toast({
+        title: "Success",
+        description: "PDF opened in new tab",
+      });
+    } catch (error) {
+      console.error('Error viewing PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to view PDF",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="flex items-center justify-center h-32">
+            <div className="text-center">Loading challan data...</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!challanData) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="flex items-center justify-center h-32">
+            <div className="text-center">Challan not found</div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50/50 p-8">
-      <h1 className="text-2xl font-bold mb-6">Challan #{challan.challanNo}</h1>
-      <div className="bg-white rounded shadow p-6 max-w-3xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div><b>Date:</b> {challan.date}</div>
-          <div><b>Truck No.:</b> {challan.truckNo}</div>
-          <div><b>From:</b> {challan.from}</div>
-          <div><b>To:</b> {challan.to}</div>
-          <div><b>Owner Name:</b> {challan.ownerName}</div>
-          <div><b>License No.:</b> {challan.licenseNo}</div>
-          <div><b>Cash/Due:</b> {challan.cashOrDue}</div>
-        </div>
-        <div className="mb-4">
-          <b>Transport Name:</b> {challan.transportName} <br />
-          <b>Commission:</b> {challan.commission} <br />
-          <b>Payment Mode:</b> {challan.paymentMode}
-        </div>
-        <div className="mb-4">
-          <b>Items:</b>
-          <table className="w-full border mt-2 mb-4">
-            <thead>
-              <tr>
-                <th>S.No</th>
-                <th>Bilty No.</th>
-                <th>Freight</th>
-                <th>Weight</th>
-                <th>Rate</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {challan.items && challan.items.map((item: any, idx: number) => (
-                <tr key={idx}>
-                  <td>{idx + 1}</td>
-                  <td>{item.biltyNo}</td>
-                  <td>{item.freight}</td>
-                  <td>{item.weight}</td>
-                  <td>{item.rate}</td>
-                  <td>{item.total}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="flex justify-between mt-4">
-          <div><b>Total Freight:</b> {challan.totalFreight}</div>
-          <div><b>Total Commission:</b> {challan.totalCommission}</div>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Challan Details</h1>
+        <div className="space-x-2">
+          <Button onClick={handleViewPdf} variant="outline">
+            <Eye className="mr-2 h-4 w-4" />
+            View PDF
+          </Button>
+          <Button onClick={handleDownloadPdf}>
+            <Download className="mr-2 h-4 w-4" />
+            Download PDF
+          </Button>
         </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            Challan #{challanData.challanNo}
+            <Badge variant="secondary">
+              {new Date(challanData.date).toLocaleDateString()}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Shipment Details</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Bilty Number:</span>
+                    <span className="font-medium">{challanData.items?.[0]?.biltyNo || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">From:</span>
+                    <span className="font-medium">{challanData.from}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">To:</span>
+                    <span className="font-medium">{challanData.to}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Truck No:</span>
+                    <span className="font-medium">{challanData.truckNo}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Truck Owner:</span>
+                    <span className="font-medium">{challanData.truckOwnerName}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Party Details</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Consignor:</span>
+                    <span className="font-medium">{challanData.items?.[0]?.consignorName || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Consignee:</span>
+                    <span className="font-medium">{challanData.items?.[0]?.consigneeName || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Goods Details</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Description:</span>
+                    <span className="font-medium">{challanData.items?.[0]?.description || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Weight:</span>
+                    <span className="font-medium">{challanData.items?.[0]?.weight || 0} kg</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Rate:</span>
+                    <span className="font-medium">₹{challanData.items?.[0]?.rate || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Quantity:</span>
+                    <span className="font-medium">{challanData.items?.[0]?.quantity || 0}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-lg mb-2">Amount Details</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Freight:</span>
+                    <span className="font-medium">₹{challanData.items?.[0]?.freight || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Item Total:</span>
+                    <span className="font-medium">₹{challanData.items?.[0]?.total || 0}</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-2 font-semibold text-lg">
+                    <span>Total Amount:</span>
+                    <span>₹{challanData.totalFreight || 0}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Items Table */}
+          {challanData.items && challanData.items.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Items Details</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full border border-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Sr.</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Bilty No.</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Consignor</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Consignee</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Description</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Qty</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Weight</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Freight</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {challanData.items.map((item: any, index: number) => (
+                      <tr key={index}>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 border-b">{index + 1}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 border-b">{item.biltyNo}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 border-b">{item.consignorName}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 border-b">{item.consigneeName}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 border-b">{item.description}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 border-b">{item.quantity}</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 border-b">{item.weight} kg</td>
+                        <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 border-b">₹{item.freight}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
-
-export default function ChallanViewPage({ params }: { params: { id: string } }) {
-  return (
-    <Suspense fallback={<div className="p-8">Loading...</div>}>
-      {/* @ts-expect-error Async Server Component */}
-      <ChallanView id={params.id} />
-    </Suspense>
-  );
-} 
