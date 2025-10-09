@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createChallan } from "@/lib/firestore";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Truck, MapPin, User, Save } from "lucide-react";
 
 // Define types for item and challanData
 interface ChallanItem {
@@ -58,6 +58,54 @@ export default function CreateChallanForm() {
     items: [{ ...defaultItem }],
   });
   const [totalFreight, setTotalFreight] = useState(0);
+
+  // Autocomplete states
+  const [truckSuggestions, setTruckSuggestions] = useState<string[]>([]);
+  const [showTruckDropdown, setShowTruckDropdown] = useState(false);
+  const [ownerSuggestions, setOwnerSuggestions] = useState<string[]>([]);
+  const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
+  const truckDropdownRef = useRef<HTMLDivElement>(null);
+  const ownerDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch suggestions for autocomplete
+  const fetchSuggestions = async (type: 'truck' | 'owner', searchTerm: string) => {
+    if (searchTerm.length < 2) {
+      if (type === 'truck') setTruckSuggestions([]);
+      else setOwnerSuggestions([]);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/bilty/suggestions?type=${type}&search=${encodeURIComponent(searchTerm)}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (type === 'truck') {
+          setTruckSuggestions(data.suggestions || []);
+          setShowTruckDropdown(true);
+        } else {
+          setOwnerSuggestions(data.suggestions || []);
+          setShowOwnerDropdown(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+    }
+  };
+
+  // Handle click outside for dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (truckDropdownRef.current && !truckDropdownRef.current.contains(event.target as Node)) {
+        setShowTruckDropdown(false);
+      }
+      if (ownerDropdownRef.current && !ownerDropdownRef.current.contains(event.target as Node)) {
+        setShowOwnerDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Auto-fetch today's bilties when form loads
   useEffect(() => {
@@ -323,123 +371,194 @@ export default function CreateChallanForm() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
-      <Card>
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-          <CardTitle className="text-2xl font-bold flex items-center gap-2">
-            <Loader2 className="h-6 w-6" />
-            Create Challan
-          </CardTitle>
-          <CardDescription className="text-blue-50">
-            Fill in the challan details below. Today's bilties are auto-loaded.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-6">
+    <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
+      <CardHeader className="bg-gradient-to-r from-blue-50/50 to-transparent border-b border-gray-100">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-blue-100 rounded-lg">
+            <Truck className="h-5 w-5 text-blue-600" />
+          </div>
+          <div>
+            <CardTitle className="text-xl">Create Delivery Challan</CardTitle>
+            <CardDescription>Fill in the challan details below. Today's bilties are auto-loaded.</CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Details Section */}
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Plus className="h-5 w-5" />
+            <div className="bg-gradient-to-br from-gray-50/80 to-blue-50/30 p-6 rounded-xl border border-gray-200/50">
+              <h3 className="text-base font-semibold mb-5 flex items-center gap-2 text-gray-800">
+                <div className="p-1.5 bg-blue-100 rounded-lg">
+                  <MapPin className="h-4 w-4 text-blue-600" />
+                </div>
                 Basic Details
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div>
-                  <Label htmlFor="date" className="text-sm font-medium">Date *</Label>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
+                <div className="space-y-2">
+                  <Label htmlFor="date" className="text-sm font-medium text-gray-700">
+                    Date <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="date"
                     type="date"
                     value={form.date}
                     onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
                     required
-                    className="mt-1"
+                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="truckNo" className="text-sm font-medium">Truck No. *</Label>
-                  <Input
-                    id="truckNo"
-                    value={form.truckNo}
-                    onChange={e => setForm(f => ({ ...f, truckNo: e.target.value.toUpperCase() }))}
-                    placeholder="RJ04GA6778"
-                    required
-                    className="mt-1"
-                  />
+                
+                <div className="space-y-2" ref={truckDropdownRef}>
+                  <Label htmlFor="truckNo" className="text-sm font-medium text-gray-700">
+                    Truck Number <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="truckNo"
+                      value={form.truckNo}
+                      onChange={e => {
+                        const value = e.target.value.toUpperCase();
+                        setForm(f => ({ ...f, truckNo: value }));
+                        fetchSuggestions('truck', value);
+                      }}
+                      placeholder="e.g., RJ14GA1234"
+                      required
+                      className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    {showTruckDropdown && truckSuggestions.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                        {truckSuggestions.map((suggestion, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            className="w-full px-4 py-2.5 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0 flex items-center gap-2"
+                            onClick={() => {
+                              setForm(f => ({ ...f, truckNo: suggestion }));
+                              setShowTruckDropdown(false);
+                            }}
+                          >
+                            <Truck className="h-4 w-4 text-blue-600" />
+                            <span className="font-medium text-gray-900">{suggestion}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="truckOwnerName" className="text-sm font-medium">Owner Name *</Label>
-                  <Input
-                    id="truckOwnerName"
-                    value={form.truckOwnerName}
-                    onChange={e => setForm(f => ({ ...f, truckOwnerName: e.target.value }))}
-                    placeholder="Owner name"
-                    required
-                    className="mt-1"
-                  />
+
+                <div className="space-y-2" ref={ownerDropdownRef}>
+                  <Label htmlFor="truckOwnerName" className="text-sm font-medium text-gray-700">
+                    Owner Name <span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="truckOwnerName"
+                      value={form.truckOwnerName}
+                      onChange={e => {
+                        const value = e.target.value;
+                        setForm(f => ({ ...f, truckOwnerName: value }));
+                        fetchSuggestions('owner', value);
+                      }}
+                      placeholder="Owner name"
+                      required
+                      className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    {showOwnerDropdown && ownerSuggestions.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                        {ownerSuggestions.map((suggestion, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            className="w-full px-4 py-2.5 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0 flex items-center gap-2"
+                            onClick={() => {
+                              setForm(f => ({ ...f, truckOwnerName: suggestion }));
+                              setShowOwnerDropdown(false);
+                            }}
+                          >
+                            <User className="h-4 w-4 text-blue-600" />
+                            <span className="font-medium text-gray-900">{suggestion}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="from" className="text-sm font-medium">From *</Label>
+
+                <div className="space-y-2">
+                  <Label htmlFor="from" className="text-sm font-medium text-gray-700">
+                    From <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="from"
                     value={form.from}
                     onChange={e => setForm(f => ({ ...f, from: e.target.value }))}
-                    placeholder="Jodhpur"
+                    placeholder="Origin city"
                     required
-                    className="mt-1"
+                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="to" className="text-sm font-medium">To *</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="to" className="text-sm font-medium text-gray-700">
+                    To <span className="text-red-500">*</span>
+                  </Label>
                   <Input
                     id="to"
                     value={form.to}
                     onChange={e => setForm(f => ({ ...f, to: e.target.value }))}
-                    placeholder="Mumbai"
+                    placeholder="Destination city"
                     required
-                    className="mt-1"
+                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               </div>
             </div>
 
             {/* Bilty Items Table */}
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-blue-600 text-white p-3 flex justify-between items-center">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Plus className="h-5 w-5" />
-                  Bilty Items
-                </h3>
-                <Button
-                  type="button"
-                  onClick={addItem}
-                  size="sm"
-                  variant="secondary"
-                  className="flex items-center gap-1"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Row
-                </Button>
-              </div>
+            <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
+              <CardHeader className="bg-gradient-to-r from-green-50/50 to-transparent border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <Plus className="h-5 w-5 text-green-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl">Bilty Items</CardTitle>
+                      <CardDescription>Add bilty items to this challan</CardDescription>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={addItem}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Row
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="bg-gray-100 border-b border-gray-300">
-                      <th className="p-2 text-xs font-semibold text-left border-r border-gray-300">Sr</th>
-                      <th className="p-2 text-xs font-semibold text-left border-r border-gray-300">Bilty No</th>
-                      <th className="p-2 text-xs font-semibold text-left border-r border-gray-300">Consignor</th>
-                      <th className="p-2 text-xs font-semibold text-left border-r border-gray-300">Consignee</th>
-                      <th className="p-2 text-xs font-semibold text-left border-r border-gray-300">Description</th>
-                      <th className="p-2 text-xs font-semibold text-right border-r border-gray-300">Qty</th>
-                      <th className="p-2 text-xs font-semibold text-right border-r border-gray-300">Weight</th>
-                      <th className="p-2 text-xs font-semibold text-right border-r border-gray-300">Freight</th>
-                      <th className="p-2 text-xs font-semibold text-right border-r border-gray-300">Rate</th>
-                      <th className="p-2 text-xs font-semibold text-right border-r border-gray-300">Total</th>
-                      <th className="p-2 text-xs font-semibold text-center">Action</th>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="p-3 text-xs font-semibold text-gray-700 text-left border-r border-gray-200">Sr</th>
+                      <th className="p-3 text-xs font-semibold text-gray-700 text-left border-r border-gray-200">Bilty No</th>
+                      <th className="p-3 text-xs font-semibold text-gray-700 text-left border-r border-gray-200">Consignor</th>
+                      <th className="p-3 text-xs font-semibold text-gray-700 text-left border-r border-gray-200">Consignee</th>
+                      <th className="p-3 text-xs font-semibold text-gray-700 text-left border-r border-gray-200">Description</th>
+                      <th className="p-3 text-xs font-semibold text-gray-700 text-right border-r border-gray-200">Qty</th>
+                      <th className="p-3 text-xs font-semibold text-gray-700 text-right border-r border-gray-200">Weight</th>
+                      <th className="p-3 text-xs font-semibold text-gray-700 text-right border-r border-gray-200">Freight</th>
+                      <th className="p-3 text-xs font-semibold text-gray-700 text-right border-r border-gray-200">Rate</th>
+                      <th className="p-3 text-xs font-semibold text-gray-700 text-right border-r border-gray-200">Total</th>
+                      <th className="p-3 text-xs font-semibold text-gray-700 text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {form.items.map((item, idx) => (
-                      <tr key={idx} className="border-b border-gray-200 hover:bg-gray-50">
-                        <td className="p-2 text-sm text-center border-r border-gray-200">{idx + 1}</td>
+                      <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                        <td className="p-2 text-sm font-medium text-center border-r border-gray-100">{idx + 1}</td>
                         <td className="p-2 border-r border-gray-200">
                           <Input
                             value={item.biltyNo}
@@ -525,42 +644,44 @@ export default function CreateChallanForm() {
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr className="bg-blue-50 border-t-2 border-blue-600">
-                      <td colSpan={9} className="p-3 text-right font-bold text-sm">
+                    <tr className="bg-gradient-to-r from-green-50/50 to-transparent border-t-2 border-gray-200">
+                      <td colSpan={9} className="p-4 text-right font-semibold text-sm text-gray-700">
                         Total Freight:
                       </td>
-                      <td colSpan={2} className="p-3 text-right font-bold text-lg text-blue-700">
-                        Rs. {totalFreight.toFixed(2)}
+                      <td colSpan={2} className="p-4 text-right font-bold text-lg text-green-700">
+                        ₹ {totalFreight.toFixed(2)}
                       </td>
                     </tr>
                   </tfoot>
                 </table>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <div className="flex items-center justify-between pt-6 border-t border-gray-200">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleReset}
                 disabled={loading}
+                className="px-6"
               >
-                Reset
+                Reset Form
               </Button>
               <Button
                 type="submit"
                 disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
+                    Creating Challan...
                   </>
                 ) : (
                   <>
-                    <Plus className="mr-2 h-4 w-4" />
+                    <Save className="mr-2 h-4 w-4" />
                     Create Challan
                   </>
                 )}
@@ -569,6 +690,5 @@ export default function CreateChallanForm() {
           </form>
         </CardContent>
       </Card>
-    </div>
   )
 }

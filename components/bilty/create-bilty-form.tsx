@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -48,10 +48,33 @@ interface BiltyCharges {
   grandTotal: number
 }
 
+interface Suggestion {
+  name?: string
+  gst?: string
+  displayName?: string
+  displayGst?: string
+  truckNo?: string
+  displayTruckNo?: string
+  lastConsignor?: string
+  lastConsignee?: string
+}
+
 export function CreateBiltyForm() {
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+
+  // Suggestion states
+  const [consignorSuggestions, setConsignorSuggestions] = useState<Suggestion[]>([])
+  const [consigneeSuggestions, setConsigneeSuggestions] = useState<Suggestion[]>([])
+  const [truckSuggestions, setTruckSuggestions] = useState<Suggestion[]>([])
+  const [showConsignorSuggestions, setShowConsignorSuggestions] = useState(false)
+  const [showConsigneeSuggestions, setShowConsigneeSuggestions] = useState(false)
+  const [showTruckSuggestions, setShowTruckSuggestions] = useState(false)
+  
+  const consignorRef = useRef<HTMLDivElement>(null)
+  const consigneeRef = useRef<HTMLDivElement>(null)
+  const truckRef = useRef<HTMLDivElement>(null)
 
   const [formData, setFormData] = useState({
     biltyDate: new Date().toISOString().split("T")[0],
@@ -136,6 +159,72 @@ export function CreateBiltyForm() {
         grandTotal: grandTotal,
       }
     })
+  }
+
+  // Fetch suggestions
+  const fetchSuggestions = async (type: 'consignor' | 'consignee' | 'truck', searchTerm: string) => {
+    if (searchTerm.length < 2) {
+      if (type === 'consignor') setConsignorSuggestions([])
+      if (type === 'consignee') setConsigneeSuggestions([])
+      if (type === 'truck') setTruckSuggestions([])
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/bilty/suggestions?type=${type}&search=${encodeURIComponent(searchTerm)}`)
+      if (response.ok) {
+        const data = await response.json()
+        if (type === 'consignor') setConsignorSuggestions(data.suggestions || [])
+        if (type === 'consignee') setConsigneeSuggestions(data.suggestions || [])
+        if (type === 'truck') setTruckSuggestions(data.suggestions || [])
+      }
+    } catch (error) {
+      console.error('Failed to fetch suggestions:', error)
+    }
+  }
+
+  // Handle clicking outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (consignorRef.current && !consignorRef.current.contains(event.target as Node)) {
+        setShowConsignorSuggestions(false)
+      }
+      if (consigneeRef.current && !consigneeRef.current.contains(event.target as Node)) {
+        setShowConsigneeSuggestions(false)
+      }
+      if (truckRef.current && !truckRef.current.contains(event.target as Node)) {
+        setShowTruckSuggestions(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleConsignorSelect = (suggestion: Suggestion) => {
+    setFormData(prev => ({
+      ...prev,
+      consignorName: suggestion.displayName || '',
+      consignorGst: suggestion.displayGst || ''
+    }))
+    setShowConsignorSuggestions(false)
+  }
+
+  const handleConsigneeSelect = (suggestion: Suggestion) => {
+    setFormData(prev => ({
+      ...prev,
+      consigneeName: suggestion.displayName || '',
+      consigneeGst: suggestion.displayGst || ''
+    }))
+    setShowConsigneeSuggestions(false)
+  }
+
+  const handleTruckSelect = (suggestion: Suggestion) => {
+    setFormData(prev => ({
+      ...prev,
+      truckNo: suggestion.displayTruckNo || ''
+    }))
+    setShowTruckSuggestions(false)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -247,18 +336,46 @@ export function CreateBiltyForm() {
                   required
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2" ref={truckRef}>
                 <Label htmlFor="truckNo" className="text-sm font-medium text-gray-700">
                   Truck Number <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  id="truckNo"
-                  value={formData.truckNo}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, truckNo: e.target.value }))}
-                  placeholder="e.g., RJ14GA1234"
-                  className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="truckNo"
+                    value={formData.truckNo}
+                    onChange={(e) => {
+                      setFormData((prev) => ({ ...prev, truckNo: e.target.value }))
+                      fetchSuggestions('truck', e.target.value)
+                      setShowTruckSuggestions(true)
+                    }}
+                    onFocus={() => {
+                      if (formData.truckNo.length >= 2) setShowTruckSuggestions(true)
+                    }}
+                    placeholder="e.g., RJ14GA1234"
+                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                  {showTruckSuggestions && truckSuggestions.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                      {truckSuggestions.map((suggestion, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleTruckSelect(suggestion)}
+                          className="w-full px-4 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="font-medium text-gray-900">{suggestion.displayTruckNo}</div>
+                          {suggestion.lastConsignor && (
+                            <div className="text-xs text-gray-500">
+                              Last used: {suggestion.lastConsignor} → {suggestion.lastConsignee}
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="from" className="text-sm font-medium text-gray-700">
@@ -308,18 +425,44 @@ export function CreateBiltyForm() {
               <div className="space-y-4">
                 <h3 className="font-semibold text-gray-900 border-b border-gray-200 pb-2">Consignor Details</h3>
                 <div className="space-y-4">
-                  <div className="space-y-2">
+                  <div className="space-y-2" ref={consignorRef}>
                     <Label htmlFor="consignorName" className="text-sm font-medium text-gray-700">
                       Consignor Name <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                      id="consignorName"
-                      value={formData.consignorName}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, consignorName: e.target.value }))}
-                      placeholder="Company or person name"
-                      className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
+                    <div className="relative">
+                      <Input
+                        id="consignorName"
+                        value={formData.consignorName}
+                        onChange={(e) => {
+                          setFormData((prev) => ({ ...prev, consignorName: e.target.value }))
+                          fetchSuggestions('consignor', e.target.value)
+                          setShowConsignorSuggestions(true)
+                        }}
+                        onFocus={() => {
+                          if (formData.consignorName.length >= 2) setShowConsignorSuggestions(true)
+                        }}
+                        placeholder="Company or person name"
+                        className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                      {showConsignorSuggestions && consignorSuggestions.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                          {consignorSuggestions.map((suggestion, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => handleConsignorSelect(suggestion)}
+                              className="w-full px-4 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="font-medium text-gray-900">{suggestion.displayName}</div>
+                              {suggestion.displayGst && (
+                                <div className="text-xs text-gray-500">GST: {suggestion.displayGst}</div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="consignorGst" className="text-sm font-medium text-gray-700">
@@ -338,18 +481,44 @@ export function CreateBiltyForm() {
               <div className="space-y-4">
                 <h3 className="font-semibold text-gray-900 border-b border-gray-200 pb-2">Consignee Details</h3>
                 <div className="space-y-4">
-                  <div className="space-y-2">
+                  <div className="space-y-2" ref={consigneeRef}>
                     <Label htmlFor="consigneeName" className="text-sm font-medium text-gray-700">
                       Consignee Name <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                      id="consigneeName"
-                      value={formData.consigneeName}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, consigneeName: e.target.value }))}
-                      placeholder="Company or person name"
-                      className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
+                    <div className="relative">
+                      <Input
+                        id="consigneeName"
+                        value={formData.consigneeName}
+                        onChange={(e) => {
+                          setFormData((prev) => ({ ...prev, consigneeName: e.target.value }))
+                          fetchSuggestions('consignee', e.target.value)
+                          setShowConsigneeSuggestions(true)
+                        }}
+                        onFocus={() => {
+                          if (formData.consigneeName.length >= 2) setShowConsigneeSuggestions(true)
+                        }}
+                        placeholder="Company or person name"
+                        className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                      {showConsigneeSuggestions && consigneeSuggestions.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                          {consigneeSuggestions.map((suggestion, idx) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => handleConsigneeSelect(suggestion)}
+                              className="w-full px-4 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="font-medium text-gray-900">{suggestion.displayName}</div>
+                              {suggestion.displayGst && (
+                                <div className="text-xs text-gray-500">GST: {suggestion.displayGst}</div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="consigneeGst" className="text-sm font-medium text-gray-700">

@@ -21,9 +21,12 @@ import {
   Calendar,
   MapPin,
   Truck,
-  Users
+  Users,
+  CheckSquare,
+  Square
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface Bilty {
   id: string
@@ -46,6 +49,8 @@ export function ViewBiltiesTable() {
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState<"biltyNo" | "biltyDate" | "grandTotal">("biltyDate")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
+  const [selectedBilties, setSelectedBilties] = useState<Set<string>>(new Set())
+  const [isDeleting, setIsDeleting] = useState(false)
   const { toast } = useToast()
 
   const handleSort = (column: "biltyNo" | "biltyDate" | "grandTotal") => {
@@ -140,6 +145,65 @@ export function ViewBiltiesTable() {
         variant: "destructive",
       })
     }
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedBilties.size === 0) {
+      toast({
+        title: "No Selection",
+        description: "Please select bilties to delete",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!confirm(`Are you sure you want to delete ${selectedBilties.size} selected bilty/bilties?`)) return
+
+    setIsDeleting(true)
+    try {
+      const deletePromises = Array.from(selectedBilties).map(id =>
+        fetch(`/api/bilty/${id}`, { method: "DELETE" })
+      )
+
+      const results = await Promise.all(deletePromises)
+      const successCount = results.filter(r => r.ok).length
+      const failCount = results.length - successCount
+
+      setBilties(bilties.filter((b) => !selectedBilties.has(b.id)))
+      setSelectedBilties(new Set())
+
+      toast({
+        title: "Bulk Delete Complete",
+        description: `${successCount} bilty/bilties deleted successfully${failCount > 0 ? `, ${failCount} failed` : ''}`,
+        variant: failCount > 0 ? "destructive" : "default",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete selected bilties",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedBilties.size === filteredBilties.length) {
+      setSelectedBilties(new Set())
+    } else {
+      setSelectedBilties(new Set(filteredBilties.map(b => b.id)))
+    }
+  }
+
+  const toggleSelectBilty = (id: string) => {
+    const newSelected = new Set(selectedBilties)
+    if (newSelected.has(id)) {
+      newSelected.delete(id)
+    } else {
+      newSelected.add(id)
+    }
+    setSelectedBilties(newSelected)
   }
 
   const handleExport = () => {
@@ -258,6 +322,17 @@ export function ViewBiltiesTable() {
                   className="pl-10 w-full sm:w-80 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
+              {selectedBilties.size > 0 && (
+                <Button 
+                  onClick={handleBulkDelete} 
+                  variant="destructive" 
+                  disabled={isDeleting}
+                  className="hover:bg-red-600"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete ({selectedBilties.size})
+                </Button>
+              )}
               <Button onClick={handleExport} variant="outline" className="hover:bg-blue-50">
                 <Download className="h-4 w-4 mr-2" />
                 Export All
@@ -290,6 +365,12 @@ export function ViewBiltiesTable() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50/50 hover:bg-gray-50/50 border-b border-gray-200">
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={filteredBilties.length > 0 && selectedBilties.size === filteredBilties.length}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
                     <TableHead 
                       className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors"
                       onClick={() => handleSort("biltyNo")}
@@ -341,6 +422,12 @@ export function ViewBiltiesTable() {
                       key={bilty.id} 
                       className="hover:bg-blue-50/30 transition-colors border-b border-gray-100 group"
                     >
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedBilties.has(bilty.id)}
+                          onCheckedChange={() => toggleSelectBilty(bilty.id)}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 bg-blue-500 rounded-full"></div>

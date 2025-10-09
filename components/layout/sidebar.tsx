@@ -117,9 +117,15 @@ export function Sidebar() {
               <LogOut className="mr-3 h-5 w-5" />
               Logout
             </Button>
-            <div className="text-xs text-gray-500 text-center mt-2">
-              <p>Jodhpur Bombay Road Carrier</p>
-              <p>© 2025 All rights reserved</p>
+            <div className="text-xs text-gray-500 text-center mt-3 space-y-1">
+              <p className="font-medium text-gray-700">Jodhpur Bombay Road Carrier</p>
+              <div className="flex items-center justify-center gap-1">
+                <p>Powered by</p>
+                <span className="font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  Shivkara Digital
+                </span>
+              </div>
+              <p className="text-gray-400">© 2025 All rights reserved</p>
             </div>
           </div>
         </div>

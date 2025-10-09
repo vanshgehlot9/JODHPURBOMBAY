@@ -29,12 +29,12 @@ export async function GET(
       format: "a4",
     });
 
-    // Modern gradient-style header background
-    pdf.setFillColor(0, 102, 204);
+    // Modern gradient-style header background with custom dark blue (#003049)
+    pdf.setFillColor(0, 48, 73);
     pdf.rect(0, 0, pageWidth, 50, 'F');
     
-    // Accent stripe
-    pdf.setFillColor(0, 150, 255);
+    // Accent stripe with orange (#f77f00)
+    pdf.setFillColor(247, 127, 0);
     pdf.rect(0, 50, pageWidth, 2, 'F');
     
     // Logo with modern circular frame
@@ -46,7 +46,7 @@ export async function GET(
         
         // White circular background for logo
         pdf.setFillColor(255, 255, 255);
-        pdf.circle(27, 22, 13, 'F');
+        
         
         pdf.addImage(`data:image/jpeg;base64,${logoBase64}`, 'JPEG', 16, 13, 22, 18);
       }
@@ -54,11 +54,26 @@ export async function GET(
       console.log("Logo not found");
     }
 
-    // Modern header text with white color
+    // Modern header text with gradient color effect
     pdf.setFontSize(22);
-    pdf.setTextColor(255, 255, 255);
     pdf.setFont("helvetica", "bold");
-    pdf.text("JODHPUR BOMBAY ROAD CARRIER", pageWidth / 1.8, 15, { align: "center" });
+    
+    // Create gradient effect by coloring each word differently
+    // JODHPUR - Orange (#f77f00)
+    pdf.setTextColor(247, 127, 0);
+    pdf.text("JODHPUR", 55, 18);
+    
+    // BOMBAY - Cyan (#00b4d8)
+    pdf.setTextColor(0, 180, 216);
+    pdf.text("BOMBAY", 95, 18);
+    
+    // ROAD - Light blue (#8ecae6)
+    pdf.setTextColor(142, 202, 230);
+    pdf.text("ROAD", 133, 18);
+    
+    // CARRIER - Orange (#f77f00)
+    pdf.setTextColor(247, 127, 0);
+    pdf.text("CARRIER", 160, 18);
     
     pdf.setFontSize(9);
     pdf.setFont("helvetica", "normal");
@@ -67,10 +82,10 @@ export async function GET(
     pdf.setFontSize(8);
     pdf.text("GSTIN: 08AABFJ2988C1ZN  |  Mobile: +91 97821-77007 , +91 93147-10568", pageWidth / 2, 32, { align: "center" });
 
-    // Modern CHALLAN badge
+    // Modern CHALLAN badge with cyan (#00b4d8)
     pdf.setFillColor(255, 255, 255);
     pdf.roundedRect(pageWidth / 2 - 28, 37, 56, 10, 2, 2, 'F');
-    pdf.setTextColor(0, 102, 204);
+    pdf.setTextColor(0, 180, 216);
     pdf.setFontSize(14);
     pdf.setFont("helvetica", "bold");
     pdf.text("CHALLAN", pageWidth / 2, 44, { align: "center" });
@@ -113,11 +128,11 @@ export async function GET(
       formattedDate = 'Invalid Date';
     }
     
-    // Modern info pills/badges
+    // Modern info pills/badges with custom colors
     let infoY = 63;
     
-    // Date badge
-    pdf.setFillColor(0, 102, 204);
+    // Date badge - cyan (#00b4d8)
+    pdf.setFillColor(0, 180, 216);
     pdf.roundedRect(20, infoY, 50, 8, 1, 1, 'F');
     pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(8);
@@ -126,8 +141,8 @@ export async function GET(
     pdf.setFont("helvetica", "normal");
     pdf.text(formattedDate, 67, infoY + 5, { align: "right" });
     
-    // Challan No badge
-    pdf.setFillColor(0, 150, 255);
+    // Challan No badge - orange (#f77f00)
+    pdf.setFillColor(247, 127, 0);
     pdf.roundedRect(75, infoY, 55, 8, 1, 1, 'F');
     pdf.setTextColor(255, 255, 255);
     pdf.setFont("helvetica", "bold");
@@ -135,8 +150,8 @@ export async function GET(
     pdf.setFont("helvetica", "normal");
     pdf.text(String(challan.challanNo || ''), 127, infoY + 5, { align: "right" });
     
-    // Truck No badge
-    pdf.setFillColor(0, 102, 204);
+    // Truck No badge - dark blue (#003049)
+    pdf.setFillColor(0, 48, 73);
     pdf.roundedRect(135, infoY, 52, 8, 1, 1, 'F');
     pdf.setTextColor(255, 255, 255);
     pdf.setFont("helvetica", "bold");
@@ -156,9 +171,9 @@ export async function GET(
     pdf.text("Owner Name: _________________", 85, infoY + 6);
     pdf.text("Lic No: __________", 148, infoY + 6);
 
-    // Modern From/To banner
+    // Modern From/To banner with cyan (#00b4d8)
     infoY += 14;
-    pdf.setFillColor(0, 102, 204);
+    pdf.setFillColor(0, 180, 216);
     pdf.roundedRect(20, infoY, 167, 10, 1, 1, 'F');
     
     pdf.setTextColor(255, 255, 255);
@@ -176,8 +191,8 @@ export async function GET(
     // Modern table design with sleek styling
     let yPos = 103;
     
-    // Table header with gradient effect
-    pdf.setFillColor(0, 102, 204);
+    // Table header with dark blue (#003049)
+    pdf.setFillColor(0, 48, 73);
     pdf.roundedRect(20, yPos - 4, 167, 10, 1, 1, 'F');
     
     pdf.setTextColor(255, 255, 255);
@@ -253,8 +268,8 @@ export async function GET(
           pdf.text(consigneeText, 57, yPos + 2);
         }
         
-        // Bilty with highlight
-        pdf.setTextColor(0, 102, 204);
+        // Bilty with cyan highlight (#00b4d8)
+        pdf.setTextColor(0, 180, 216);
         pdf.setFont("helvetica", "bold");
         pdf.text(String(item.biltyNo || ""), 87, yPos + 2);
         
@@ -280,8 +295,8 @@ export async function GET(
         pdf.text(qty, 148, yPos + 2, { align: "right" });
         pdf.text(weight.toFixed(1), 167, yPos + 2, { align: "right" });
         
-        // Amount with accent color
-        pdf.setTextColor(0, 150, 0);
+        // Amount with orange accent (#f77f00)
+        pdf.setTextColor(247, 127, 0);
         pdf.setFont("helvetica", "bold");
         pdf.text(`Rs.${total.toFixed(0)}`, 184, yPos + 2, { align: "right" });
         pdf.setFont("helvetica", "normal");
@@ -301,9 +316,9 @@ export async function GET(
       });
     }
 
-    // Modern total row with gradient
+    // Modern total row with dark blue (#003049)
     yPos += 3;
-    pdf.setFillColor(0, 102, 204);
+    pdf.setFillColor(0, 48, 73);
     pdf.roundedRect(20, yPos - 3, 167, 12, 1, 1, 'F');
     
     pdf.setTextColor(255, 255, 255);
@@ -344,12 +359,12 @@ export async function GET(
     pdf.setTextColor(120, 80, 0);
     pdf.setFont("helvetica", "italic");
     pdf.setFontSize(7);
-    pdf.text("📋 Note: Quantity goods of the memo are received in safe and sound condition", 24, yPos + 3);
+    pdf.text(" Note: The quantity of goods mentioned in the memo has been received in safe and sound condition.", 24, yPos + 3);
 
     yPos += 15;
     
-    // Modern signature section
-    pdf.setTextColor(0, 102, 204);
+    // Modern signature section with cyan (#00b4d8)
+    pdf.setTextColor(0, 180, 216);
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(10);
     pdf.text("For: Jodhpur Bombay Road Carrier", 24, yPos);
@@ -369,14 +384,14 @@ export async function GET(
         yPos += 20;
       } else {
         yPos += 15;
-        // Modern signature line
-        pdf.setDrawColor(0, 102, 204);
+        // Modern signature line with cyan
+        pdf.setDrawColor(0, 180, 216);
         pdf.setLineWidth(0.5);
         pdf.line(24, yPos, 75, yPos);
       }
     } catch (error) {
       yPos += 15;
-      pdf.setDrawColor(0, 102, 204);
+      pdf.setDrawColor(0, 180, 216);
       pdf.setLineWidth(0.5);
       pdf.line(24, yPos, 75, yPos);
     }
@@ -386,8 +401,8 @@ export async function GET(
     pdf.setFontSize(8);
     pdf.text("Authorised Signatory", 24, yPos + 5);
     
-    // Modern footer accent line
-    pdf.setDrawColor(0, 150, 255);
+    // Modern footer accent line with orange (#f77f00)
+    pdf.setDrawColor(247, 127, 0);
     pdf.setLineWidth(1);
     pdf.line(0, pageHeight - 5, pageWidth, pageHeight - 5);
 

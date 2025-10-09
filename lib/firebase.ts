@@ -21,6 +21,20 @@ const app = initializeApp(firebaseConfig)
 
 // Initialize Firebase services
 export const db = getFirestore(app)
+
+// Enable offline persistence with error handling
+if (typeof window !== 'undefined') {
+  import('firebase/firestore').then(({ enableIndexedDbPersistence }) => {
+    enableIndexedDbPersistence(db).catch((err) => {
+      if (err.code === 'failed-precondition') {
+        console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+      } else if (err.code === 'unimplemented') {
+        console.warn('The current browser does not support offline persistence');
+      }
+    });
+  });
+}
+
 export const auth = getAuth(app)
 export const storage = getStorage(app)
 

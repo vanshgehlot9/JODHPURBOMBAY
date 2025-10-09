@@ -174,6 +174,12 @@ export async function deleteBilty(id: string): Promise<void> {
   await deleteDoc(docRef)
 }
 
+// Delete a challan
+export async function deleteChallan(id: string): Promise<void> {
+  const docRef = doc(db, "challans", id)
+  await deleteDoc(docRef)
+}
+
 // Get dashboard stats
 export async function getDashboardStats() {
   const today = new Date()

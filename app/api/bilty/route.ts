@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getBilties, createBilty } from "@/lib/firestore"
 import { Timestamp } from "firebase/firestore"
+import { retryOperation, getErrorMessage, isNetworkError } from "@/lib/network-utils"
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,7 +29,8 @@ export async function GET(request: NextRequest) {
       filters.dateTo = next
     }
 
-    const bilties = await getBilties(filters)
+    // Retry the operation with exponential backoff
+    const bilties = await retryOperation(() => getBilties(filters), 3, 1000);
 
     // Convert Firestore Timestamps to ISO strings for JSON serialization
     const serializedBilties = bilties.map((bilty) => ({
@@ -38,9 +40,13 @@ export async function GET(request: NextRequest) {
     }))
 
     return NextResponse.json(serializedBilties)
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching bilties:", error)
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+    
+    return NextResponse.json(
+      { message: getErrorMessage(error) },
+      { status: isNetworkError(error) ? 503 : 500 }
+    )
   }
 }
 
@@ -67,7 +73,8 @@ export async function POST(request: NextRequest) {
     // Convert date string to Date object
     biltyData.biltyDate = new Date(biltyData.biltyDate)
 
-    const result = await createBilty(biltyData)
+    // Retry the operation with exponential backoff
+    const result = await retryOperation(() => createBilty(biltyData), 3, 1000);
 
     return NextResponse.json(
       {
@@ -77,8 +84,12 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 },
     )
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating bilty:", error)
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 })
+    
+    return NextResponse.json(
+      { message: getErrorMessage(error) },
+      { status: isNetworkError(error) ? 503 : 500 }
+    )
   }
 }
