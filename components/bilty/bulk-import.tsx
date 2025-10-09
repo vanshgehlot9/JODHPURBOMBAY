@@ -21,184 +21,128 @@ export function BulkBiltyImport() {
   const [activeTab, setActiveTab] = useState("paste")
   const { toast } = useToast()
 
-  const parseBiltyData = (text: string) => {
-    const lines = text.trim().split('\n')
-    const bilties = []
-
-    for (const line of lines) {
-      // Skip empty lines, header line, and total line
-      if (!line.trim() || 
-          line.includes('Date G.R.') || 
-          line.includes('Tot. Amt.') ||
-          line.match(/^\d+\s+0\s+0$/) ||
-          (!line.match(/^\d{2}-\d{2}-\d{4}/) && !line.includes('|'))) {
-        continue
-      }
-
-      let parts: string[]
+  const parseBiltyData = (data: string) => {
+    const lines = data.trim().split('\n')
+    const bilties: any[] = []
+    const errors: string[] = []
+    
+    lines.forEach((line, index) => {
+      const trimmedLine = line.trim()
+      if (!trimmedLine) return
       
-      // Check if data is pipe-delimited (from Excel) or space-delimited (from paste)
-      if (line.includes('|')) {
-        // Excel format with pipe delimiter
-        parts = line.split('|').map(p => p.trim())
+      try {
+        let parts: string[]
         
-        // Expected format: Date|GR.NO|Consignor|ConsignorGSTIN|Consignee|ConsigneeGSTIN|Amt|SGST|CGST|PaidBy
-        if (parts.length < 6) {
-          console.warn('Skipping line with insufficient parts:', line)
-          continue
+        // Check if this is pipe-delimited (from Excel)
+        if (trimmedLine.includes('|')) {
+          parts = trimmedLine.split('|').map(p => p.trim())
+        } else {
+          // Space-delimited (from paste)
+          parts = trimmedLine.split(/\s+/)
         }
         
+        // Validate minimum fields (date and GR number required)
+        if (parts.length < 2) {
+          errors.push(`Line ${index + 1}: Not enough data. Need at least Date and G.R No`)
+          return
+        }
+        
+        // Parse date - handle DD-MM-YYYY format
         const dateStr = parts[0]
-        const grNo = parts[1]
-        const consignor = parts[2] || ''
-        const consignorGSTIN = parts[3] || ''
-        const consignee = parts[4] || ''
-        const consigneeGSTIN = parts[5] || ''
-        const totalAmount = parseFloat((parts[6] || '0').replace(/[()]/g, '')) || 0
-        const sgst = parseFloat(parts[7] || '0') || 0
-        const cgst = parseFloat(parts[8] || '0') || 0
-        const paidBy = parts[9] || 'EXEMPTED'
-
-        // Convert date from DD-MM-YYYY to proper Date object
-        const [day, month, year] = dateStr.split('-').map(part => parseInt(part, 10))
-        const biltyDate = new Date(year, month - 1, day)
+        let biltyDate: Date
+        
+        if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+          // DD-MM-YYYY format
+          const [day, month, year] = dateStr.split('-').map(Number)
+          biltyDate = new Date(year, month - 1, day)
+        } else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+          // DD/MM/YYYY or MM/DD/YYYY format
+          const [part1, part2, year] = dateStr.split('/').map(Number)
+          biltyDate = new Date(year, part2 - 1, part1) // Assume DD/MM/YYYY
+        } else {
+          errors.push(`Line ${index + 1}: Invalid date format "${dateStr}". Use DD-MM-YYYY`)
+          return
+        }
         
         if (isNaN(biltyDate.getTime())) {
-          console.error(`Invalid date for bilty ${grNo}: ${dateStr}`)
-          continue
+          errors.push(`Line ${index + 1}: Invalid date "${dateStr}"`)
+          return
         }
-
-        console.log(`Parsed Bilty ${grNo}:`, {
-          consignor,
-          consignorGSTIN: consignorGSTIN || 'MISSING',
-          consignee,
-          consigneeGSTIN: consigneeGSTIN || 'MISSING'
-        })
-
-        bilties.push({
-          biltyNo: grNo,
-          biltyDate: biltyDate.toISOString(),
-          consignorName: consignor,
+        
+        // Parse fields with defaults
+        const biltyNo = parts[1] || ''
+        if (!biltyNo || biltyNo === '0') {
+          errors.push(`Line ${index + 1}: Missing or invalid G.R No`)
+          return
+        }
+        
+        const consignorName = parts[2] || 'Unknown'
+        const consignorGSTIN = parts[3] || ''
+        const consigneeName = parts[4] || 'Unknown'
+        const consigneeGSTIN = parts[5] || ''
+        
+        // Parse amounts - remove currency symbols and handle negative numbers in parentheses
+        const parseAmount = (str: string = '0'): number => {
+          if (!str) return 0
+          const cleaned = str.replace(/[₹,\s()]/g, '').replace(/[^\d.-]/g, '')
+          const num = parseFloat(cleaned)
+          return isNaN(num) ? 0 : num
+        }
+        
+        const totalAmount = parseAmount(parts[6])
+        const sgst = parseAmount(parts[7])
+        const cgst = parseAmount(parts[8])
+        const paidBy = parts[9] || 'EXEMPTED'
+        const from = parts[10] || 'JODHPUR'
+        const to = parts[11] || 'HYDERABAD'
+        const truckNo = parts[12] || ''
+        
+        // Additional validation
+        if (totalAmount <= 0) {
+          errors.push(`Line ${index + 1}: Total amount must be greater than 0`)
+          return
+        }
+        
+        // Create bilty object
+        const bilty = {
+          biltyNo: biltyNo.toString(),
+          biltyDate,
+          consignorName,
           consignorGSTIN,
-          consigneeName: consignee,
+          consigneeName,
           consigneeGSTIN,
           totalAmount,
           sgst,
           cgst,
           paidBy,
-          from: 'JODHPUR',
-          to: 'HYDERABAD'
-        })
-      } else {
-        // Original space-delimited format
-        parts = line.split(/\s+/)
-        
-        if (parts.length < 8) continue
-
-        const dateStr = parts[0]
-        const grNo = parts[1]
-        
-        // Find GSTIN positions (they follow a pattern like 08XXXXX or 37XXXXX)
-        let consignorGSTIN = ''
-        let consigneeGSTIN = ''
-        let consignor = ''
-        let consignee = ''
-        let totalAmount = 0
-        let sgst = 0
-        let cgst = 0
-        let paidBy = ''
-
-        // Extract data based on GSTIN pattern (15 characters starting with 2 digits)
-        const gstinPattern = /^\d{2}[A-Z0-9]{13}$/
-        
-        let currentIndex = 2
-        const consignorParts = []
-        
-        // Get consignor name (until we hit a GSTIN)
-        while (currentIndex < parts.length && !gstinPattern.test(parts[currentIndex])) {
-          consignorParts.push(parts[currentIndex])
-          currentIndex++
-        }
-        consignor = consignorParts.join(' ')
-        
-        // Get consignor GSTIN
-        if (currentIndex < parts.length && gstinPattern.test(parts[currentIndex])) {
-          consignorGSTIN = parts[currentIndex]
-          currentIndex++
+          from,
+          to,
+          truckNo,
+          // Default values for other fields
+          numberOfPackages: 1,
+          typeOfPackaging: 'Box',
+          weight: 0,
+          description: '',
+          ratePerUnit: 0,
+          unit: 'Ton',
+          additionalCharges: 0,
+          unloadingCharges: 0,
+          hamaliCharges: 0,
+          courierCharges: 0,
+          otherCharges: 0,
+          remarks: '',
+          paymentMode: 'Cash',
+          paymentStatus: 'Unpaid',
         }
         
-        // Get consignee name (until we hit another GSTIN)
-        const consigneeParts = []
-        while (currentIndex < parts.length && !gstinPattern.test(parts[currentIndex])) {
-          consigneeParts.push(parts[currentIndex])
-          currentIndex++
-        }
-        consignee = consigneeParts.join(' ')
+        bilties.push(bilty)
         
-        // Get consignee GSTIN
-        if (currentIndex < parts.length && gstinPattern.test(parts[currentIndex])) {
-          consigneeGSTIN = parts[currentIndex]
-          currentIndex++
-        }
-        
-        // Get amount (remove parentheses and parse)
-        if (currentIndex < parts.length) {
-          const amountStr = parts[currentIndex].replace(/[()]/g, '')
-          totalAmount = parseFloat(amountStr) || 0
-          currentIndex++
-        }
-        
-        // Get SGST
-        if (currentIndex < parts.length) {
-          sgst = parseFloat(parts[currentIndex]) || 0
-          currentIndex++
-        }
-        
-        // Get CGST
-        if (currentIndex < parts.length) {
-          cgst = parseFloat(parts[currentIndex]) || 0
-          currentIndex++
-        }
-        
-        // Get Paid By
-        if (currentIndex < parts.length) {
-          paidBy = parts.slice(currentIndex).join(' ')
-        }
-
-        // Convert date from DD-MM-YYYY to proper Date object
-        const [day, month, year] = dateStr.split('-').map(part => parseInt(part, 10))
-        const biltyDate = new Date(year, month - 1, day)
-        
-        if (isNaN(biltyDate.getTime())) {
-          console.error(`Invalid date for bilty ${grNo}: ${dateStr}`)
-          continue
-        }
-
-        console.log(`Parsed Bilty ${grNo}:`, {
-          consignor,
-          consignorGSTIN: consignorGSTIN || 'MISSING',
-          consignee,
-          consigneeGSTIN: consigneeGSTIN || 'MISSING'
-        })
-
-        bilties.push({
-          biltyNo: grNo,
-          biltyDate: biltyDate.toISOString(),
-          consignorName: consignor,
-          consignorGSTIN,
-          consigneeName: consignee,
-          consigneeGSTIN,
-          totalAmount,
-          sgst,
-          cgst,
-          paidBy: paidBy || 'EXEMPTED',
-          from: 'JODHPUR',
-          to: 'HYDERABAD'
-        })
+      } catch (error: any) {
+        errors.push(`Line ${index + 1}: ${error.message}`)
       }
-    }
-
-    return bilties
+    })
+    
+    return { bilties, errors }
   }
 
   const parseExcelFile = async (file: File): Promise<string> => {
@@ -208,19 +152,20 @@ export function BulkBiltyImport() {
       reader.onload = (e) => {
         try {
           const data = e.target?.result
-          const workbook = XLSX.read(data, { type: 'binary' })
+          const workbook = XLSX.read(data, { type: 'binary', cellDates: true })
           
           // Get the first sheet
           const sheetName = workbook.SheetNames[0]
           const worksheet = workbook.Sheets[sheetName]
           
           // Convert to JSON to preserve column structure
-          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, dateNF: 'dd-mm-yyyy' })
           
           // Find header row (look for row with "Date" or "G.R" or similar)
-          let headerRowIndex = 0
-          for (let i = 0; i < Math.min(5, jsonData.length); i++) {
+          let headerRowIndex = -1
+          for (let i = 0; i < Math.min(10, jsonData.length); i++) {
             const row = jsonData[i] as any[]
+            if (!row || row.length === 0) continue
             const rowText = row.join('').toLowerCase()
             if (rowText.includes('date') || rowText.includes('g.r') || rowText.includes('consignor')) {
               headerRowIndex = i
@@ -228,27 +173,48 @@ export function BulkBiltyImport() {
             }
           }
           
+          if (headerRowIndex === -1) {
+            reject(new Error('Could not find header row. Please ensure your Excel has headers like "Date", "G.R No", "Consignor", etc.'))
+            return
+          }
+          
           const headers = jsonData[headerRowIndex] as any[]
           
           // Map column indices - be more flexible with header matching
           const columnMap: any = {}
           headers.forEach((header: any, index: number) => {
-            const headerStr = String(header || '').toLowerCase().trim().replace(/[.\s]/g, '')
+            if (!header) return
+            const headerStr = String(header).toLowerCase().trim()
+            const headerNoSpace = headerStr.replace(/[.\s]/g, '')
             
             if (headerStr.includes('date') && !columnMap.date) columnMap.date = index
-            else if ((headerStr.includes('gr') || headerStr.includes('grno')) && !columnMap.grNo) columnMap.grNo = index
-            else if (headerStr.includes('consignor') && headerStr.includes('gstin')) columnMap.consignorGSTIN = index
-            else if (headerStr.includes('consignor') && !headerStr.includes('gstin') && !columnMap.consignor) columnMap.consignor = index
-            else if (headerStr.includes('consignee') && headerStr.includes('gstin')) columnMap.consigneeGSTIN = index
-            else if (headerStr.includes('consignee') && !headerStr.includes('gstin') && !columnMap.consignee) columnMap.consignee = index
-            else if ((headerStr.includes('tot') && headerStr.includes('amt')) || headerStr.includes('totamt')) columnMap.amount = index
+            else if ((headerStr.includes('gr') || headerStr.includes('grno') || headerStr.includes('biltyno') || headerStr.includes('bilty no')) && !columnMap.grNo) columnMap.grNo = index
+            // Match "Consignor GSTIN" or "ConsignorGSTIN" or "Consignor GST"
+            else if (headerStr.includes('consignor') && (headerStr.includes('gstin') || headerStr.includes('gst'))) columnMap.consignorGSTIN = index
+            else if (headerStr.includes('consignor') && !headerStr.includes('gstin') && !headerStr.includes('gst') && !columnMap.consignor) columnMap.consignor = index
+            // Match "Consignee GSTIN" or "ConsigneeGSTIN" or "Consignee GST"
+            else if (headerStr.includes('consignee') && (headerStr.includes('gstin') || headerStr.includes('gst'))) columnMap.consigneeGSTIN = index
+            else if (headerStr.includes('consignee') && !headerStr.includes('gstin') && !headerStr.includes('gst') && !columnMap.consignee) columnMap.consignee = index
+            else if ((headerStr.includes('tot') && headerStr.includes('amt')) || headerNoSpace.includes('totamt') || headerStr.includes('amount') || headerStr.includes('total')) columnMap.amount = index
             else if (headerStr.includes('sgst')) columnMap.sgst = index
             else if (headerStr.includes('cgst')) columnMap.cgst = index
-            else if (headerStr.includes('paid')) columnMap.paidBy = index
+            else if (headerStr.includes('paid') || headerStr.includes('paidby') || headerStr.includes('paid by')) columnMap.paidBy = index
+            else if (headerStr.includes('from') || headerStr.includes('origin')) columnMap.from = index
+            else if (headerStr.includes('to') || headerStr.includes('destination') || headerStr.includes('dest')) columnMap.to = index
+            else if (headerStr.includes('truck') || headerStr.includes('vehicle')) columnMap.truckNo = index
           })
           
-          console.log('Column Map:', columnMap)
-          console.log('Headers:', headers)
+          // Debug: Log column mapping
+          if (typeof window !== 'undefined') {
+            console.log('Excel Headers:', headers)
+            console.log('Column Mapping:', columnMap)
+          }
+          
+          // Validate required columns
+          if (columnMap.date === undefined || columnMap.grNo === undefined) {
+            reject(new Error('Required columns not found. Please ensure your Excel has "Date" and "G.R No" columns.'))
+            return
+          }
           
           // Convert rows to text format, preserving all columns
           const textLines: string[] = []
@@ -256,38 +222,85 @@ export function BulkBiltyImport() {
             const row = jsonData[i] as any[]
             if (!row || row.length === 0) continue
             
+            // Get date value
+            const dateValue = row[columnMap.date]
+            if (!dateValue) continue
+            
+            // Convert date to DD-MM-YYYY format
+            let dateStr = ''
+            if (dateValue instanceof Date) {
+              const day = String(dateValue.getDate()).padStart(2, '0')
+              const month = String(dateValue.getMonth() + 1).padStart(2, '0')
+              const year = dateValue.getFullYear()
+              dateStr = `${day}-${month}-${year}`
+            } else if (typeof dateValue === 'string') {
+              // Check if already in DD-MM-YYYY format
+              if (/^\d{2}-\d{2}-\d{4}$/.test(dateValue)) {
+                dateStr = dateValue
+              } else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateValue)) {
+                // Convert from MM/DD/YYYY or DD/MM/YYYY
+                const parts = dateValue.split('/')
+                dateStr = `${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}-${parts[2]}`
+              } else {
+                // Try parsing as date
+                const parsedDate = new Date(dateValue)
+                if (!isNaN(parsedDate.getTime())) {
+                  const day = String(parsedDate.getDate()).padStart(2, '0')
+                  const month = String(parsedDate.getMonth() + 1).padStart(2, '0')
+                  const year = parsedDate.getFullYear()
+                  dateStr = `${day}-${month}-${year}`
+                }
+              }
+            }
+            
+            if (!dateStr) {
+              continue
+            }
+            
+            // Get GR number
+            const grNo = String(row[columnMap.grNo] || '').trim()
+            if (!grNo || grNo === '0') continue
+            
             // Skip summary/total rows
-            const firstCell = String(row[0] || '').trim()
-            if (!firstCell || !/^\d{2}-\d{2}-\d{4}/.test(firstCell)) continue
+            if (grNo.toLowerCase().includes('total') || grNo.toLowerCase().includes('tot')) continue
             
             // Build line with proper spacing and use | as delimiter for better parsing
             const line: string[] = []
             
-            // Get values in the expected order
-            if (columnMap.date !== undefined) line.push(String(row[columnMap.date] || '').trim())
-            if (columnMap.grNo !== undefined) line.push(String(row[columnMap.grNo] || '').trim())
-            if (columnMap.consignor !== undefined) line.push(String(row[columnMap.consignor] || '').trim())
-            if (columnMap.consignorGSTIN !== undefined) line.push(String(row[columnMap.consignorGSTIN] || '').trim())
-            if (columnMap.consignee !== undefined) line.push(String(row[columnMap.consignee] || '').trim())
-            if (columnMap.consigneeGSTIN !== undefined) line.push(String(row[columnMap.consigneeGSTIN] || '').trim())
+            // Add values in the expected order
+            line.push(dateStr) // Date
+            line.push(grNo) // GR No
+            line.push(String(row[columnMap.consignor] || '').trim() || 'Unknown') // Consignor
+            line.push(String(row[columnMap.consignorGSTIN] || '').trim()) // Consignor GSTIN
+            line.push(String(row[columnMap.consignee] || '').trim() || 'Unknown') // Consignee
+            line.push(String(row[columnMap.consigneeGSTIN] || '').trim()) // Consignee GSTIN
+            
+            // Amount - handle various formats
+            let amount = '0'
             if (columnMap.amount !== undefined) {
-              const amt = String(row[columnMap.amount] || '0').trim().replace(/[()]/g, '')
-              line.push(amt)
+              const rawAmount = String(row[columnMap.amount] || '0').trim()
+              amount = rawAmount.replace(/[₹,\s()]/g, '').replace(/[^\d.-]/g, '')
+              if (!amount || amount === '') amount = '0'
             }
-            if (columnMap.sgst !== undefined) line.push(String(row[columnMap.sgst] || '0').trim())
-            if (columnMap.cgst !== undefined) line.push(String(row[columnMap.cgst] || '0').trim())
-            if (columnMap.paidBy !== undefined) line.push(String(row[columnMap.paidBy] || 'EXEMPTED').trim())
+            line.push(amount)
             
-            console.log(`Row ${i}:`, line)
+            line.push(String(row[columnMap.sgst] || '0').trim()) // SGST
+            line.push(String(row[columnMap.cgst] || '0').trim()) // CGST
+            line.push(String(row[columnMap.paidBy] || 'EXEMPTED').trim()) // Paid By
+            line.push(String(row[columnMap.from] || 'JODHPUR').trim()) // From
+            line.push(String(row[columnMap.to] || 'HYDERABAD').trim()) // To
+            line.push(String(row[columnMap.truckNo] || '').trim()) // Truck No
             
-            // Only add if we have at least date and GR number
-            if (line.length >= 2 && line[0] && line[1]) {
-              textLines.push(line.join('|'))  // Use pipe delimiter
-            }
+            // Add line
+            textLines.push(line.join('|'))
+          }
+          
+          if (textLines.length === 0) {
+            reject(new Error('No valid data rows found in Excel file. Please check your data format.'))
+            return
           }
           
           const textData = textLines.join('\n')
-          console.log('Parsed Excel Data:', textData)
           resolve(textData)
         } catch (error: any) {
           reject(new Error(`Failed to parse Excel file: ${error.message}`))
@@ -357,22 +370,33 @@ export function BulkBiltyImport() {
     setResults(null)
 
     try {
-      const bilties = parseBiltyData(data)
+      const parsedData = parseBiltyData(data)
 
-      if (bilties.length === 0) {
+      if (parsedData.bilties.length === 0) {
         toast({
           title: "Error",
-          description: "No valid bilty data found",
+          description: parsedData.errors.length > 0 
+            ? `Failed to parse data:\n${parsedData.errors.slice(0, 5).join('\n')}${parsedData.errors.length > 5 ? `\n...and ${parsedData.errors.length - 5} more errors` : ''}`
+            : "No valid bilty data found",
           variant: "destructive"
         })
         setLoading(false)
         return
       }
 
+      // Show warnings if there were errors
+      if (parsedData.errors.length > 0) {
+        toast({
+          title: "Warning",
+          description: `${parsedData.errors.length} lines could not be parsed. Importing ${parsedData.bilties.length} valid bilties.`,
+          variant: "default"
+        })
+      }
+
       const response = await fetch('/api/bilty/bulk-import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bilties })
+        body: JSON.stringify({ bilties: parsedData.bilties })
       })
 
       const result = await response.json()
@@ -487,6 +511,26 @@ export function BulkBiltyImport() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Instructions */}
+        <Alert className="bg-blue-50 border-blue-200">
+          <AlertDescription className="text-sm space-y-2">
+            <div className="font-semibold text-blue-900">📋 Import Instructions:</div>
+            <div className="text-blue-800">
+              <strong>Excel Format:</strong> Your Excel should have headers in the first row:
+              <div className="ml-4 mt-1 font-mono text-xs">Date | G.R No | Consignor | Consignor GSTIN | Consignee | Consignee GSTIN | Tot.Amt | SGST | CGST | Paid By | From | To | Truck No</div>
+            </div>
+            <div className="text-blue-800">
+              <strong>Date Format:</strong> DD-MM-YYYY (e.g., 07-01-2025)
+            </div>
+            <div className="text-blue-800">
+              <strong>Required Fields:</strong> Date, G.R No, Consignor, Consignee, Tot.Amt
+            </div>
+            <div className="text-blue-800">
+              <strong>Supported Files:</strong> .xlsx, .xls, .csv
+            </div>
+          </AlertDescription>
+        </Alert>
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="paste" className="flex items-center gap-2">
@@ -503,7 +547,7 @@ export function BulkBiltyImport() {
             <div>
               <label className="text-sm font-medium mb-2 block">Paste Bilty Data</label>
               <Textarea
-                placeholder={`Format:\nDate GR.NO Consignor ConsignorGSTIN Consignee ConsigneeGSTIN Amount SGST CGST PaidBy\n\nExample:\n${sampleData}`}
+                placeholder={`Format (space-separated):\nDate GR.NO Consignor ConsignorGSTIN Consignee ConsigneeGSTIN Amount SGST CGST PaidBy From To TruckNo\n\nExample:\n${sampleData}`}
                 value={data}
                 onChange={(e) => setData(e.target.value)}
                 rows={10}

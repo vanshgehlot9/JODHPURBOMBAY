@@ -18,22 +18,43 @@ export async function POST(request: NextRequest) {
 
     for (const biltyData of bilties) {
       try {
-        // Validate required fields
+        // Validate required fields with more detail
         const requiredFields = ["biltyNo", "biltyDate", "consignorName", "consigneeName", "totalAmount"]
-        const missingFields = requiredFields.filter(field => !biltyData[field])
+        const missingFields = requiredFields.filter(field => {
+          const value = biltyData[field]
+          if (field === 'totalAmount') {
+            return !value || value <= 0
+          }
+          return !value || (typeof value === 'string' && value.trim() === '')
+        })
         
         if (missingFields.length > 0) {
           errors.push({
             biltyNo: biltyData.biltyNo || "Unknown",
-            error: `Missing fields: ${missingFields.join(", ")}`
+            error: `Missing or invalid fields: ${missingFields.join(", ")}`
           })
           continue
         }
 
-        // Parse and validate date
+        // Parse and validate date - handle DD-MM-YYYY format
         let biltyDate: Date
         if (biltyData.biltyDate instanceof Date) {
           biltyDate = biltyData.biltyDate
+        } else if (typeof biltyData.biltyDate === 'string') {
+          const dateStr = biltyData.biltyDate.trim()
+          
+          // Try DD-MM-YYYY format
+          if (/^\d{2}-\d{2}-\d{4}$/.test(dateStr)) {
+            const [day, month, year] = dateStr.split('-').map(Number)
+            biltyDate = new Date(year, month - 1, day)
+          } else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+            // Try DD/MM/YYYY format
+            const [day, month, year] = dateStr.split('/').map(Number)
+            biltyDate = new Date(year, month - 1, day)
+          } else {
+            // Try standard date parsing
+            biltyDate = new Date(dateStr)
+          }
         } else {
           biltyDate = new Date(biltyData.biltyDate)
         }
@@ -42,36 +63,51 @@ export async function POST(request: NextRequest) {
         if (isNaN(biltyDate.getTime())) {
           errors.push({
             biltyNo: biltyData.biltyNo || "Unknown",
-            error: `Invalid date: ${biltyData.biltyDate}`
+            error: `Invalid date: ${biltyData.biltyDate}. Please use DD-MM-YYYY format`
           })
           continue
         }
 
+        // Parse numeric fields
+        const parseNum = (val: any): number => {
+          if (typeof val === 'number') return val
+          if (typeof val === 'string') {
+            const cleaned = val.replace(/[₹,\s()]/g, '')
+            const num = parseFloat(cleaned)
+            return isNaN(num) ? 0 : num
+          }
+          return 0
+        }
+
+        const totalAmount = parseNum(biltyData.totalAmount)
+        const sgst = parseNum(biltyData.sgst)
+        const cgst = parseNum(biltyData.cgst)
+
         // Create bilty document
         const bilty = {
-          biltyNo: parseInt(biltyData.biltyNo),
+          biltyNo: parseInt(String(biltyData.biltyNo)),
           biltyDate: Timestamp.fromDate(biltyDate),
-          consignorName: biltyData.consignorName,
-          consignorGSTIN: biltyData.consignorGSTIN || "",
-          consigneeName: biltyData.consigneeName,
-          consigneeGSTIN: biltyData.consigneeGSTIN || "",
-          from: biltyData.from || "JODHPUR",
-          to: biltyData.to || "HYDERABAD",
-          truckNo: biltyData.truckNo || "",
+          consignorName: String(biltyData.consignorName).trim(),
+          consignorGSTIN: String(biltyData.consignorGSTIN || "").trim(),
+          consigneeName: String(biltyData.consigneeName).trim(),
+          consigneeGSTIN: String(biltyData.consigneeGSTIN || "").trim(),
+          from: String(biltyData.from || "JODHPUR").trim(),
+          to: String(biltyData.to || "HYDERABAD").trim(),
+          truckNo: String(biltyData.truckNo || "").trim(),
           items: biltyData.items || [{
             description: "Goods",
             quantity: 1,
             weight: 0,
-            rate: biltyData.totalAmount || 0,
-            freight: biltyData.totalAmount || 0
+            rate: totalAmount,
+            freight: totalAmount
           }],
           charges: {
-            freight: biltyData.totalAmount || 0,
-            sgst: biltyData.sgst || 0,
-            cgst: biltyData.cgst || 0,
-            grandTotal: biltyData.totalAmount || 0
+            freight: totalAmount,
+            sgst: sgst,
+            cgst: cgst,
+            grandTotal: totalAmount
           },
-          paidBy: biltyData.paidBy || "EXEMPTED",
+          paidBy: String(biltyData.paidBy || "EXEMPTED").trim(),
           status: "pending",
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now()
@@ -84,9 +120,10 @@ export async function POST(request: NextRequest) {
           success: true
         })
       } catch (error: any) {
+        console.error('Error processing bilty:', biltyData.biltyNo, error)
         errors.push({
           biltyNo: biltyData.biltyNo || "Unknown",
-          error: error.message
+          error: error.message || 'Unknown error'
         })
       }
     }
