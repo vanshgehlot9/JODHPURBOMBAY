@@ -184,31 +184,22 @@ export function BulkBiltyImport() {
           const columnMap: any = {}
           headers.forEach((header: any, index: number) => {
             if (!header) return
-            const headerStr = String(header).toLowerCase().trim()
-            const headerNoSpace = headerStr.replace(/[.\s]/g, '')
+            const headerStr = String(header).toLowerCase().trim().replace(/[.\s]/g, '')
             
             if (headerStr.includes('date') && !columnMap.date) columnMap.date = index
-            else if ((headerStr.includes('gr') || headerStr.includes('grno') || headerStr.includes('biltyno') || headerStr.includes('bilty no')) && !columnMap.grNo) columnMap.grNo = index
-            // Match "Consignor GSTIN" or "ConsignorGSTIN" or "Consignor GST"
+            else if ((headerStr.includes('gr') || headerStr.includes('grno') || headerStr.includes('biltyno')) && !columnMap.grNo) columnMap.grNo = index
             else if (headerStr.includes('consignor') && (headerStr.includes('gstin') || headerStr.includes('gst'))) columnMap.consignorGSTIN = index
             else if (headerStr.includes('consignor') && !headerStr.includes('gstin') && !headerStr.includes('gst') && !columnMap.consignor) columnMap.consignor = index
-            // Match "Consignee GSTIN" or "ConsigneeGSTIN" or "Consignee GST"
             else if (headerStr.includes('consignee') && (headerStr.includes('gstin') || headerStr.includes('gst'))) columnMap.consigneeGSTIN = index
             else if (headerStr.includes('consignee') && !headerStr.includes('gstin') && !headerStr.includes('gst') && !columnMap.consignee) columnMap.consignee = index
-            else if ((headerStr.includes('tot') && headerStr.includes('amt')) || headerNoSpace.includes('totamt') || headerStr.includes('amount') || headerStr.includes('total')) columnMap.amount = index
+            else if ((headerStr.includes('tot') && headerStr.includes('amt')) || headerStr.includes('totamt') || headerStr.includes('amount') || headerStr.includes('total')) columnMap.amount = index
             else if (headerStr.includes('sgst')) columnMap.sgst = index
             else if (headerStr.includes('cgst')) columnMap.cgst = index
-            else if (headerStr.includes('paid') || headerStr.includes('paidby') || headerStr.includes('paid by')) columnMap.paidBy = index
+            else if (headerStr.includes('paid') || headerStr.includes('paidby')) columnMap.paidBy = index
             else if (headerStr.includes('from') || headerStr.includes('origin')) columnMap.from = index
             else if (headerStr.includes('to') || headerStr.includes('destination') || headerStr.includes('dest')) columnMap.to = index
             else if (headerStr.includes('truck') || headerStr.includes('vehicle')) columnMap.truckNo = index
           })
-          
-          // Debug: Log column mapping
-          if (typeof window !== 'undefined') {
-            console.log('Excel Headers:', headers)
-            console.log('Column Mapping:', columnMap)
-          }
           
           // Validate required columns
           if (columnMap.date === undefined || columnMap.grNo === undefined) {

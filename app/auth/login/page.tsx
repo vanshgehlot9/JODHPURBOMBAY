@@ -47,6 +47,29 @@ export default function LoginPage() {
       {/* Animated Grid Pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(99,102,241,.03)_1px,transparent_1px),linear-gradient(90deg,rgba(99,102,241,.03)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,#000_70%,transparent_110%)]"></div>
       
+      {/* Driving Truck Animation */}
+      <div className="absolute top-20 left-0 w-full h-24 overflow-hidden pointer-events-none">
+        <div className="animate-truck-drive">
+          <div className="flex items-center gap-3">
+            <Truck className="h-16 w-16 text-blue-600/40" />
+            <div className="flex gap-1">
+              <div className="h-2 w-2 rounded-full bg-blue-400/40 animate-pulse" style={{ animationDelay: '0s' }}></div>
+              <div className="h-2 w-2 rounded-full bg-blue-400/40 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+              <div className="h-2 w-2 rounded-full bg-blue-400/40 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Road Lines Animation */}
+      <div className="absolute top-32 left-0 w-full h-1 overflow-hidden pointer-events-none opacity-30">
+        <div className="animate-road-lines flex gap-8">
+          {[...Array(20)].map((_, i) => (
+            <div key={i} className="h-1 w-12 bg-gray-400"></div>
+          ))}
+        </div>
+      </div>
+      
       {/* Floating Gradient Orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400/20 rounded-full blur-3xl animate-float"></div>

@@ -142,11 +142,36 @@ const LedgerPage = () => {
       <div className="flex-1 flex flex-col">
         <Header title="Ledger" subtitle="Generate and view account ledgers" />
         <main className="flex-1 p-6 space-y-6">
+          {/* Animated Header Banner */}
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-8 shadow-xl animate-in slide-up">
+            <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,rgba(255,255,255,0.6))]"></div>
+            <div className="relative flex items-center justify-between">
+              <div className="space-y-2">
+                <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+                  <BookOpen className="h-8 w-8 animate-pulse" />
+                  Account Ledger
+                </h2>
+                <p className="text-emerald-50/90 text-sm">Track debits, credits, and balances with detailed insights</p>
+              </div>
+              <div className="hidden md:flex gap-2">
+                <div className="animate-slide-document opacity-60">
+                  <div className="w-16 h-20 bg-white/20 backdrop-blur-sm rounded-lg border border-white/30 shadow-lg"></div>
+                </div>
+                <div className="animate-slide-document opacity-40" style={{ animationDelay: '1s' }}>
+                  <div className="w-16 h-20 bg-white/20 backdrop-blur-sm rounded-lg border border-white/30 shadow-lg"></div>
+                </div>
+                <div className="animate-slide-document opacity-20" style={{ animationDelay: '2s' }}>
+                  <div className="w-16 h-20 bg-white/20 backdrop-blur-sm rounded-lg border border-white/30 shadow-lg"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Filters Card */}
-          <Card>
+          <Card className="card-hover animate-in slide-up" style={{ animationDelay: '100ms' }}>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
+                <BookOpen className="h-5 w-5 text-emerald-600" />
                 Ledger Filters
               </CardTitle>
               <CardDescription>
@@ -194,15 +219,20 @@ const LedgerPage = () => {
               </div>
               <Separator />
               <div className="flex flex-wrap gap-2">
-                <Button onClick={fetchLedger} disabled={loading}>
+                <Button onClick={fetchLedger} disabled={loading} className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
                   <Search className="h-4 w-4 mr-2" />
-                  {loading ? "Generating..." : "Generate Ledger"}
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
+                      Generating...
+                    </div>
+                  ) : "Generate Ledger"}
                 </Button>
-                <Button variant="outline" onClick={handleExport} disabled={rows.length === 0 || exportOpen}>
+                <Button variant="outline" onClick={handleExport} disabled={rows.length === 0 || exportOpen} className="border-emerald-200 hover:bg-emerald-50">
                   <Download className="h-4 w-4 mr-2" />
                   {exportOpen ? "Exporting..." : "Export to Excel"}
                 </Button>
-                <Button variant="outline" onClick={clearFilters}>
+                <Button variant="outline" onClick={clearFilters} className="border-gray-200 hover:bg-gray-50">
                   <X className="h-4 w-4 mr-2" />
                   Clear Filters
                 </Button>
@@ -212,7 +242,7 @@ const LedgerPage = () => {
 
           {/* Error Display */}
           {error && (
-            <Card className="border-red-200">
+            <Card className="border-red-200 animate-in slide-up">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2 text-red-600">
                   <X className="h-4 w-4" />
@@ -224,10 +254,10 @@ const LedgerPage = () => {
 
           {/* Summary Card */}
           {summary && (
-            <Card>
+            <Card className="card-hover animate-in slide-up" style={{ animationDelay: '200ms' }}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
+                  <TrendingUp className="h-5 w-5 text-emerald-600" />
                   Ledger Summary
                 </CardTitle>
                 <CardDescription>
@@ -237,29 +267,29 @@ const LedgerPage = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="text-center p-4 bg-gray-50 rounded-lg border">
-                    <div className="text-2xl font-bold text-gray-600">
+                  <div className="text-center p-6 bg-gradient-to-br from-gray-50 to-slate-100 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 animate-counter-up" style={{ animationDelay: '0ms' }}>
+                    <div className="text-3xl font-bold text-gray-700 mb-1">
                       ₹{summary.openingBalance.toFixed(2)}
                     </div>
-                    <div className="text-sm text-gray-600">Opening Balance</div>
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Opening Balance</div>
                   </div>
-                  <div className="text-center p-4 bg-red-50 rounded-lg border">
-                    <div className="text-2xl font-bold text-red-600">
+                  <div className="text-center p-6 bg-gradient-to-br from-red-50 to-rose-100 rounded-xl border border-red-200 shadow-sm hover:shadow-md transition-all duration-300 animate-counter-up" style={{ animationDelay: '100ms' }}>
+                    <div className="text-3xl font-bold text-red-600 mb-1">
                       ₹{summary.totalDebit.toFixed(2)}
                     </div>
-                    <div className="text-sm text-red-600">Total Debit</div>
+                    <div className="text-xs font-semibold text-red-500 uppercase tracking-wide">Total Debit</div>
                   </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg border">
-                    <div className="text-2xl font-bold text-green-600">
+                  <div className="text-center p-6 bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl border border-green-200 shadow-sm hover:shadow-md transition-all duration-300 animate-counter-up" style={{ animationDelay: '200ms' }}>
+                    <div className="text-3xl font-bold text-green-600 mb-1">
                       ₹{summary.totalCredit.toFixed(2)}
                     </div>
-                    <div className="text-sm text-green-600">Total Credit</div>
+                    <div className="text-xs font-semibold text-green-500 uppercase tracking-wide">Total Credit</div>
                   </div>
-                  <div className="text-center p-4 bg-blue-50 rounded-lg border">
-                    <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-cyan-100 rounded-xl border border-blue-200 shadow-sm hover:shadow-md transition-all duration-300 animate-counter-up" style={{ animationDelay: '300ms' }}>
+                    <div className="text-3xl font-bold text-blue-600 mb-1">
                       ₹{summary.closingBalance.toFixed(2)}
                     </div>
-                    <div className="text-sm text-blue-600">Closing Balance</div>
+                    <div className="text-xs font-semibold text-blue-500 uppercase tracking-wide">Closing Balance</div>
                   </div>
                 </div>
               </CardContent>
