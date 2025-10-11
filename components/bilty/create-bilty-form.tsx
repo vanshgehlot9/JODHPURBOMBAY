@@ -57,6 +57,7 @@ interface Suggestion {
   displayTruckNo?: string
   lastConsignor?: string
   lastConsignee?: string
+  score?: number
 }
 
 export function CreateBiltyForm() {
@@ -161,22 +162,38 @@ export function CreateBiltyForm() {
     })
   }
 
-  // Fetch suggestions
-  const fetchSuggestions = async (type: 'consignor' | 'consignee' | 'truck', searchTerm: string) => {
-    if (searchTerm.length < 2) {
-      if (type === 'consignor') setConsignorSuggestions([])
-      if (type === 'consignee') setConsigneeSuggestions([])
-      if (type === 'truck') setTruckSuggestions([])
+  // Fetch suggestions with fuzzy matching
+  const fetchSuggestions = async (field: string, searchTerm: string) => {
+    if (searchTerm.length < 1) {
+      if (field === 'consignor') setConsignorSuggestions([])
+      if (field === 'consignee') setConsigneeSuggestions([])
+      if (field === 'truck') setTruckSuggestions([])
       return
     }
 
     try {
-      const response = await fetch(`/api/bilty/suggestions?type=${type}&search=${encodeURIComponent(searchTerm)}`)
+      const response = await fetch(`/api/bilty/suggestions?field=${field}&q=${encodeURIComponent(searchTerm)}`)
       if (response.ok) {
         const data = await response.json()
-        if (type === 'consignor') setConsignorSuggestions(data.suggestions || [])
-        if (type === 'consignee') setConsigneeSuggestions(data.suggestions || [])
-        if (type === 'truck') setTruckSuggestions(data.suggestions || [])
+        const mappedSuggestions = (data.suggestions || []).map((s: any) => {
+          if (field === 'consignor' || field === 'consignee') {
+            return {
+              displayName: s.value,
+              displayGst: '', // We'll handle GST separately
+              score: s.score
+            }
+          } else if (field === 'truck') {
+            return {
+              displayTruckNo: s.value,
+              score: s.score
+            }
+          }
+          return s
+        })
+        
+        if (field === 'consignor') setConsignorSuggestions(mappedSuggestions)
+        if (field === 'consignee') setConsigneeSuggestions(mappedSuggestions)
+        if (field === 'truck') setTruckSuggestions(mappedSuggestions)
       }
     } catch (error) {
       console.error('Failed to fetch suggestions:', error)
@@ -357,20 +374,39 @@ export function CreateBiltyForm() {
                     required
                   />
                   {showTruckSuggestions && truckSuggestions.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-auto">
+                      <div className="px-3 py-2 bg-gradient-to-r from-orange-50 to-amber-50 border-b border-orange-200">
+                        <span className="text-xs font-semibold text-orange-700 uppercase tracking-wide flex items-center gap-1">
+                          <Truck className="h-3 w-3" />
+                          Similar Trucks ({truckSuggestions.length})
+                        </span>
+                      </div>
                       {truckSuggestions.map((suggestion, idx) => (
                         <button
                           key={idx}
                           type="button"
                           onClick={() => handleTruckSelect(suggestion)}
-                          className="w-full px-4 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0"
+                          className="w-full px-4 py-3 text-left hover:bg-gradient-to-r hover:from-orange-50 hover:to-amber-50 focus:bg-orange-50 focus:outline-none border-b border-gray-100 last:border-b-0 transition-all duration-150 group"
                         >
-                          <div className="font-medium text-gray-900">{suggestion.displayTruckNo}</div>
-                          {suggestion.lastConsignor && (
-                            <div className="text-xs text-gray-500">
-                              Last used: {suggestion.lastConsignor} → {suggestion.lastConsignee}
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-900 group-hover:text-orange-700 transition-colors font-mono">
+                                {suggestion.displayTruckNo}
+                              </div>
+                              {suggestion.lastConsignor && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  <span className="bg-gray-100 px-2 py-0.5 rounded">
+                                    Last: {suggestion.lastConsignor} → {suggestion.lastConsignee}
+                                  </span>
+                                </div>
+                              )}
                             </div>
-                          )}
+                            {suggestion.score && suggestion.score > 80 && (
+                              <Badge variant="outline" className="ml-2 text-xs bg-orange-50 text-orange-700 border-orange-200">
+                                {suggestion.score >= 100 ? 'Exact' : suggestion.score >= 90 ? 'High' : 'Match'}
+                              </Badge>
+                            )}
+                          </div>
                         </button>
                       ))}
                     </div>
@@ -446,18 +482,36 @@ export function CreateBiltyForm() {
                         required
                       />
                       {showConsignorSuggestions && consignorSuggestions.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-auto">
+                          <div className="px-3 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200">
+                            <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
+                              Similar Entries ({consignorSuggestions.length})
+                            </span>
+                          </div>
                           {consignorSuggestions.map((suggestion, idx) => (
                             <button
                               key={idx}
                               type="button"
                               onClick={() => handleConsignorSelect(suggestion)}
-                              className="w-full px-4 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0"
+                              className="w-full px-4 py-3 text-left hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0 transition-all duration-150 group"
                             >
-                              <div className="font-medium text-gray-900">{suggestion.displayName}</div>
-                              {suggestion.displayGst && (
-                                <div className="text-xs text-gray-500">GST: {suggestion.displayGst}</div>
-                              )}
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">
+                                    {suggestion.displayName}
+                                  </div>
+                                  {suggestion.displayGst && (
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">GST: {suggestion.displayGst}</span>
+                                    </div>
+                                  )}
+                                </div>
+                                {suggestion.score && suggestion.score > 80 && (
+                                  <Badge variant="outline" className="ml-2 text-xs bg-green-50 text-green-700 border-green-200">
+                                    {suggestion.score >= 100 ? 'Exact' : suggestion.score >= 90 ? 'High' : 'Match'}
+                                  </Badge>
+                                )}
+                              </div>
                             </button>
                           ))}
                         </div>
@@ -502,18 +556,36 @@ export function CreateBiltyForm() {
                         required
                       />
                       {showConsigneeSuggestions && consigneeSuggestions.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-auto">
+                          <div className="px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200">
+                            <span className="text-xs font-semibold text-green-700 uppercase tracking-wide">
+                              Similar Entries ({consigneeSuggestions.length})
+                            </span>
+                          </div>
                           {consigneeSuggestions.map((suggestion, idx) => (
                             <button
                               key={idx}
                               type="button"
                               onClick={() => handleConsigneeSelect(suggestion)}
-                              className="w-full px-4 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0"
+                              className="w-full px-4 py-3 text-left hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 focus:bg-green-50 focus:outline-none border-b border-gray-100 last:border-b-0 transition-all duration-150 group"
                             >
-                              <div className="font-medium text-gray-900">{suggestion.displayName}</div>
-                              {suggestion.displayGst && (
-                                <div className="text-xs text-gray-500">GST: {suggestion.displayGst}</div>
-                              )}
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="font-medium text-gray-900 group-hover:text-green-700 transition-colors">
+                                    {suggestion.displayName}
+                                  </div>
+                                  {suggestion.displayGst && (
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">GST: {suggestion.displayGst}</span>
+                                    </div>
+                                  )}
+                                </div>
+                                {suggestion.score && suggestion.score > 80 && (
+                                  <Badge variant="outline" className="ml-2 text-xs bg-green-50 text-green-700 border-green-200">
+                                    {suggestion.score >= 100 ? 'Exact' : suggestion.score >= 90 ? 'High' : 'Match'}
+                                  </Badge>
+                                )}
+                              </div>
                             </button>
                           ))}
                         </div>
