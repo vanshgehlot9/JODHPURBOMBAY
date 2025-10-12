@@ -21,12 +21,14 @@ import {
   Truck,
   Download,
   LogOut,
+  Building2,
 } from "lucide-react"
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Create Bilty", href: "/bilty/create", icon: FileText },
   { name: "View Bilties", href: "/bilty/view", icon: FileText },
+  { name: "Parties", href: "/parties", icon: Building2 },
   { name: "Payment Reminder", href: "/payment-reminder", icon: Bell },
   { name: "E-way Bill", href: "/eway-bill", icon: Receipt },
   { name: "Ledger", href: "/ledger", icon: BookOpen },

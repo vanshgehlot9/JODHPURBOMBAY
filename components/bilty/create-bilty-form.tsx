@@ -172,28 +172,32 @@ export function CreateBiltyForm() {
     }
 
     try {
-      const response = await fetch(`/api/bilty/suggestions?field=${field}&q=${encodeURIComponent(searchTerm)}`)
-      if (response.ok) {
-        const data = await response.json()
-        const mappedSuggestions = (data.suggestions || []).map((s: any) => {
-          if (field === 'consignor' || field === 'consignee') {
-            return {
-              displayName: s.value,
-              displayGst: '', // We'll handle GST separately
-              score: s.score
-            }
-          } else if (field === 'truck') {
-            return {
-              displayTruckNo: s.value,
-              score: s.score
-            }
-          }
-          return s
-        })
-        
-        if (field === 'consignor') setConsignorSuggestions(mappedSuggestions)
-        if (field === 'consignee') setConsigneeSuggestions(mappedSuggestions)
-        if (field === 'truck') setTruckSuggestions(mappedSuggestions)
+      // For consignor and consignee, fetch from parties database
+      if (field === 'consignor' || field === 'consignee') {
+        const response = await fetch(`/api/parties?search=${encodeURIComponent(searchTerm)}`)
+        if (response.ok) {
+          const data = await response.json()
+          const mappedSuggestions = (data.parties || []).map((party: any) => ({
+            displayName: party.name,
+            displayGst: party.gstin,
+            score: 100 // Exact matches from database
+          }))
+          
+          if (field === 'consignor') setConsignorSuggestions(mappedSuggestions)
+          if (field === 'consignee') setConsigneeSuggestions(mappedSuggestions)
+        }
+      } 
+      // For truck, use the existing fuzzy matching
+      else if (field === 'truck') {
+        const response = await fetch(`/api/bilty/suggestions?field=${field}&q=${encodeURIComponent(searchTerm)}`)
+        if (response.ok) {
+          const data = await response.json()
+          const mappedSuggestions = (data.suggestions || []).map((s: any) => ({
+            displayTruckNo: s.value,
+            score: s.score
+          }))
+          setTruckSuggestions(mappedSuggestions)
+        }
       }
     } catch (error) {
       console.error('Failed to fetch suggestions:', error)
@@ -246,6 +250,44 @@ export function CreateBiltyForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate GST numbers
+    if (!formData.consignorGst.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Consignor GST number is required",
+        variant: "destructive",
+      })
+      return
+    }
+    
+    if (!formData.consigneeGst.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Consignee GST number is required",
+        variant: "destructive",
+      })
+      return
+    }
+    
+    if (formData.consignorGst.length !== 15) {
+      toast({
+        title: "Validation Error",
+        description: "Consignor GST must be exactly 15 characters",
+        variant: "destructive",
+      })
+      return
+    }
+    
+    if (formData.consigneeGst.length !== 15) {
+      toast({
+        title: "Validation Error",
+        description: "Consignee GST must be exactly 15 characters",
+        variant: "destructive",
+      })
+      return
+    }
+    
     setLoading(true)
 
     try {
@@ -446,14 +488,24 @@ export function CreateBiltyForm() {
         {/* Parties Information */}
         <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
           <CardHeader className="bg-gradient-to-r from-green-50/50 to-transparent border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Users className="h-5 w-5 text-green-600" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Users className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Parties Information</CardTitle>
+                  <CardDescription>Start typing to see parties from your database</CardDescription>
+                </div>
               </div>
-              <div>
-                <CardTitle className="text-xl">Parties Information</CardTitle>
-                <CardDescription>Consignor and consignee details</CardDescription>
-              </div>
+              <a 
+                href="/parties" 
+                target="_blank"
+                className="text-sm text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1"
+              >
+                <Plus className="h-4 w-4" />
+                Add New Party
+              </a>
             </div>
           </CardHeader>
           <CardContent className="pt-6">
@@ -485,7 +537,7 @@ export function CreateBiltyForm() {
                         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-auto">
                           <div className="px-3 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200">
                             <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
-                              Similar Entries ({consignorSuggestions.length})
+                              Party Database ({consignorSuggestions.length})
                             </span>
                           </div>
                           {consignorSuggestions.map((suggestion, idx) => (
@@ -520,14 +572,16 @@ export function CreateBiltyForm() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="consignorGst" className="text-sm font-medium text-gray-700">
-                      Consignor GST
+                      Consignor GST <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="consignorGst"
                       value={formData.consignorGst}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, consignorGst: e.target.value }))}
-                      placeholder="GST number (optional)"
-                      className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      onChange={(e) => setFormData((prev) => ({ ...prev, consignorGst: e.target.value.toUpperCase() }))}
+                      placeholder="15-digit GST number"
+                      maxLength={15}
+                      className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                      required
                     />
                   </div>
                 </div>
@@ -559,7 +613,7 @@ export function CreateBiltyForm() {
                         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-auto">
                           <div className="px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200">
                             <span className="text-xs font-semibold text-green-700 uppercase tracking-wide">
-                              Similar Entries ({consigneeSuggestions.length})
+                              Party Database ({consigneeSuggestions.length})
                             </span>
                           </div>
                           {consigneeSuggestions.map((suggestion, idx) => (
@@ -594,14 +648,16 @@ export function CreateBiltyForm() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="consigneeGst" className="text-sm font-medium text-gray-700">
-                      Consignee GST
+                      Consignee GST <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="consigneeGst"
                       value={formData.consigneeGst}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, consigneeGst: e.target.value }))}
-                      placeholder="GST number (optional)"
-                      className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      onChange={(e) => setFormData((prev) => ({ ...prev, consigneeGst: e.target.value.toUpperCase() }))}
+                      placeholder="15-digit GST number"
+                      maxLength={15}
+                      className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                      required
                     />
                   </div>
                 </div>

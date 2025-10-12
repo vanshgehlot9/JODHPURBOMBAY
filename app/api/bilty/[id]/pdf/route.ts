@@ -183,17 +183,17 @@ async function drawBiltyCopy(
       pdf.setFontSize(7);  // Increased font size from 6 to 7
       
       const quantity = item.quantity ? String(item.quantity) : "0";
-      const description = item.goodsDescription ? String(item.goodsDescription).substring(0, 30) : "";
+      const description = item.goodsDescription ? String(item.goodsDescription).substring(0, 20) : "";
       const weight = item.weight ? String(item.weight) : "0";
       const chargedWeight = item.chargedWeight ? String(item.chargedWeight) : weight;
       const rate = item.rate ? String(item.rate) : "";
       
-      // Fill items with positioning matching table definition (tableX = 5, full 200mm width)
-      safeText(pdf, quantity, tableX + 8, currentY, { align: "center" });         // Pkgs 
-      safeText(pdf, description, tableX + 18, currentY);                          // Description
-      safeText(pdf, weight, tableX + 74, currentY, { align: "center" });          // Act.Wt
-      safeText(pdf, chargedWeight, tableX + 92, currentY, { align: "center" });   // Chg.Wt  
-      safeText(pdf, rate, tableX + 110, currentY, { align: "center" });           // Rate
+      // Fill items with NEW column positions - using calculated centers
+      safeText(pdf, quantity, tableX + 8, currentY, { align: "center" });              // Pkgs 
+      safeText(pdf, description, tableX + 20, currentY);                               // Description
+      safeText(pdf, weight, 71.5, currentY, { align: "center" });                      // Act.Wt (center between 60 and 83)
+      safeText(pdf, chargedWeight, 92, currentY, { align: "center" });                 // Chg.Wt (center between 83 and 101)
+      safeText(pdf, rate, 110, currentY, { align: "center" });                         // Rate (center between 101 and 119)
       
       currentY += 10; // Increased line spacing from 7 to 10 for much better visibility
     });
@@ -229,10 +229,10 @@ async function drawBiltyCopy(
     safeText(pdf, bilty.goodsValue.toString(), tableX + 25, unifiedSectionY + 4);
   }
   
-    // Fill charges section
+    // Fill charges section - ALIGNED WITH NEW LAYOUT
   if (bilty.charges) {
     const charges = bilty.charges;
-    pdf.setFontSize(6);  // Increased font size from 5 to 6
+    pdf.setFontSize(6.5);  // Match the label font size
     
     const formatAmount = (value: number | string | undefined) => {
       if (value === null || value === undefined) return "0.00";
@@ -244,22 +244,22 @@ async function drawBiltyCopy(
       }
     };
     
-    // Fill charge values directly from charges object - no calculations
-    const chargesValueX = pageWidth - 10; // Right edge matches header section
+    // Right-aligned charges values
+    const chargesValueX = pageWidth - 7; // Right side of charges column
     
     const chargesValues = [
       charges.freight || 0, charges.pf || 0, charges.lc || 0, charges.bc || 0,
       charges.total || 0, charges.cgst || 0, charges.sgst || 0, charges.grandTotal || 0
     ];
     
-    // Position charges values - PROFESSIONAL STYLING - Match labels positioning
-    // Calculate headerY to match the table layout (from drawBiltyForm)
+    // Position charges values to match the new label layout
     const partyInfoHeight = 15;
     const itemsHeaderHeight = 6;
     const headerY = tableY + partyInfoHeight + itemsHeaderHeight;
+    const chargeLineSpacing = 3.5;
     
     chargesValues.forEach((value, i) => {
-      const yPos = headerY + 2 + (i * 3.5);  // Optimized spacing from 3.5 to 2.2 to fit within table boundaries
+      const yPos = headerY + 2 + (i * chargeLineSpacing);
       const isBold = i === 4 || i === 7; // Total and G.Total
       
       if (isBold) {
@@ -435,19 +435,23 @@ async function drawBiltyForm(
   const itemsStartY = tableY + partyInfoHeight;
   
   // Column positions (relative to tableX) - proportional to 200mm width
-  const col1 = tableX + 16;   // After Pkgs (16mm wide)
-  const col2 = tableX + 150;   // After Description (49mm wide - much larger)  
-  const col3 = tableX + 83;   // After Act.Wt (18mm wide)
-  const col4 = tableX + 101;  // After Chg.Wt (18mm wide)
-  const col5 = tableX + 60;  // After Rate (18mm wide)
-  // Charges section: remaining 81mm wide (from col5 to table end)
+  const col1 = tableX + 16;    // After Pkgs (16mm wide)
+  const col2 = tableX + 60;    // After Description (44mm wide)  
+  const col3 = tableX + 83;    // After Act.Wt (23mm wide)
+  const col4 = tableX + 101;   // After Chg.Wt (18mm wide)
+  const col5 = tableX + 119;   // After Rate (18mm wide)
+  // Charges section: remaining width (from col5 to table end = pageWidth - 5)
   
-  // Draw vertical lines for items columns
+  // Draw vertical lines for items columns - ALL THE WAY DOWN
   pdf.line(col1, itemsStartY, col1, itemsStartY + itemsHeaderHeight + itemsDataHeight);
   pdf.line(col2, itemsStartY, col2, itemsStartY + itemsHeaderHeight + itemsDataHeight);
   pdf.line(col3, itemsStartY, col3, itemsStartY + itemsHeaderHeight + itemsDataHeight);
   pdf.line(col4, itemsStartY, col4, itemsStartY + itemsHeaderHeight + itemsDataHeight);
   pdf.line(col5, itemsStartY, col5, itemsStartY + itemsHeaderHeight + itemsDataHeight);
+  
+  // Charges section main divider (vertical line separating charges from items)
+  // This creates the border between Rate column and Charges section
+  // No additional divider needed - charges are in one section
   
   // STEP 4: Add labels
   pdf.setFontSize(7);  // Increased font size for better readability
@@ -463,25 +467,28 @@ async function drawBiltyForm(
   pdf.setTextColor(0, 32, 96);  // Professional blue
   
   safeText(pdf, "Pkgs", tableX + 8, headerY - 2, { align: "center" });
-  safeText(pdf, "DESCRIPTION", tableX + 40, headerY - 2, { align: "center" });
-  safeText(pdf, "Act.Wt", tableX + 74, headerY - 2, { align: "center" });
-  safeText(pdf, "Chg.Wt", tableX + 92, headerY - 2, { align: "center" });
-  safeText(pdf, "Rate", tableX + 110, headerY - 2, { align: "center" });
-  safeText(pdf, "CHARGES", tableX + 150, headerY - 2, { align: "center" });
+  safeText(pdf, "DESCRIPTION", (tableX + col2) / 2, headerY - 2, { align: "center" });
+  safeText(pdf, "Act.Wt", (col2 + col3) / 2, headerY - 2, { align: "center" });
+  safeText(pdf, "Chg.Wt", (col3 + col4) / 2, headerY - 2, { align: "center" });
+  safeText(pdf, "Rate", (col4 + col5) / 2, headerY - 2, { align: "center" });
+  safeText(pdf, "CHARGES", (col5 + pageWidth - 5) / 2, headerY - 2, { align: "center" });
   
   // Reset color and font
   pdf.setTextColor(0, 0, 0);
   pdf.setFont("helvetica", "normal");
   
-  // Charges breakdown - PROFESSIONAL STYLING
+  // Charges breakdown - PROFESSIONAL STYLING WITH HORIZONTAL LINES
   const chargeItems = ["Freight", "P.F.", "L.C.", "B.C.", "Total", "CGST", "SGST", "G.Total"];
-  pdf.setFontSize(7);  // Increased for better readability
+  pdf.setFontSize(6.5);  // Slightly smaller to fit better
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(64, 64, 64);  // Professional gray
   
+  const chargeLineSpacing = 3.5;
+  
   chargeItems.forEach((label, i) => {
-    const yPos = headerY + 2 + (i * 3.5);  // Optimized spacing from 3.5 to 2.2 to fit within table boundaries
+    const yPos = headerY + 2 + (i * chargeLineSpacing);
     const isBold = label === "Total" || label === "G.Total";
+    
     if (isBold) {
       pdf.setFont("helvetica", "bold");
       pdf.setTextColor(0, 32, 96);  // Blue for totals
@@ -489,8 +496,21 @@ async function drawBiltyForm(
       pdf.setFont("helvetica", "normal");
       pdf.setTextColor(64, 64, 64);  // Gray for regular items
     }
-    safeText(pdf, label, tableX + 125, yPos);
+    
+    // Draw label
+    safeText(pdf, label, col5 + 2, yPos);
+    
+    // Draw horizontal line after each charge item
+    if (i < chargeItems.length - 1) {
+      pdf.setDrawColor(200, 200, 200); // Light gray
+      pdf.setLineWidth(0.1);
+      pdf.line(col5, yPos + 1, pageWidth - 5, yPos + 1);
+    }
   });
+  
+  // Reset drawing color
+  pdf.setDrawColor(0, 0, 0);
+  pdf.setLineWidth(0.2);
   
   // Reset color and font
   pdf.setTextColor(0, 0, 0);

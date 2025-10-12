@@ -17,6 +17,19 @@ import {
 } from "firebase/firestore"
 import { db } from "./firebase"
 
+export interface Party {
+  id?: string
+  name: string
+  gstin: string
+  type?: 'consignor' | 'consignee' | 'both'
+  address?: string
+  contactPerson?: string
+  phone?: string
+  email?: string
+  createdAt: Date | Timestamp
+  updatedAt: Date | Timestamp
+}
+
 export interface BiltyItem {
   quantity: number
   goodsDescription: string
@@ -285,4 +298,95 @@ export async function getAllChallans(): Promise<any[]> {
     console.error("Error fetching challans:", error);
     throw error;
   }
+}
+
+// ============ PARTY MANAGEMENT ============
+
+// Create a new party
+export async function createParty(
+  partyData: Omit<Party, "id" | "createdAt" | "updatedAt">
+): Promise<string> {
+  // Filter out undefined values
+  const cleanedData: any = {
+    name: partyData.name,
+    gstin: partyData.gstin,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+  
+  // Only add optional fields if they have values
+  if (partyData.type) cleanedData.type = partyData.type;
+  if (partyData.address) cleanedData.address = partyData.address;
+  if (partyData.contactPerson) cleanedData.contactPerson = partyData.contactPerson;
+  if (partyData.phone) cleanedData.phone = partyData.phone;
+  if (partyData.email) cleanedData.email = partyData.email;
+  
+  const docRef = await addDoc(collection(db, "parties"), cleanedData);
+  return docRef.id;
+}
+
+// Get all parties
+export async function getAllParties(): Promise<Party[]> {
+  try {
+    const q = query(collection(db, "parties"), orderBy("name", "asc"));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Party[];
+  } catch (error) {
+    console.error("Error fetching parties:", error);
+    throw error;
+  }
+}
+
+// Get party by ID
+export async function getPartyById(id: string): Promise<Party | null> {
+  try {
+    const docRef = doc(db, "parties", id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() } as Party;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching party:", error);
+    return null;
+  }
+}
+
+// Search parties by name or GSTIN
+export async function searchParties(searchTerm: string): Promise<Party[]> {
+  try {
+    const partiesRef = collection(db, "parties");
+    const snapshot = await getDocs(partiesRef);
+    
+    const searchLower = searchTerm.toLowerCase();
+    const filtered = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() } as Party))
+      .filter(party => 
+        party.name.toLowerCase().includes(searchLower) ||
+        party.gstin.toLowerCase().includes(searchLower)
+      );
+    
+    return filtered;
+  } catch (error) {
+    console.error("Error searching parties:", error);
+    return [];
+  }
+}
+
+// Update party
+export async function updateParty(id: string, partyData: Partial<Party>): Promise<void> {
+  const partyRef = doc(db, "parties", id);
+  await updateDoc(partyRef, {
+    ...partyData,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+// Delete party
+export async function deleteParty(id: string): Promise<void> {
+  const partyRef = doc(db, "parties", id);
+  await deleteDoc(partyRef);
 }
