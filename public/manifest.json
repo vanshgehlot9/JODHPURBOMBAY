@@ -1,0 +1,41 @@
+{
+  "name": "JBRC - Jodhpur Bombay Road Carrier",
+  "short_name": "JBRC",
+  "description": "Bilty Management System for Transport Business",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/images/truck.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/truck.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Create Bilty",
+      "short_name": "New Bilty",
+      "description": "Create a new bilty document",
+      "url": "/bilty/create",
+      "icons": [{ "src": "/images/truck.jpeg", "sizes": "96x96" }]
+    },
+    {
+      "name": "View Bilties",
+      "short_name": "Bilties",
+      "description": "View all bilty documents",
+      "url": "/bilty/view",
+      "icons": [{ "src": "/images/truck.jpeg", "sizes": "96x96" }]
+    }
+  ]
+}

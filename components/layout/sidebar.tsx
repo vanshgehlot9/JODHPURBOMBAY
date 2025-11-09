@@ -30,7 +30,7 @@ const navigation = [
   { name: "View Bilties", href: "/bilty/view", icon: FileText },
   { name: "Parties", href: "/parties", icon: Building2 },
   { name: "Payment Reminder", href: "/payment-reminder", icon: Bell },
-  { name: "E-way Bill", href: "/eway-bill", icon: Receipt },
+  { name: "E-way Bill", href: "https://ewaybillgst.gov.in/mainmenu.aspx", icon: Receipt, external: true },
   { name: "Ledger", href: "/ledger", icon: BookOpen },
   { name: "Statement", href: "/statements", icon: BarChart3 },
   { name: "Challan", href: "/challan", icon: Truck },
@@ -91,6 +91,27 @@ export function Sidebar() {
             <nav className="space-y-2">
               {navigation.map((item) => {
                 const isActive = pathname === item.href
+                const isExternal = item.external
+                
+                if (isExternal) {
+                  return (
+                    <a
+                      key={item.name}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setIsOpen(false)}
+                      className={cn(
+                        "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                        "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      )}
+                    >
+                      <item.icon className="mr-3 h-5 w-5" />
+                      {item.name}
+                    </a>
+                  )
+                }
+                
                 return (
                   <Link
                     key={item.name}

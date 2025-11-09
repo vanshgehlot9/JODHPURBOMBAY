@@ -183,17 +183,18 @@ async function drawBiltyCopy(
       pdf.setFontSize(7);  // Increased font size from 6 to 7
       
       const quantity = item.quantity ? String(item.quantity) : "0";
-      const description = item.goodsDescription ? String(item.goodsDescription).substring(0, 20) : "";
+      const description = item.goodsDescription ? String(item.goodsDescription).substring(0, 30) : "";
       const weight = item.weight ? String(item.weight) : "0";
       const chargedWeight = item.chargedWeight ? String(item.chargedWeight) : weight;
       const rate = item.rate ? String(item.rate) : "";
       
-      // Fill items with NEW column positions - using calculated centers
-      safeText(pdf, quantity, tableX + 8, currentY, { align: "center" });              // Pkgs 
-      safeText(pdf, description, tableX + 20, currentY);                               // Description
-      safeText(pdf, weight, 71.5, currentY, { align: "center" });                      // Act.Wt (center between 60 and 83)
-      safeText(pdf, chargedWeight, 92, currentY, { align: "center" });                 // Chg.Wt (center between 83 and 101)
-      safeText(pdf, rate, 110, currentY, { align: "center" });                         // Rate (center between 101 and 119)
+      // Column positions: col1=21, col2=90, col3=110, col4=128, col5=146
+      // Fill items with UPDATED column positions - matching new layout
+      safeText(pdf, quantity, tableX + 8, currentY, { align: "center" });              // Pkgs (center in first column)
+      safeText(pdf, description, tableX + 18, currentY);                               // Description (left aligned in wider column)
+      safeText(pdf, weight, 95, currentY, { align: "center" });                        // Act.Wt (center between col2=90 and col3=110)
+      safeText(pdf, chargedWeight, 114, currentY, { align: "center" });                // Chg.Wt (center between col3=110 and col4=128)
+      safeText(pdf, rate, 132, currentY, { align: "center" });                         // Rate (center between col4=128 and col5=146)
       
       currentY += 10; // Increased line spacing from 7 to 10 for much better visibility
     });
@@ -339,12 +340,45 @@ async function drawBiltyForm(
   pdf.setTextColor(0, 0, 0);
   pdf.setFont("helvetica", "normal");
   
-  // Company name header - WITH MORE SPACING FROM JURISDICTION TEXT
-  pdf.setFontSize(17);
+  // Company name header - WITH COLORFUL TEXT LIKE CHALLAN
+  pdf.setFontSize(15);  // Reduced from 17 to 15 for better fit
   pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(0, 32, 96);
   const headerX = trueCenterX - 10;
-  safeText(pdf, "JODHPUR BOMBAY ROAD CARRIER", headerX, yOffset + 16, { align: "center" });
+  
+  // Calculate text widths for proper spacing
+  const word1 = "JODHPUR ";
+  const word2 = "BOMBAY ";
+  const word3 = "ROAD ";
+  const word4 = "CARRIER";
+  
+  const word1Width = pdf.getTextWidth(word1);
+  const word2Width = pdf.getTextWidth(word2);
+  const word3Width = pdf.getTextWidth(word3);
+  const word4Width = pdf.getTextWidth(word4);
+  
+  const totalWidth = word1Width + word2Width + word3Width + word4Width;
+  // Adjust for better centering - considering the right box and logo
+  const leftMargin = 40; // Space after logo
+  const availableWidth = rightBoxX - leftMargin; // Space available between logo and right box
+  const startX = leftMargin + (availableWidth / 2) - (totalWidth / 2);
+  
+  // JODHPUR - Orange (#f77f00)
+  pdf.setTextColor(247, 127, 0);
+  safeText(pdf, word1, startX, yOffset + 16);
+  
+  // BOMBAY - Cyan (#00b4d8)
+  pdf.setTextColor(0, 180, 216);
+  safeText(pdf, word2, startX + word1Width, yOffset + 16);
+  
+  // ROAD - Light blue (#8ecae6)
+  pdf.setTextColor(142, 202, 230);
+  safeText(pdf, word3, startX + word1Width + word2Width, yOffset + 16);
+  
+  // CARRIER - Orange (#f77f00)
+  pdf.setTextColor(247, 127, 0);
+  safeText(pdf, word4, startX + word1Width + word2Width + word3Width, yOffset + 16);
+  
+  pdf.setTextColor(0, 0, 0); // Reset to black
   
   // Company address - ALIGNED WITH HEADER AND PROPER SPACING
   pdf.setFontSize(9);
@@ -436,11 +470,11 @@ async function drawBiltyForm(
   
   // Column positions (relative to tableX) - proportional to 200mm width
   const col1 = tableX + 16;    // After Pkgs (16mm wide)
-  const col2 = tableX + 60;    // After Description (44mm wide)  
-  const col3 = tableX + 83;    // After Act.Wt (23mm wide)
-  const col4 = tableX + 101;   // After Chg.Wt (18mm wide)
-  const col5 = tableX + 119;   // After Rate (18mm wide)
-  // Charges section: remaining width (from col5 to table end = pageWidth - 5)
+  const col2 = tableX + 85;    // After Description (69mm wide - INCREASED MORE)  
+  const col3 = tableX + 105;   // After Act.Wt (20mm wide)
+  const col4 = tableX + 123;   // After Chg.Wt (18mm wide)
+  const col5 = tableX + 141;   // After Rate (18mm wide)
+  // Charges section: remaining width (from col5 to table end = pageWidth - 5) - MORE NARROW
   
   // Draw vertical lines for items columns - ALL THE WAY DOWN
   pdf.line(col1, itemsStartY, col1, itemsStartY + itemsHeaderHeight + itemsDataHeight);

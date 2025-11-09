@@ -15,16 +15,18 @@ const quickActions = [
     hoverGradient: "hover:from-blue-600 hover:to-indigo-700",
     bgLight: "bg-blue-50",
     iconColor: "text-blue-600",
+    external: false,
   },
   {
     title: "Generate E-way Bill",
     description: "Create e-way bill for transport",
-    href: "/eway-bill",
+    href: "https://ewaybillgst.gov.in/mainmenu.aspx",
     icon: Receipt,
     gradient: "from-green-500 to-emerald-600",
     hoverGradient: "hover:from-green-600 hover:to-emerald-700",
     bgLight: "bg-green-50",
     iconColor: "text-green-600",
+    external: true,
   },
   {
     title: "Export to Excel",
@@ -35,6 +37,7 @@ const quickActions = [
     hoverGradient: "hover:from-purple-600 hover:to-pink-700",
     bgLight: "bg-purple-50",
     iconColor: "text-purple-600",
+    external: false,
   },
   {
     title: "Challan",
@@ -45,6 +48,7 @@ const quickActions = [
     hoverGradient: "hover:from-orange-600 hover:to-red-700",
     bgLight: "bg-orange-50",
     iconColor: "text-orange-600",
+    external: false,
   },
 ]
 
@@ -64,37 +68,44 @@ export function QuickActions() {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {quickActions.map((action, index) => (
-            <Link key={index} href={action.href} className="group">
-              <div className={`relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-${action.iconColor}/20`}>
-                {/* Background gradient on hover */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
-                
-                {/* Decorative circles */}
-                <div className={`absolute -right-6 -top-6 h-20 w-20 rounded-full ${action.bgLight} opacity-50 group-hover:scale-150 transition-transform duration-500`}></div>
-                
-                <div className="relative flex items-start gap-4">
-                  <div className={`flex-shrink-0 h-12 w-12 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                    <action.icon className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
-                        {action.title}
-                      </h3>
-                      <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-gray-900 group-hover:translate-x-1 transition-all duration-300" />
+          {quickActions.map((action, index) => {
+            const CardWrapper = action.external ? 'a' : Link
+            const extraProps = action.external 
+              ? { target: "_blank", rel: "noopener noreferrer" } 
+              : {}
+            
+            return (
+              <CardWrapper key={index} href={action.href} className="group" {...extraProps}>
+                <div className={`relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-${action.iconColor}/20`}>
+                  {/* Background gradient on hover */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+                  
+                  {/* Decorative circles */}
+                  <div className={`absolute -right-6 -top-6 h-20 w-20 rounded-full ${action.bgLight} opacity-50 group-hover:scale-150 transition-transform duration-500`}></div>
+                  
+                  <div className="relative flex items-start gap-4">
+                    <div className={`flex-shrink-0 h-12 w-12 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                      <action.icon className="h-6 w-6 text-white" />
                     </div>
-                    <p className="text-sm text-gray-500 group-hover:text-gray-600 transition-colors">
-                      {action.description}
-                    </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-semibold text-gray-900 group-hover:text-gray-950 transition-colors">
+                          {action.title}
+                        </h3>
+                        <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-gray-900 group-hover:translate-x-1 transition-all duration-300" />
+                      </div>
+                      <p className="text-sm text-gray-500 group-hover:text-gray-600 transition-colors">
+                        {action.description}
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                {/* Bottom accent line */}
-                <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${action.gradient} scale-x-0 group-hover:scale-x-100 transition-transform duration-300`}></div>
-              </div>
-            </Link>
-          ))}
+                  {/* Bottom accent line */}
+                  <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${action.gradient} scale-x-0 group-hover:scale-x-100 transition-transform duration-300`}></div>
+                </div>
+              </CardWrapper>
+            )
+          })}
         </div>
       </CardContent>
     </Card>

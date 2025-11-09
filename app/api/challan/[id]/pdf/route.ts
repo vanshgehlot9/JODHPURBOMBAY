@@ -29,36 +29,26 @@ export async function GET(
       format: "a4",
     });
 
-    // Modern gradient-style header background with custom dark blue (#003049)
-    pdf.setFillColor(0, 48, 73);
-    pdf.rect(0, 0, pageWidth, 50, 'F');
+    // White background
+    pdf.setFillColor(255, 255, 255);
+    pdf.rect(0, 0, pageWidth, pageHeight, 'F');
     
-    // Accent stripe with orange (#f77f00)
-    pdf.setFillColor(247, 127, 0);
-    pdf.rect(0, 50, pageWidth, 2, 'F');
-    
-    // Logo with modern circular frame
+    // Logo
     try {
       const logoPath = path.join(process.cwd(), "public", "images", "truck.jpeg");
       if (fs.existsSync(logoPath)) {
         const logoData = fs.readFileSync(logoPath);
         const logoBase64 = logoData.toString('base64');
-        
-        // White circular background for logo
-        pdf.setFillColor(255, 255, 255);
-        
-        
         pdf.addImage(`data:image/jpeg;base64,${logoBase64}`, 'JPEG', 16, 13, 22, 18);
       }
     } catch (error) {
       console.log("Logo not found");
     }
 
-    // Modern header text with gradient color effect
+    // Colorful header text - JODHPUR BOMBAY ROAD CARRIER
     pdf.setFontSize(22);
     pdf.setFont("helvetica", "bold");
     
-    // Create gradient effect by coloring each word differently
     // JODHPUR - Orange (#f77f00)
     pdf.setTextColor(247, 127, 0);
     pdf.text("JODHPUR", 55, 18);
@@ -75,6 +65,8 @@ export async function GET(
     pdf.setTextColor(247, 127, 0);
     pdf.text("CARRIER", 160, 18);
     
+    // Black text for address and contact
+    pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(9);
     pdf.setFont("helvetica", "normal");
     pdf.text("Opp. Bhagat Singh Circle, Heavy Industrial Area, Jodhpur-342003", pageWidth / 2, 26, { align: "center" });
@@ -82,28 +74,18 @@ export async function GET(
     pdf.setFontSize(8);
     pdf.text("GSTIN: 08AABFJ2988C1ZN  |  Mobile: +91 97821-77007 , +91 93147-10568", pageWidth / 2, 32, { align: "center" });
 
-    // Modern CHALLAN badge with cyan (#00b4d8)
-    pdf.setFillColor(255, 255, 255);
-    pdf.roundedRect(pageWidth / 2 - 28, 37, 56, 10, 2, 2, 'F');
-    pdf.setTextColor(0, 180, 216);
-    pdf.setFontSize(14);
+    // CHALLAN title in black
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(16);
     pdf.setFont("helvetica", "bold");
     pdf.text("CHALLAN", pageWidth / 2, 44, { align: "center" });
-
-    // Modern card-style container with shadow effect
-    pdf.setDrawColor(220, 220, 220);
-    pdf.setFillColor(255, 255, 255);
+    
+    // Black line separator
+    pdf.setDrawColor(0, 0, 0);
     pdf.setLineWidth(0.5);
-    
-    // Shadow effect
-    pdf.setFillColor(240, 240, 240);
-    pdf.roundedRect(16, 58, 178, 170, 3, 3, 'F');
-    
-    // Main white card
-    pdf.setFillColor(255, 255, 255);
-    pdf.roundedRect(15, 57, 178, 170, 3, 3, 'FD');
+    pdf.line(15, 48, 195, 48);
 
-    // Modern info cards with icons-style layout
+    // Info section with black borders
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(9);
     pdf.setFont("helvetica", "normal");
@@ -128,283 +110,256 @@ export async function GET(
       formattedDate = 'Invalid Date';
     }
     
-    // Modern info pills/badges with custom colors
-    let infoY = 63;
+    // Info boxes with black borders
+    let infoY = 53;
     
-    // Date badge - cyan (#00b4d8)
-    pdf.setFillColor(0, 180, 216);
-    pdf.roundedRect(20, infoY, 50, 8, 1, 1, 'F');
-    pdf.setTextColor(255, 255, 255);
+    // Draw info box
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setLineWidth(0.5);
+    pdf.rect(15, infoY, 180, 10);
+    
+    // Vertical dividers
+    pdf.line(75, infoY, 75, infoY + 10);
+    pdf.line(135, infoY, 135, infoY + 10);
+    
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(9);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("DATE:", 18, infoY + 6);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(formattedDate, 33, infoY + 6);
+    
+    pdf.setFont("helvetica", "bold");
+    pdf.text("CHALLAN NO:", 78, infoY + 6);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(String(challan.challanNo || ''), 105, infoY + 6);
+    
+    pdf.setFont("helvetica", "bold");
+    pdf.text("TRUCK NO:", 138, infoY + 6);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(String(challan.truckNo || 'N/A'), 161, infoY + 6);
+    
+    infoY += 10;
+    
+    // Secondary info row
+    pdf.setDrawColor(0, 0, 0);
+    pdf.rect(15, infoY, 180, 10);
+    
+    pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(8);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("DATE", 23, infoY + 5);
     pdf.setFont("helvetica", "normal");
-    pdf.text(formattedDate, 67, infoY + 5, { align: "right" });
-    
-    // Challan No badge - orange (#f77f00)
-    pdf.setFillColor(247, 127, 0);
-    pdf.roundedRect(75, infoY, 55, 8, 1, 1, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("CHALLAN NO", 78, infoY + 5);
-    pdf.setFont("helvetica", "normal");
-    pdf.text(String(challan.challanNo || ''), 127, infoY + 5, { align: "right" });
-    
-    // Truck No badge - dark blue (#003049)
-    pdf.setFillColor(0, 48, 73);
-    pdf.roundedRect(135, infoY, 52, 8, 1, 1, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("TRUCK NO", 138, infoY + 5);
-    pdf.setFont("helvetica", "normal");
-    pdf.text(String(challan.truckNo || 'N/A'), 184, infoY + 5, { align: "right" });
-    
-    infoY += 12;
-    
-    // Secondary info row with modern style
-    pdf.setFillColor(248, 249, 250);
-    pdf.roundedRect(20, infoY, 167, 10, 1, 1, 'F');
-    pdf.setTextColor(80, 80, 80);
-    pdf.setFontSize(8);
-    pdf.setFont("helvetica", "normal");
-    pdf.text("Driver Name: _________________", 24, infoY + 6);
-    pdf.text("Owner Name: _________________", 85, infoY + 6);
-    pdf.text("Lic No: __________", 148, infoY + 6);
+    pdf.text("Driver Name: _________________", 18, infoY + 6);
+    pdf.text("Owner Name: _________________", 75, infoY + 6);
+    pdf.text("Lic No: __________", 138, infoY + 6);
 
-    // Modern From/To banner with cyan (#00b4d8)
-    infoY += 14;
-    pdf.setFillColor(0, 180, 216);
-    pdf.roundedRect(20, infoY, 167, 10, 1, 1, 'F');
+    // From/To row
+    infoY += 10;
+    pdf.setDrawColor(0, 0, 0);
+    pdf.rect(15, infoY, 180, 10);
     
-    pdf.setTextColor(255, 255, 255);
+    // Vertical divider
+    pdf.line(105, infoY, 105, infoY + 10);
+    
+    pdf.setTextColor(0, 0, 0);
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(9);
-    pdf.text("FROM:", 24, infoY + 6);
+    pdf.text("FROM:", 18, infoY + 6);
     pdf.setFont("helvetica", "normal");
-    pdf.text(String(challan.from || 'JODHPUR'), 42, infoY + 6);
+    pdf.text(String(challan.from || 'JODHPUR'), 35, infoY + 6);
     
     pdf.setFont("helvetica", "bold");
-    pdf.text("TO:", 110, infoY + 6);
+    pdf.text("TO:", 108, infoY + 6);
     pdf.setFont("helvetica", "normal");
-    pdf.text(String(challan.to || 'N/A'), 122, infoY + 6);
+    pdf.text(String(challan.to || 'N/A'), 118, infoY + 6);
 
-    // Modern table design with sleek styling
-    let yPos = 103;
+    // Table design with black borders
+    let yPos = 83;
     
-    // Table header with dark blue (#003049)
-    pdf.setFillColor(0, 48, 73);
-    pdf.roundedRect(20, yPos - 4, 167, 10, 1, 1, 'F');
-    
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(8);
-    
-    // Optimized column headers with perfect spacing
-    pdf.text("SR", 22, yPos);
-    pdf.text("CONSIGNOR", 31, yPos);
-    pdf.text("CONSIGNEE", 58, yPos);
-    pdf.text("BILTY", 88, yPos);
-    pdf.text("PARTICULARS", 108, yPos);
-    pdf.text("QTY", 144, yPos);
-    pdf.text("WEIGHT", 156, yPos);
-    pdf.text("TOTAL", 176, yPos);
-
-    // Modern vertical dividers with optimized positions
-    pdf.setDrawColor(255, 255, 255, 0.3);
+    // Table header
+    pdf.setDrawColor(0, 0, 0);
     pdf.setLineWidth(0.5);
-    pdf.line(27, yPos - 4, 27, yPos + 6);   // After SR
-    pdf.line(55, yPos - 4, 55, yPos + 6);   // After Consignor
-    pdf.line(85, yPos - 4, 85, yPos + 6);   // After Consignee
-    pdf.line(103, yPos - 4, 103, yPos + 6); // After Bilty
-    pdf.line(140, yPos - 4, 140, yPos + 6); // After Particulars
-    pdf.line(151, yPos - 4, 151, yPos + 6); // After Qty
-    pdf.line(170, yPos - 4, 170, yPos + 6); // After Weight
+    pdf.rect(15, yPos, 180, 10);
+    
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9);
+    
+    // Column headers
+    pdf.text("SR", 17, yPos + 6);
+    pdf.text("CONSIGNOR", 28, yPos + 6);
+    pdf.text("CONSIGNEE", 55, yPos + 6);
+    pdf.text("BILTY", 85, yPos + 6);
+    pdf.text("PARTICULARS", 105, yPos + 6);
+    pdf.text("QTY", 142, yPos + 6);
+    pdf.text("WEIGHT", 155, yPos + 6);
+    pdf.text("TOTAL", 175, yPos + 6);
+
+    // Vertical dividers
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setLineWidth(0.5);
+    pdf.line(25, yPos, 25, yPos + 10);   // After SR
+    pdf.line(52, yPos, 52, yPos + 10);   // After Consignor
+    pdf.line(82, yPos, 82, yPos + 10);   // After Consignee
+    pdf.line(100, yPos, 100, yPos + 10); // After Bilty
+    pdf.line(138, yPos, 138, yPos + 10); // After Particulars
+    pdf.line(150, yPos, 150, yPos + 10); // After Qty
+    pdf.line(170, yPos, 170, yPos + 10); // After Weight
 
     yPos += 10;
 
-    // Modern data rows with card-style design
+    // Data rows with black borders
     pdf.setTextColor(0, 0, 0);
     pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(7);
+    pdf.setFontSize(8);
     
     if (challan.items && challan.items.length > 0) {
       challan.items.forEach((item: any, index: number) => {
-        // Modern alternating rows with subtle colors
-        if (index % 2 === 0) {
-          pdf.setFillColor(250, 251, 252);
-        } else {
-          pdf.setFillColor(255, 255, 255);
-        }
-        pdf.roundedRect(20, yPos - 3, 167, 12, 0.5, 0.5, 'F');
+        // Draw row border
+        pdf.setDrawColor(0, 0, 0);
+        pdf.setLineWidth(0.5);
+        pdf.rect(15, yPos, 180, 12);
         
-        // Subtle row border
-        pdf.setDrawColor(230, 230, 230);
-        pdf.setLineWidth(0.2);
-        pdf.roundedRect(20, yPos - 3, 167, 12, 0.5, 0.5, 'S');
+        // Data in black
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(String(index + 1), 17, yPos + 7);
         
-        // Data with modern styling
-        pdf.setTextColor(60, 60, 60);
-        pdf.text(String(index + 1), 23, yPos + 2);
-        
-        // Full consignor name with optimized wrapping
+        // Consignor name with wrapping
         const consignorText = (item.consignorName || "").toUpperCase();
         if (consignorText.length > 11) {
-          pdf.setFontSize(6);
-          pdf.text(consignorText.substring(0, 11), 29, yPos);
-          pdf.text(consignorText.substring(11, 22), 29, yPos + 4);
           pdf.setFontSize(7);
+          pdf.text(consignorText.substring(0, 11), 27, yPos + 5);
+          pdf.text(consignorText.substring(11, 22), 27, yPos + 9);
+          pdf.setFontSize(8);
         } else {
-          pdf.text(consignorText, 29, yPos + 2);
+          pdf.text(consignorText, 27, yPos + 7);
         }
         
-        // Full consignee name with optimized wrapping
+        // Consignee name with wrapping
         const consigneeText = (item.consigneeName || "").toUpperCase();
         if (consigneeText.length > 11) {
-          pdf.setFontSize(6);
-          pdf.text(consigneeText.substring(0, 11), 57, yPos);
-          pdf.text(consigneeText.substring(11, 22), 57, yPos + 4);
           pdf.setFontSize(7);
+          pdf.text(consigneeText.substring(0, 11), 54, yPos + 5);
+          pdf.text(consigneeText.substring(11, 22), 54, yPos + 9);
+          pdf.setFontSize(8);
         } else {
-          pdf.text(consigneeText, 57, yPos + 2);
+          pdf.text(consigneeText, 54, yPos + 7);
         }
         
-        // Bilty with cyan highlight (#00b4d8)
-        pdf.setTextColor(0, 180, 216);
-        pdf.setFont("helvetica", "bold");
-        pdf.text(String(item.biltyNo || ""), 87, yPos + 2);
+        // Bilty in black
+        pdf.text(String(item.biltyNo || ""), 84, yPos + 7);
         
-        pdf.setTextColor(60, 60, 60);
-        pdf.setFont("helvetica", "normal");
-        
-        // Particulars with optimized wrapping
+        // Particulars with wrapping
         const particularText = (item.description || "").toUpperCase();
         if (particularText.length > 14) {
-          pdf.setFontSize(6);
-          pdf.text(particularText.substring(0, 14), 105, yPos);
-          pdf.text(particularText.substring(14, 28), 105, yPos + 4);
           pdf.setFontSize(7);
+          pdf.text(particularText.substring(0, 14), 102, yPos + 5);
+          pdf.text(particularText.substring(14, 28), 102, yPos + 9);
+          pdf.setFontSize(8);
         } else {
-          pdf.text(particularText, 105, yPos + 2);
+          pdf.text(particularText, 102, yPos + 7);
         }
         
-        // Right-aligned numbers with modern styling
+        // Right-aligned numbers
         const qty = String(item.quantity || 1);
         const weight = parseFloat(item.weight || 0);
         const total = parseFloat(item.freight || item.total || item.amount || 0);
         
-        pdf.text(qty, 148, yPos + 2, { align: "right" });
-        pdf.text(weight.toFixed(1), 167, yPos + 2, { align: "right" });
-        
-        // Amount with orange accent (#f77f00)
-        pdf.setTextColor(247, 127, 0);
-        pdf.setFont("helvetica", "bold");
-        pdf.text(`Rs.${total.toFixed(0)}`, 184, yPos + 2, { align: "right" });
-        pdf.setFont("helvetica", "normal");
+        pdf.text(qty, 147, yPos + 7, { align: "right" });
+        pdf.text(weight.toFixed(1), 167, yPos + 7, { align: "right" });
+        pdf.text(`Rs.${total.toFixed(0)}`, 192, yPos + 7, { align: "right" });
 
-        // Modern subtle dividers with optimized positions
-        pdf.setDrawColor(240, 240, 240);
-        pdf.setLineWidth(0.2);
-        pdf.line(27, yPos - 3, 27, yPos + 9);
-        pdf.line(55, yPos - 3, 55, yPos + 9);
-        pdf.line(85, yPos - 3, 85, yPos + 9);
-        pdf.line(103, yPos - 3, 103, yPos + 9);
-        pdf.line(140, yPos - 3, 140, yPos + 9);
-        pdf.line(151, yPos - 3, 151, yPos + 9);
-        pdf.line(170, yPos - 3, 170, yPos + 9);
+        // Vertical dividers
+        pdf.setDrawColor(0, 0, 0);
+        pdf.setLineWidth(0.5);
+        pdf.line(25, yPos, 25, yPos + 12);
+        pdf.line(52, yPos, 52, yPos + 12);
+        pdf.line(82, yPos, 82, yPos + 12);
+        pdf.line(100, yPos, 100, yPos + 12);
+        pdf.line(138, yPos, 138, yPos + 12);
+        pdf.line(150, yPos, 150, yPos + 12);
+        pdf.line(170, yPos, 170, yPos + 12);
         
         yPos += 12;
       });
     }
 
-    // Modern total row with dark blue (#003049)
-    yPos += 3;
-    pdf.setFillColor(0, 48, 73);
-    pdf.roundedRect(20, yPos - 3, 167, 12, 1, 1, 'F');
+    // Total row with black borders
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setLineWidth(0.5);
+    pdf.rect(15, yPos, 180, 10);
     
-    pdf.setTextColor(255, 255, 255);
+    pdf.setTextColor(0, 0, 0);
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(9);
-    pdf.text("TOTAL", 105, yPos + 2);
+    pdf.setFontSize(10);
+    pdf.text("TOTAL", 102, yPos + 7);
     
     // Calculate and display totals
     const totalQty = challan.items?.reduce((sum: number, item: any) => sum + (parseInt(item.quantity) || 0), 0) || 0;
     const totalWeight = challan.items?.reduce((sum: number, item: any) => sum + (parseFloat(item.weight) || 0), 0) || 0;
     const totalAmount = challan.items?.reduce((sum: number, item: any) => sum + (parseFloat(item.freight || item.total || item.amount) || 0), 0) || 0;
     
-    pdf.setFontSize(9);
-    pdf.text(String(totalQty), 148, yPos + 2, { align: "right" });
-    pdf.text(totalWeight.toFixed(1), 167, yPos + 2, { align: "right" });
-    pdf.text(`Rs.${totalAmount.toFixed(0)}`, 184, yPos + 2, { align: "right" });
+    pdf.text(String(totalQty), 147, yPos + 7, { align: "right" });
+    pdf.text(totalWeight.toFixed(1), 167, yPos + 7, { align: "right" });
+    pdf.text(`Rs.${totalAmount.toFixed(0)}`, 192, yPos + 7, { align: "right" });
 
-    // Modern dividers for total with optimized positions
-    pdf.setDrawColor(255, 255, 255, 0.3);
+    // Vertical dividers for total
+    pdf.setDrawColor(0, 0, 0);
     pdf.setLineWidth(0.5);
-    pdf.line(27, yPos - 3, 27, yPos + 9);
-    pdf.line(55, yPos - 3, 55, yPos + 9);
-    pdf.line(85, yPos - 3, 85, yPos + 9);
-    pdf.line(103, yPos - 3, 103, yPos + 9);
-    pdf.line(140, yPos - 3, 140, yPos + 9);
-    pdf.line(151, yPos - 3, 151, yPos + 9);
-    pdf.line(170, yPos - 3, 170, yPos + 9);
+    pdf.line(25, yPos, 25, yPos + 10);
+    pdf.line(52, yPos, 52, yPos + 10);
+    pdf.line(82, yPos, 82, yPos + 10);
+    pdf.line(100, yPos, 100, yPos + 10);
+    pdf.line(138, yPos, 138, yPos + 10);
+    pdf.line(150, yPos, 150, yPos + 10);
+    pdf.line(170, yPos, 170, yPos + 10);
 
-    yPos += 20;
+    yPos += 15;
 
-    // Modern footer with note badge
-    pdf.setFillColor(255, 248, 220);
-    pdf.roundedRect(20, yPos - 2, 167, 8, 1, 1, 'F');
-    pdf.setDrawColor(255, 193, 7);
-    pdf.setLineWidth(0.3);
-    pdf.roundedRect(20, yPos - 2, 167, 8, 1, 1, 'S');
+    // Footer note with black border
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setLineWidth(0.5);
+    pdf.rect(15, yPos, 180, 8);
     
-    pdf.setTextColor(120, 80, 0);
+    pdf.setTextColor(0, 0, 0);
     pdf.setFont("helvetica", "italic");
-    pdf.setFontSize(7);
-    pdf.text(" Note: The quantity of goods mentioned in the memo has been received in safe and sound condition.", 24, yPos + 3);
+    pdf.setFontSize(8);
+    pdf.text("Note: The quantity of goods mentioned in the memo has been received in safe and sound condition.", 18, yPos + 5);
 
     yPos += 15;
     
-    // Modern signature section with cyan (#00b4d8)
-    pdf.setTextColor(0, 180, 216);
+    // Signature section in black
+    pdf.setTextColor(0, 0, 0);
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(10);
-    pdf.text("For: Jodhpur Bombay Road Carrier", 24, yPos);
+    pdf.text("For: Jodhpur Bombay Road Carrier", 18, yPos);
     
-    // Signature with modern styling
+    // Signature
     try {
       const signaturePath = path.join(process.cwd(), "public", "images", "signature.png");
       if (fs.existsSync(signaturePath)) {
         const signatureData = fs.readFileSync(signaturePath);
         const signatureBase64 = signatureData.toString('base64');
         
-        // White background for signature
-        pdf.setFillColor(255, 255, 255);
-        pdf.roundedRect(22, yPos + 4, 40, 15, 1, 1, 'F');
-        
-        pdf.addImage(`data:image/png;base64,${signatureBase64}`, 'PNG', 24, yPos + 5, 35, 12);
+        pdf.addImage(`data:image/png;base64,${signatureBase64}`, 'PNG', 18, yPos + 5, 35, 12);
         yPos += 20;
       } else {
         yPos += 15;
-        // Modern signature line with cyan
-        pdf.setDrawColor(0, 180, 216);
+        // Signature line in black
+        pdf.setDrawColor(0, 0, 0);
         pdf.setLineWidth(0.5);
-        pdf.line(24, yPos, 75, yPos);
+        pdf.line(18, yPos, 70, yPos);
       }
     } catch (error) {
       yPos += 15;
-      pdf.setDrawColor(0, 180, 216);
+      pdf.setDrawColor(0, 0, 0);
       pdf.setLineWidth(0.5);
-      pdf.line(24, yPos, 75, yPos);
+      pdf.line(18, yPos, 70, yPos);
     }
     
-    pdf.setTextColor(80, 80, 80);
+    pdf.setTextColor(0, 0, 0);
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
-    pdf.text("Authorised Signatory", 24, yPos + 5);
-    
-    // Modern footer accent line with orange (#f77f00)
-    pdf.setDrawColor(247, 127, 0);
-    pdf.setLineWidth(1);
-    pdf.line(0, pageHeight - 5, pageWidth, pageHeight - 5);
+    pdf.text("Authorised Signatory", 18, yPos + 5);
 
     const pdfBuffer = Buffer.from(pdf.output('arraybuffer'));
 

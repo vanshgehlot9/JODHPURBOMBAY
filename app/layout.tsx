@@ -5,17 +5,26 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as Sonner } from "@/components/ui/sonner"
 import { AuthProvider } from "@/components/auth/auth-provider"
+import { OfflineIndicator } from "@/components/offline-indicator"
+import { ServiceWorkerProvider } from "@/components/service-worker-provider"
 
 export const metadata: Metadata = {
   title: "JBRC - Jodhpur Bombay Road Carrier",
   description: "Bilty Management System for Jodhpur Bombay Road Carrier",
   generator: 'v0.dev',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'JBRC',
+  },
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  themeColor: '#3b82f6',
 }
 
 export default function RootLayout({
@@ -34,13 +43,16 @@ export default function RootLayout({
         />
       </head>
       <body className="font-inter antialiased">
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <AuthProvider>
-            {children}
-            <Toaster />
-            <Sonner />
-          </AuthProvider>
-        </ThemeProvider>
+        <ServiceWorkerProvider>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+            <AuthProvider>
+              {children}
+              <Toaster />
+              <Sonner />
+              <OfflineIndicator />
+            </AuthProvider>
+          </ThemeProvider>
+        </ServiceWorkerProvider>
       </body>
     </html>
   )

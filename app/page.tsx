@@ -2,7 +2,6 @@
 
 import { Suspense } from "react"
 import { useAuth } from "@/components/auth/auth-provider"
-import { DashboardStats } from "@/components/dashboard/dashboard-stats"
 import { QuickActions } from "@/components/dashboard/quick-actions"
 import { RecentBilties } from "@/components/dashboard/recent-bilties"
 import { Sidebar } from "@/components/layout/sidebar"
@@ -55,10 +54,6 @@ export default function Dashboard() {
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl -ml-32 -mb-32"></div>
           </div>
-
-          <Suspense fallback={<StatsLoading />}>
-            <DashboardStats />
-          </Suspense>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="lg:col-span-2 space-y-6">
@@ -115,25 +110,6 @@ export default function Dashboard() {
           </div>
         </main>
       </div>
-    </div>
-  )
-}
-
-function StatsLoading() {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Card key={i}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-8 w-16 mb-2" />
-            <Skeleton className="h-3 w-32" />
-          </CardContent>
-        </Card>
-      ))}
     </div>
   )
 }

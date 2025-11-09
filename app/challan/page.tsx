@@ -16,13 +16,11 @@ import {
   Edit, 
   Trash2, 
   MoreHorizontal, 
-  FileText, 
   Plus, 
   Truck, 
   Calendar,
   MapPin,
-  Users,
-  TrendingUp
+  Users
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -140,91 +138,6 @@ export default function ChallanListPage() {
       <div className="flex-1 flex flex-col">
         <Header title="Challans" subtitle="Manage delivery challans" />
         <main className="flex-1 p-3 sm:p-6 space-y-4 sm:space-y-6">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6">
-            <Card className="group relative overflow-hidden border-0 ring-1 ring-blue-200/50 hover-lift transition-all duration-300 animate-in">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-blue-50 opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
-              <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
-                <CardTitle className="text-sm font-semibold text-gray-600 group-hover:text-gray-900 transition-colors">
-                  Total Challans
-                </CardTitle>
-                <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <FileText className="h-5 w-5 text-blue-600" />
-                </div>
-              </CardHeader>
-              <CardContent className="relative">
-                <div className="text-3xl font-bold text-gray-900">{challans.length}</div>
-                <p className="text-xs text-gray-500 font-medium mt-1">Active challans</p>
-              </CardContent>
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </Card>
-
-            <Card className="group relative overflow-hidden border-0 ring-1 ring-green-200/50 hover-lift transition-all duration-300 animate-in" style={{ animationDelay: '100ms' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-green-50 opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
-              <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
-                <CardTitle className="text-sm font-semibold text-gray-600 group-hover:text-gray-900 transition-colors">
-                  This Month
-                </CardTitle>
-                <div className="h-10 w-10 rounded-xl bg-green-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Calendar className="h-5 w-5 text-green-600" />
-                </div>
-              </CardHeader>
-              <CardContent className="relative">
-                <div className="text-3xl font-bold text-gray-900">
-                  {challans.filter(c => {
-                    const date = new Date(c.date);
-                    const now = new Date();
-                    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-                  }).length}
-                </div>
-                <p className="text-xs text-gray-500 font-medium mt-1">Current month</p>
-              </CardContent>
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </Card>
-
-            <Card className="group relative overflow-hidden border-0 ring-1 ring-purple-200/50 hover-lift transition-all duration-300 animate-in" style={{ animationDelay: '200ms' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-purple-50 opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
-              <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
-                <CardTitle className="text-sm font-semibold text-gray-600 group-hover:text-gray-900 transition-colors">
-                  Active Trucks
-                </CardTitle>
-                <div className="h-10 w-10 rounded-xl bg-purple-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Truck className="h-5 w-5 text-purple-600" />
-                </div>
-              </CardHeader>
-              <CardContent className="relative">
-                <div className="text-3xl font-bold text-gray-900">
-                  {new Set(challans.map(c => c.truckNo)).size}
-                </div>
-                <p className="text-xs text-gray-500 font-medium mt-1">Unique trucks</p>
-              </CardContent>
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </Card>
-
-            <Card className="group relative overflow-hidden border-0 ring-1 ring-orange-200/50 hover-lift transition-all duration-300 animate-in" style={{ animationDelay: '300ms' }}>
-              <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-red-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-orange-50 opacity-50 group-hover:scale-150 transition-transform duration-500"></div>
-              <CardHeader className="relative flex flex-row items-center justify-between space-y-0 pb-3">
-                <CardTitle className="text-sm font-semibold text-gray-600 group-hover:text-gray-900 transition-colors">
-                  Total Freight
-                </CardTitle>
-                <div className="h-10 w-10 rounded-xl bg-orange-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <TrendingUp className="h-5 w-5 text-orange-600" />
-                </div>
-              </CardHeader>
-              <CardContent className="relative">
-                <div className="text-3xl font-bold text-gray-900">
-                  ₹{challans.reduce((sum, c) => sum + (c.totalFreight || 0), 0).toFixed(0)}
-                </div>
-                <p className="text-xs text-gray-500 font-medium mt-1">Total amount</p>
-              </CardContent>
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 to-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </Card>
-          </div>
-
           {/* Main Table Card */}
           <Card className="shadow-sm border-0 ring-1 ring-gray-200/50 slide-up">
             <CardHeader className="bg-gradient-to-r from-gray-50/50 to-transparent border-b border-gray-100">

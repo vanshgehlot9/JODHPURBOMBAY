@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,9 +35,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2, Building2, Users, Phone, Mail, MapPin, FileText, Sparkles, ArrowLeft } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Building2, Users, Phone, Mail, MapPin, FileText } from "lucide-react";
 import { toast } from "sonner";
-import Link from "next/link";
 
 interface Party {
   id: string;
@@ -265,211 +266,159 @@ export default function PartiesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="container mx-auto p-6 space-y-6">
-        {/* Back Button */}
-        <Link href="/">
-          <Button 
-            variant="ghost" 
-            className="mb-4 hover:bg-white/50 text-gray-700 hover:text-gray-900 transition-all duration-200"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Button>
-        </Link>
-
-        {/* Animated Header */}
-        <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-2xl p-8 text-white animate-gradient">
-          <div className="absolute inset-0 bg-grid-white/[0.05] pointer-events-none"></div>
-          <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -left-10 -bottom-10 w-60 h-60 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+    <div className="flex min-h-screen bg-gray-50/50">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <Header title="Party Management" subtitle="Manage your consignors and consignees" />
+        <main className="flex-1 p-3 sm:p-6 space-y-4 sm:space-y-6">
           
-          <div className="relative flex justify-between items-center">
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl border border-white/30 shadow-lg animate-float">
-                  <Building2 className="h-8 w-8" />
+          {/* Add Party Dialog */}
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                onClick={() => resetForm()}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add New Party
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add New Party</DialogTitle>
+                <DialogDescription>
+                  Enter party details. Fields marked with <span className="text-red-500">*</span> are required.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid gap-4 py-4">
+                {/* Row 1: Party Name and GSTIN */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">
+                      Party Name <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      placeholder="Enter party name"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="gstin">
+                      GSTIN <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="gstin"
+                      value={formData.gstin}
+                      onChange={(e) => handleGstinChange(e.target.value)}
+                      placeholder="37ACRPK5945P1ZK"
+                      maxLength={15}
+                      required
+                      className={gstinError ? "border-red-500" : ""}
+                    />
+                    {gstinError && (
+                      <p className="text-sm text-red-500">{gstinError}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      15 characters: State(2) + PAN(10) + Registration(3)
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-4xl font-bold tracking-tight flex items-center gap-2">
-                    Party Management
-                    <Sparkles className="h-6 w-6 text-yellow-300 animate-pulse" />
-                  </h1>
-                  <p className="text-blue-100 mt-1 text-lg">
-                    Manage your consignors and consignees with ease
-                  </p>
+
+                {/* Row 2: Party Type and Contact Person */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="type">Party Type</Label>
+                    <Input
+                      id="type"
+                      value={formData.type}
+                      onChange={(e) =>
+                        setFormData({ ...formData, type: e.target.value })
+                      }
+                      placeholder="e.g., Consignor, Consignee"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="contactPerson">Contact Person</Label>
+                    <Input
+                      id="contactPerson"
+                      value={formData.contactPerson}
+                      onChange={(e) =>
+                        setFormData({ ...formData, contactPerson: e.target.value })
+                      }
+                      placeholder="Contact person name"
+                    />
+                  </div>
+                </div>
+
+                {/* Row 3: Address */}
+                <div className="space-y-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Input
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) =>
+                      setFormData({ ...formData, address: e.target.value })
+                    }
+                    placeholder="Full address"
+                  />
+                </div>
+
+                {/* Row 4: Phone and Email */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      value={formData.phone}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
+                      placeholder="Phone number"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      placeholder="email@example.com"
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-6 mt-4">
-                <Badge variant="secondary" className="bg-white/20 text-white border-white/30 hover:bg-white/30">
-                  <Users className="h-3 w-3 mr-1" />
-                  {parties.length} Total Parties
-                </Badge>
-                <Badge variant="secondary" className="bg-white/20 text-white border-white/30 hover:bg-white/30">
-                  <FileText className="h-3 w-3 mr-1" />
-                  Quick Access
-                </Badge>
-              </div>
-            </div>
-            
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
+
+              <DialogFooter>
                 <Button 
-                  onClick={() => resetForm()}
-                  size="lg"
-                  className="bg-white text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  variant="outline" 
+                  onClick={() => setIsAddDialogOpen(false)}
                 >
-                  <Plus className="mr-2 h-5 w-5" />
-                  Add New Party
+                  Cancel
                 </Button>
-              </DialogTrigger>
-          <DialogContent className="max-w-2xl border-0 shadow-2xl">
-            <DialogHeader className="pb-6 border-b border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl">
-                  <Plus className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    Add New Party
-                  </DialogTitle>
-                  <DialogDescription className="text-base mt-1">
-                    Enter party details. Fields marked with <span className="text-red-500 font-medium">*</span> are required.
-                  </DialogDescription>
-                </div>
-              </div>
-            </DialogHeader>
-            
-            <div className="grid gap-6 py-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="required">
-                    Party Name <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    placeholder="Enter party name"
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="gstin" className="required">
-                    GSTIN <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="gstin"
-                    value={formData.gstin}
-                    onChange={(e) => handleGstinChange(e.target.value)}
-                    placeholder="37ACRPK5945P1ZK"
-                    maxLength={15}
-                    required
-                    className={gstinError ? "border-red-500" : ""}
-                  />
-                  {gstinError && (
-                    <p className="text-sm text-red-500">{gstinError}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground">
-                    15 characters: State(2) + PAN(10) + Registration(3)
-                  </p>
-                </div>
-              </div>
+                <Button 
+                  onClick={handleAddParty} 
+                  disabled={loading || !!gstinError || !formData.name.trim() || !formData.gstin.trim()}
+                >
+                  {loading ? "Adding..." : "Add Party"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="type">Party Type</Label>
-                  <Input
-                    id="type"
-                    value={formData.type}
-                    onChange={(e) =>
-                      setFormData({ ...formData, type: e.target.value })
-                    }
-                    placeholder="e.g., Consignor, Consignee"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="contactPerson">Contact Person</Label>
-                  <Input
-                    id="contactPerson"
-                    value={formData.contactPerson}
-                    onChange={(e) =>
-                      setFormData({ ...formData, contactPerson: e.target.value })
-                    }
-                    placeholder="Contact person name"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Input
-                  id="address"
-                  value={formData.address}
-                  onChange={(e) =>
-                    setFormData({ ...formData, address: e.target.value })
-                  }
-                  placeholder="Full address"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
-                    placeholder="Phone number"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    placeholder="email@example.com"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter className="pt-6 border-t border-gray-100 gap-3">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsAddDialogOpen(false)}
-                className="flex-1 sm:flex-none hover:bg-gray-100 border-2"
-                size="lg"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleAddParty} 
-                disabled={loading || !!gstinError || !formData.name.trim() || !formData.gstin.trim()}
-                className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
-                size="lg"
-              >
-                {loading ? "Adding..." : "Add Party"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-          </div>
-        </div>
-
-      <Card className="shadow-xl border-0 ring-1 ring-gray-200/50 overflow-hidden animate-fade-in-up">
+          {/* Main Table Card */}
+          <Card className="shadow-xl border-0 ring-1 ring-gray-200/50 overflow-hidden">
         <CardHeader className="bg-gradient-to-r from-blue-50/50 to-transparent border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -624,24 +573,15 @@ export default function PartiesPage() {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl border-0 shadow-2xl">
-          <DialogHeader className="pb-6 border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl">
-                <Edit className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                  Edit Party
-                </DialogTitle>
-                <DialogDescription className="text-base mt-1">
-                  Update party details. Fields marked with <span className="text-red-500 font-medium">*</span> are required.
-                </DialogDescription>
-              </div>
-            </div>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Party</DialogTitle>
+            <DialogDescription>
+              Update party details. Fields marked with <span className="text-red-500">*</span> are required.
+            </DialogDescription>
           </DialogHeader>
           
-          <div className="grid gap-6 py-6">
+          <div className="grid gap-4 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="edit-name">
@@ -744,21 +684,16 @@ export default function PartiesPage() {
             </div>
           </div>
 
-          <DialogFooter className="pt-6 border-t border-gray-100 gap-3">
+          <DialogFooter>
             <Button 
               variant="outline" 
               onClick={() => setIsEditDialogOpen(false)}
-              className="flex-1 sm:flex-none hover:bg-gray-100 border-2"
-              size="lg"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
               Cancel
             </Button>
             <Button 
               onClick={handleEditParty} 
               disabled={loading || !!gstinError || !formData.name.trim() || !formData.gstin.trim()}
-              className="flex-1 sm:flex-none bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg"
-              size="lg"
             >
               {loading ? "Updating..." : "Update Party"}
             </Button>
@@ -768,44 +703,34 @@ export default function PartiesPage() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent className="border-0 shadow-2xl">
+        <AlertDialogContent>
           <AlertDialogHeader>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-red-100 rounded-xl">
-                <Trash2 className="h-6 w-6 text-red-600" />
-              </div>
-              <AlertDialogTitle className="text-2xl font-bold text-red-600">
-                Delete Party?
-              </AlertDialogTitle>
-            </div>
-            <AlertDialogDescription className="text-base leading-relaxed">
+            <AlertDialogTitle>Delete Party?</AlertDialogTitle>
+            <AlertDialogDescription>
               You are about to permanently delete{" "}
-              <strong className="text-gray-900 font-semibold">{currentParty?.name}</strong>
+              <strong>{currentParty?.name}</strong>
               {" "}with GSTIN{" "}
               <Badge variant="outline" className="font-mono text-xs">
                 {currentParty?.gstin}
               </Badge>
               <br /><br />
-              <span className="text-red-600 font-medium">⚠️ This action cannot be undone.</span>
+              <span className="text-red-600">⚠️ This action cannot be undone.</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="gap-3 pt-4">
-            <AlertDialogCancel 
-              className="flex-1 sm:flex-none hover:bg-gray-100 border-2 h-11"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
+          <AlertDialogFooter>
+            <AlertDialogCancel>
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteParty}
-              className="flex-1 sm:flex-none bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-lg h-11"
+              className="bg-red-600 hover:bg-red-700"
             >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete Permanently
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+        </main>
       </div>
     </div>
   );
