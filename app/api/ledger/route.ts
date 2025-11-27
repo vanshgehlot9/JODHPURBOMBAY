@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/firebase";
 import {
@@ -8,168 +7,229 @@ import {
   where,
   orderBy,
   Timestamp,
+  DocumentData,
+  QueryDocumentSnapshot
 } from "firebase/firestore";
 
-function parseDate(dateStr: string | null) {
+// Helper to safely parse dates
+function parseDate(dateStr: string | null): Date | null {
   if (!dateStr) return null;
   const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return null;
-  return d;
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// Helper to convert Firestore timestamp or string to Date object
+function toDate(val: any): Date | null {
+  if (!val) return null;
+  if (val instanceof Timestamp) return val.toDate();
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? null : d;
 }
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const from = parseDate(searchParams.get("from"));
-    const to = parseDate(searchParams.get("to"));
-    const party = searchParams.get("party");
+    const fromStr = searchParams.get("from");
+    const toStr = searchParams.get("to");
+    const party = searchParams.get("party")?.toLowerCase().trim();
 
-    // --- Opening Balance Calculation ---
+    const from = parseDate(fromStr);
+    const to = parseDate(toStr);
+
+    // Validate dates
+    if (!from || !to) {
+      return NextResponse.json(
+        { message: "Please provide valid 'from' and 'to' dates." },
+        { status: 400 }
+      );
+    }
+
+    // Set 'to' date to end of day to include all transactions on that day
+    to.setHours(23, 59, 59, 999);
+
+    // --- 1. Calculate Opening Balance (Transactions BEFORE 'from' date) ---
     let openingDebit = 0;
     let openingCredit = 0;
-    if (from) {
-      // Bilties before 'from'
-      let biltyQ = query(collection(db, "bilties"), orderBy("biltyDate", "asc"), where("biltyDate", "<", from));
-      const biltySnap = await getDocs(biltyQ);
-      let bilties = biltySnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+    // 1a. Bilties (Debit) - Before 'from'
+    const biltyRef = collection(db, "bilties");
+    const biltyQBefore = query(biltyRef, where("biltyDate", "<", fromStr)); // Using string comparison for stability if stored as string, or convert if needed. 
+    // Note: If dates are stored as strings in format YYYY-MM-DD, string comparison works. 
+    // If stored as Timestamps, we need to pass Date objects. 
+    // Assuming mixed or string based on previous code, but let's try to be robust.
+    // Ideally we fetch all and filter in memory if the dataset isn't huge, 
+    // or use proper Firestore indexes. For now, let's fetch based on date if possible, 
+    // but to be safe against format mismatches, fetching a wider range or all might be safer if volume allows.
+    // Let's stick to the previous pattern but refine it.
+
+    // Actually, to avoid "Invalid state" issues, let's fetch collections in parallel and process in memory 
+    // if the dataset is reasonable ( < few thousand docs). If it's large, we need indexes.
+    // Let's assume reasonable size for this "JBRC" app.
+
+    const [biltySnap, challanSnap, paymentSnap] = await Promise.all([
+      getDocs(collection(db, "bilties")),
+      getDocs(collection(db, "challans")),
+      getDocs(collection(db, "payments")),
+    ]);
+
+    const bilties = biltySnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+    const challans = challanSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+    const payments = paymentSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+
+    // Filter and Calculate Opening Balance
+    // Rules:
+    // - Date < from
+    // - Matches Party (if provided)
+
+    for (const b of bilties) {
+      const bDate = toDate(b.biltyDate);
+      if (!bDate) continue;
+
+      // Filter by Party
       if (party) {
-        bilties = bilties.filter(
-          (b: any) =>
-            b.consignorName?.toLowerCase().includes(party.toLowerCase()) ||
-            b.consigneeName?.toLowerCase().includes(party.toLowerCase()) ||
-            b.truckNo?.toLowerCase().includes(party.toLowerCase())
-        );
+        const match =
+          b.consignorName?.toLowerCase().includes(party) ||
+          b.consigneeName?.toLowerCase().includes(party) ||
+          b.truckNo?.toLowerCase().includes(party);
+        if (!match) continue;
       }
-      openingDebit += bilties.reduce((sum, b: any) => sum + (b.charges?.grandTotal || 0), 0);
-      // Challans before 'from'
-      let challanQ = query(collection(db, "challans"), orderBy("challanDate", "asc"), where("challanDate", "<", from));
-      const challanSnap = await getDocs(challanQ);
-      let challans = challanSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+      if (bDate < from) {
+        openingDebit += (Number(b.charges?.grandTotal) || 0);
+      }
+    }
+
+    for (const c of challans) {
+      const cDate = toDate(c.challanDate);
+      if (!cDate) continue;
+
       if (party) {
-        challans = challans.filter(
-          (c: any) =>
-            c.partyName?.toLowerCase().includes(party.toLowerCase()) ||
-            c.truckNo?.toLowerCase().includes(party.toLowerCase())
-        );
+        const match =
+          c.partyName?.toLowerCase().includes(party) ||
+          c.truckNo?.toLowerCase().includes(party);
+        if (!match) continue;
       }
-      openingCredit += challans.reduce((sum, c: any) => sum + (c.amount || 0), 0);
-      // Payments before 'from'
-      let paymentQ = query(collection(db, "payments"), orderBy("date", "asc"), where("date", "<", from));
-      const paymentSnap = await getDocs(paymentQ);
-      let payments = paymentSnap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+      if (cDate < from) {
+        openingCredit += (Number(c.amount) || 0);
+      }
+    }
+
+    for (const p of payments) {
+      const pDate = toDate(p.date);
+      if (!pDate) continue;
+
       if (party) {
-        payments = payments.filter(
-          (p: any) =>
-            p.partyName?.toLowerCase().includes(party.toLowerCase())
-        );
+        const match = p.partyName?.toLowerCase().includes(party);
+        if (!match) continue;
       }
-      openingCredit += payments.reduce((sum, p: any) => sum + (p.amount || 0), 0);
-    }
-    const openingBalance = openingCredit - openingDebit;
 
-    // --- Main Ledger Entries ---
-    // Fetch bilties
-    let biltyQ = query(collection(db, "bilties"), orderBy("biltyDate", "asc"));
-    if (from && to) {
-      biltyQ = query(biltyQ, where("biltyDate", ">=", from), where("biltyDate", "<=", to));
-    } else if (from) {
-      biltyQ = query(biltyQ, where("biltyDate", ">=", from));
-    } else if (to) {
-      biltyQ = query(biltyQ, where("biltyDate", "<=", to));
-    }
-    const biltySnap = await getDocs(biltyQ);
-    let bilties = biltySnap.docs.map((doc) => ({ id: doc.id, ...doc.data(), voucherType: "Bilty" }));
-    if (party) {
-      bilties = bilties.filter(
-        (b: any) =>
-          b.consignorName?.toLowerCase().includes(party.toLowerCase()) ||
-          b.consigneeName?.toLowerCase().includes(party.toLowerCase()) ||
-          b.truckNo?.toLowerCase().includes(party.toLowerCase())
-      );
+      if (pDate < from) {
+        openingCredit += (Number(p.amount) || 0);
+      }
     }
 
-    // Fetch challans
-    let challanQ = query(collection(db, "challans"), orderBy("challanDate", "asc"));
-    if (from && to) {
-      challanQ = query(challanQ, where("challanDate", ">=", from), where("challanDate", "<=", to));
-    } else if (from) {
-      challanQ = query(challanQ, where("challanDate", ">=", from));
-    } else if (to) {
-      challanQ = query(challanQ, where("challanDate", "<=", to));
-    }
-    const challanSnap = await getDocs(challanQ);
-    let challans = challanSnap.docs.map((doc) => ({ id: doc.id, ...doc.data(), voucherType: "Challan" }));
-    if (party) {
-      challans = challans.filter(
-        (c: any) =>
-          c.partyName?.toLowerCase().includes(party.toLowerCase()) ||
-          c.truckNo?.toLowerCase().includes(party.toLowerCase())
-      );
+    // Opening Balance = Debit - Credit (Asset/Receivable nature)
+    // If Debit > Credit, positive balance (Receivable)
+    const openingBalance = openingDebit - openingCredit;
+
+
+    // --- 2. Calculate Period Transactions (Between 'from' and 'to') ---
+    const transactions: any[] = [];
+
+    // Process Bilties (Debit)
+    for (const b of bilties) {
+      const bDate = toDate(b.biltyDate);
+      if (!bDate) continue;
+
+      if (party) {
+        const match =
+          b.consignorName?.toLowerCase().includes(party) ||
+          b.consigneeName?.toLowerCase().includes(party) ||
+          b.truckNo?.toLowerCase().includes(party);
+        if (!match) continue;
+      }
+
+      if (bDate >= from && bDate <= to) {
+        transactions.push({
+          id: b.id,
+          date: bDate,
+          voucherType: "Bilty",
+          particulars: b.consignorName || b.consigneeName || b.truckNo || "Bilty #" + b.biltyNo,
+          debit: Number(b.charges?.grandTotal) || 0,
+          credit: 0
+        });
+      }
     }
 
-    // Fetch payments
-    let paymentQ = query(collection(db, "payments"), orderBy("date", "asc"));
-    if (from && to) {
-      paymentQ = query(paymentQ, where("date", ">=", from), where("date", "<=", to));
-    } else if (from) {
-      paymentQ = query(paymentQ, where("date", ">=", from));
-    } else if (to) {
-      paymentQ = query(paymentQ, where("date", "<=", to));
-    }
-    const paymentSnap = await getDocs(paymentQ);
-    let payments = paymentSnap.docs.map((doc) => ({ id: doc.id, ...doc.data(), voucherType: "Payment" }));
-    if (party) {
-      payments = payments.filter(
-        (p: any) =>
-          p.partyName?.toLowerCase().includes(party.toLowerCase())
-      );
+    // Process Challans (Credit)
+    for (const c of challans) {
+      const cDate = toDate(c.challanDate);
+      if (!cDate) continue;
+
+      if (party) {
+        const match =
+          c.partyName?.toLowerCase().includes(party) ||
+          c.truckNo?.toLowerCase().includes(party);
+        if (!match) continue;
+      }
+
+      if (cDate >= from && cDate <= to) {
+        transactions.push({
+          id: c.id,
+          date: cDate,
+          voucherType: "Challan",
+          particulars: c.partyName || c.truckNo || "Challan",
+          debit: 0,
+          credit: Number(c.amount) || 0
+        });
+      }
     }
 
-    // Combine and sort all entries by date, with defensive checks
-    const allEntries = [
-      ...bilties.map((b: any) => ({
-        date: b.biltyDate
-          ? (b.biltyDate instanceof Timestamp ? b.biltyDate.toDate() : new Date(b.biltyDate))
-          : null,
-        voucherType: b.voucherType || "Bilty",
-        particulars: b.consignorName || b.consigneeName || b.truckNo || '',
-        debit: b.charges?.grandTotal || 0,
-        credit: 0,
-      })),
-      ...challans.map((c: any) => ({
-        date: c.challanDate
-          ? (c.challanDate instanceof Timestamp ? c.challanDate.toDate() : new Date(c.challanDate))
-          : null,
-        voucherType: c.voucherType || "Challan",
-        particulars: c.partyName || c.truckNo || '',
-        debit: 0,
-        credit: c.amount || 0,
-      })),
-      ...payments.map((p: any) => ({
-        date: p.date
-          ? (p.date instanceof Timestamp ? p.date.toDate() : new Date(p.date))
-          : null,
-        voucherType: p.voucherType || "Payment",
-        particulars: p.partyName || '',
-        debit: 0,
-        credit: p.amount || 0,
-      })),
-    ].filter(e => e.date).sort((a, b) => a.date.getTime() - b.date.getTime());
+    // Process Payments (Credit)
+    for (const p of payments) {
+      const pDate = toDate(p.date);
+      if (!pDate) continue;
 
-    // Calculate running balance and summary totals
-    let balance = openingBalance;
+      if (party) {
+        const match = p.partyName?.toLowerCase().includes(party);
+        if (!match) continue;
+      }
+
+      if (pDate >= from && pDate <= to) {
+        transactions.push({
+          id: p.id,
+          date: pDate,
+          voucherType: "Payment",
+          particulars: p.partyName || "Payment",
+          debit: 0,
+          credit: Number(p.amount) || 0
+        });
+      }
+    }
+
+    // Sort transactions by date
+    transactions.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    // --- 3. Calculate Running Balance ---
+    let runningBalance = openingBalance;
     let totalDebit = 0;
     let totalCredit = 0;
-    const ledgerRows = allEntries.map((entry) => {
-      totalDebit += entry.debit;
-      totalCredit += entry.credit;
-      balance += entry.credit - entry.debit;
+
+    const ledgerRows = transactions.map(t => {
+      totalDebit += t.debit;
+      totalCredit += t.credit;
+
+      // Balance = Previous Balance + Debit - Credit
+      runningBalance = runningBalance + t.debit - t.credit;
+
       return {
-        ...entry,
-        balance,
+        ...t,
+        balance: runningBalance
       };
     });
-    const closingBalance = openingBalance + totalCredit - totalDebit;
+
+    const closingBalance = openingBalance + totalDebit - totalCredit;
 
     return NextResponse.json({
       data: ledgerRows,
@@ -177,11 +237,15 @@ export async function GET(request: NextRequest) {
         openingBalance,
         totalDebit,
         totalCredit,
-        closingBalance,
-      },
+        closingBalance
+      }
     });
-  } catch (error) {
-    console.error('Ledger API error:', error);
-    return NextResponse.json({ message: "Failed to fetch ledger.", error: String(error) }, { status: 500 });
+
+  } catch (error: any) {
+    console.error("Ledger API Error:", error);
+    return NextResponse.json(
+      { message: "Internal Server Error", error: error.message },
+      { status: 500 }
+    );
   }
-} 
+}
