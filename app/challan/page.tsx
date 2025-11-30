@@ -273,7 +273,7 @@ export default function ChallanListPage() {
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   variant="ghost"
-                                  className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 rounded-full"
+                                  className="h-8 w-8 p-0 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full"
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>

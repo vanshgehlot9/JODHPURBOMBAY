@@ -316,7 +316,7 @@ export default function LedgerPage() {
                                     size="sm"
                                     onClick={exportToExcel}
                                     disabled={!summary}
-                                    className="hidden sm:flex bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800 hover:border-green-300"
+                                    className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800 hover:border-green-300"
                                 >
                                     <Download className="h-4 w-4 mr-2" />
                                     Export Excel

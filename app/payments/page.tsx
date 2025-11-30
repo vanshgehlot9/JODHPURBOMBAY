@@ -163,7 +163,7 @@ export default function PaymentEntryPage() {
 
                             {/* Results Table */}
                             {searchResults.length > 0 && (
-                                <div className="rounded-md border border-gray-200 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                                <div className="rounded-md border border-gray-200 overflow-x-auto animate-in fade-in slide-in-from-top-2">
                                     <Table>
                                         <TableHeader className="bg-gray-50">
                                             <TableRow>

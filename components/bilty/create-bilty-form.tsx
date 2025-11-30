@@ -723,8 +723,8 @@ export function CreateBiltyForm() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
-                    <div className="space-y-2">
+                  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-6 gap-6">
+                    <div className="col-span-1 space-y-2">
                       <Label className="text-sm font-semibold text-gray-700">Quantity</Label>
                       <Input
                         type="number"
@@ -734,7 +734,7 @@ export function CreateBiltyForm() {
                         className="h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
-                    <div className="md:col-span-2 space-y-2">
+                    <div className="col-span-2 md:col-span-2 space-y-2">
                       <Label className="text-sm font-semibold text-gray-700">Description</Label>
                       <Input
                         value={item.goodsDescription}
@@ -743,7 +743,7 @@ export function CreateBiltyForm() {
                         className="h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="col-span-1 space-y-2">
                       <Label className="text-sm font-semibold text-gray-700">HSN Code</Label>
                       <Input
                         value={item.hsnCode}
@@ -752,7 +752,7 @@ export function CreateBiltyForm() {
                         className="h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="col-span-1 space-y-2">
                       <Label className="text-sm font-semibold text-gray-700">Actual Kg</Label>
                       <Input
                         type="number"
@@ -763,7 +763,7 @@ export function CreateBiltyForm() {
                         className="h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="col-span-1 space-y-2">
                       <Label className="text-sm font-semibold text-gray-700">Charged Kg</Label>
                       <Input
                         type="number"
@@ -774,7 +774,7 @@ export function CreateBiltyForm() {
                         className="h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="col-span-2 lg:col-span-1 space-y-2">
                       <Label className="text-sm font-semibold text-gray-700">Rate</Label>
                       <Input
                         value={item.rate}

@@ -567,9 +567,9 @@ export default function CreateChallanForm() {
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-12 gap-4">
                     {/* Row 1 */}
-                    <div className="md:col-span-2 space-y-2">
+                    <div className="col-span-2 md:col-span-2 space-y-2">
                       <Label className="text-xs font-medium text-gray-500">Bilty No</Label>
                       <Input
                         value={item.biltyNo}
@@ -578,7 +578,7 @@ export default function CreateChallanForm() {
                         className="h-9 font-mono focus:ring-purple-500 focus:border-purple-500"
                       />
                     </div>
-                    <div className="md:col-span-5 space-y-2">
+                    <div className="col-span-2 md:col-span-5 space-y-2">
                       <Label className="text-xs font-medium text-gray-500">Consignor</Label>
                       <Input
                         value={item.consignorName || ""}
@@ -586,7 +586,7 @@ export default function CreateChallanForm() {
                         className="h-9 bg-gray-50 border-gray-200 text-gray-600"
                       />
                     </div>
-                    <div className="md:col-span-5 space-y-2">
+                    <div className="col-span-2 md:col-span-5 space-y-2">
                       <Label className="text-xs font-medium text-gray-500">Consignee</Label>
                       <Input
                         value={item.consigneeName || ""}
@@ -596,7 +596,7 @@ export default function CreateChallanForm() {
                     </div>
 
                     {/* Row 2 */}
-                    <div className="md:col-span-12 space-y-2">
+                    <div className="col-span-2 md:col-span-12 space-y-2">
                       <Label className="text-xs font-medium text-gray-500">Description</Label>
                       <Input
                         value={item.description || ""}
@@ -606,7 +606,7 @@ export default function CreateChallanForm() {
                     </div>
 
                     {/* Row 3 */}
-                    <div className="md:col-span-2 space-y-2">
+                    <div className="col-span-1 md:col-span-2 space-y-2">
                       <Label className="text-xs font-medium text-gray-500">Qty</Label>
                       <Input
                         type="number"
@@ -615,7 +615,7 @@ export default function CreateChallanForm() {
                         className="h-9 text-right bg-gray-50 border-gray-200 text-gray-600"
                       />
                     </div>
-                    <div className="md:col-span-2 space-y-2">
+                    <div className="col-span-1 md:col-span-2 space-y-2">
                       <Label className="text-xs font-medium text-gray-500">Weight</Label>
                       <Input
                         type="number"
@@ -624,7 +624,7 @@ export default function CreateChallanForm() {
                         className="h-9 text-right bg-gray-50 border-gray-200 text-gray-600"
                       />
                     </div>
-                    <div className="md:col-span-3 space-y-2">
+                    <div className="col-span-1 md:col-span-3 space-y-2">
                       <Label className="text-xs font-medium text-gray-500">Freight</Label>
                       <Input
                         type="number"
@@ -633,7 +633,7 @@ export default function CreateChallanForm() {
                         className="h-9 text-right bg-gray-50 border-gray-200 text-gray-600"
                       />
                     </div>
-                    <div className="md:col-span-2 space-y-2">
+                    <div className="col-span-1 md:col-span-2 space-y-2">
                       <Label className="text-xs font-medium text-gray-500">Rate</Label>
                       <Input
                         type="number"
@@ -642,7 +642,7 @@ export default function CreateChallanForm() {
                         className="h-9 text-right bg-gray-50 border-gray-200 text-gray-600"
                       />
                     </div>
-                    <div className="md:col-span-3 space-y-2">
+                    <div className="col-span-2 md:col-span-3 space-y-2">
                       <Label className="text-xs font-medium text-gray-500">Total</Label>
                       <Input
                         type="number"
