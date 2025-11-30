@@ -7,14 +7,14 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { 
-  Search, 
-  Download, 
-  Eye, 
-  Edit, 
-  Trash2, 
-  MoreHorizontal, 
-  FileText, 
+import {
+  Search,
+  Download,
+  Eye,
+  Edit,
+  Trash2,
+  MoreHorizontal,
+  FileText,
   Filter,
   SortAsc,
   SortDesc,
@@ -81,7 +81,7 @@ export function ViewBiltiesTable() {
         bilty.to.toLowerCase().includes(searchTerm.toLowerCase()),
     ).sort((a, b) => {
       let aValue: any, bValue: any
-      
+
       switch (sortBy) {
         case "biltyNo":
           aValue = a.biltyNo
@@ -98,7 +98,7 @@ export function ViewBiltiesTable() {
         default:
           return 0
       }
-      
+
       return sortOrder === "asc" ? aValue - bValue : bValue - aValue
     })
     setFilteredBilties(filtered)
@@ -230,15 +230,15 @@ export function ViewBiltiesTable() {
   return (
     <div className="space-y-6">
       {/* Main Table */}
-      <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
-        <CardHeader className="bg-gradient-to-r from-gray-50/50 to-transparent border-b border-gray-100">
+      <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
+        <CardHeader className="border-b border-gray-100/50 pb-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <CardTitle className="text-xl flex items-center gap-2">
-                <FileText className="h-5 w-5 text-blue-600" />
+              <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <FileText className="h-5 w-5 text-indigo-600" />
                 Bilty Documents
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-gray-500">
                 {filteredBilties.length} of {bilties.length} bilties
                 {searchTerm && ` matching "${searchTerm}"`}
               </CardDescription>
@@ -250,21 +250,21 @@ export function ViewBiltiesTable() {
                   placeholder="Search bilties, clients, routes..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-full sm:w-80 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="pl-10 w-full sm:w-80 h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50/50 border-gray-200"
                 />
               </div>
               {selectedBilties.size > 0 && (
-                <Button 
-                  onClick={handleBulkDelete} 
-                  variant="destructive" 
+                <Button
+                  onClick={handleBulkDelete}
+                  variant="destructive"
                   disabled={isDeleting}
-                  className="hover:bg-red-600"
+                  className="hover:bg-red-600 shadow-md shadow-red-200"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete ({selectedBilties.size})
                 </Button>
               )}
-              <Button onClick={handleExport} variant="outline" className="hover:bg-blue-50">
+              <Button onClick={handleExport} variant="outline" className="hover:bg-indigo-50 border-gray-200 text-gray-700">
                 <Download className="h-4 w-4 mr-2" />
                 Export All
               </Button>
@@ -274,18 +274,20 @@ export function ViewBiltiesTable() {
         <CardContent className="p-0">
           {filteredBilties.length === 0 ? (
             <div className="text-center py-16">
-              <FileText className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FileText className="h-10 w-10 text-gray-300" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
                 {searchTerm ? "No matching bilties found" : "No bilties created yet"}
               </h3>
-              <p className="text-gray-500 mb-6">
-                {searchTerm 
+              <p className="text-gray-500 mb-8 max-w-sm mx-auto">
+                {searchTerm
                   ? "Try adjusting your search terms or clear the search to see all bilties"
                   : "Get started by creating your first bilty document"
                 }
               </p>
               {!searchTerm && (
-                <Button onClick={() => window.location.href = '/bilty/create'} className="bg-blue-600 hover:bg-blue-700">
+                <Button onClick={() => window.location.href = '/bilty/create'} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200">
                   <FileText className="h-4 w-4 mr-2" />
                   Create First Bilty
                 </Button>
@@ -295,14 +297,15 @@ export function ViewBiltiesTable() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-gray-50/50 hover:bg-gray-50/50 border-b border-gray-200">
+                  <TableRow className="bg-gray-50/50 hover:bg-gray-50/50 border-b border-gray-100">
                     <TableHead className="w-12">
                       <Checkbox
                         checked={filteredBilties.length > 0 && selectedBilties.size === filteredBilties.length}
                         onCheckedChange={toggleSelectAll}
+                        className="border-gray-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                       />
                     </TableHead>
-                    <TableHead 
+                    <TableHead
                       className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors"
                       onClick={() => handleSort("biltyNo")}
                     >
@@ -311,30 +314,30 @@ export function ViewBiltiesTable() {
                         {getSortIcon("biltyNo")}
                       </div>
                     </TableHead>
-                    <TableHead 
+                    <TableHead
                       className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors"
                       onClick={() => handleSort("biltyDate")}
                     >
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
+                        <Calendar className="h-4 w-4 text-indigo-400" />
                         Date
                         {getSortIcon("biltyDate")}
                       </div>
                     </TableHead>
                     <TableHead className="font-semibold text-gray-700">
                       <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4" />
+                        <Users className="h-4 w-4 text-gray-400" />
                         Consignor
                       </div>
                     </TableHead>
                     <TableHead className="font-semibold text-gray-700">Consignee</TableHead>
                     <TableHead className="font-semibold text-gray-700">
                       <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
+                        <MapPin className="h-4 w-4 text-gray-400" />
                         Route
                       </div>
                     </TableHead>
-                    <TableHead 
+                    <TableHead
                       className="font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors"
                       onClick={() => handleSort("grandTotal")}
                     >
@@ -349,25 +352,25 @@ export function ViewBiltiesTable() {
                 </TableHeader>
                 <TableBody>
                   {filteredBilties.map((bilty) => (
-                    <TableRow 
-                      key={bilty.id} 
-                      className="hover:bg-blue-50/30 transition-colors border-b border-gray-100 group"
+                    <TableRow
+                      key={bilty.id}
+                      className="hover:bg-indigo-50/30 transition-all duration-200 border-b border-gray-50 group"
                     >
                       <TableCell>
                         <Checkbox
                           checked={selectedBilties.has(bilty.id)}
                           onCheckedChange={() => toggleSelectBilty(bilty.id)}
+                          className="border-gray-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                         />
                       </TableCell>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          #{bilty.biltyNo}
+                          <div className="w-2 h-2 bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
+                          <span className="text-gray-900 font-mono">#{bilty.biltyNo}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-gray-400" />
+                        <div className="text-gray-600 font-medium">
                           {formatDate(bilty.biltyDate)}
                         </div>
                       </TableCell>
@@ -383,20 +386,20 @@ export function ViewBiltiesTable() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1 text-sm">
-                          <span className="font-medium text-blue-600">{bilty.from}</span>
-                          <span className="text-gray-400">→</span>
+                          <span className="font-medium text-indigo-600">{bilty.from}</span>
+                          <span className="text-gray-300">→</span>
                           <span className="font-medium text-purple-600">{bilty.to}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="font-semibold text-green-600">
+                        <div className="font-bold text-gray-900">
                           ₹{bilty.charges?.grandTotal?.toFixed(2) || "0.00"}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge 
-                          variant="outline" 
-                          className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+                        <Badge
+                          variant="secondary"
+                          className="bg-green-100 text-green-700 hover:bg-green-100 border-0"
                         >
                           Active
                         </Badge>
@@ -404,26 +407,26 @@ export function ViewBiltiesTable() {
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-100"
+                            <Button
+                              variant="ghost"
+                              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 rounded-full"
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem 
+                          <DropdownMenuContent align="end" className="w-48 shadow-xl border-gray-100 rounded-xl p-1">
+                            <DropdownMenuItem
                               onClick={() => window.open(`/bilty/view/${bilty.id}`, "_blank")}
-                              className="hover:bg-blue-50"
+                              className="hover:bg-indigo-50 rounded-lg focus:bg-indigo-50 cursor-pointer"
                             >
-                              <Eye className="mr-2 h-4 w-4 text-blue-600" />
+                              <Eye className="mr-2 h-4 w-4 text-indigo-600" />
                               View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => window.open(`/api/bilty/${bilty.id}/pdf`, "_blank")}
-                              className="hover:bg-green-50"
+                              className="hover:bg-indigo-50 rounded-lg focus:bg-indigo-50 cursor-pointer"
                             >
-                              <FileText className="mr-2 h-4 w-4 text-green-600" />
+                              <FileText className="mr-2 h-4 w-4 text-indigo-600" />
                               View PDF
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => {
@@ -433,27 +436,28 @@ export function ViewBiltiesTable() {
                               document.body.appendChild(link);
                               link.click();
                               document.body.removeChild(link);
-                            }} className="hover:bg-purple-50">
-                              <Download className="mr-2 h-4 w-4 text-purple-600" />
+                            }} className="hover:bg-indigo-50 rounded-lg focus:bg-indigo-50 cursor-pointer">
+                              <Download className="mr-2 h-4 w-4 text-indigo-600" />
                               Download PDF
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => (window.location.href = `/bilty/edit/${bilty.id}`)}
-                              className="hover:bg-orange-50"
+                              className="hover:bg-indigo-50 rounded-lg focus:bg-indigo-50 cursor-pointer"
                             >
-                              <Edit className="mr-2 h-4 w-4 text-orange-600" />
+                              <Edit className="mr-2 h-4 w-4 text-indigo-600" />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => window.open(`/api/bilty/${bilty.id}/ewaybill`, "_blank")}
-                              className="hover:bg-yellow-50"
+                              className="hover:bg-indigo-50 rounded-lg focus:bg-indigo-50 cursor-pointer"
                             >
-                              <FileText className="mr-2 h-4 w-4 text-yellow-600" />
+                              <FileText className="mr-2 h-4 w-4 text-indigo-600" />
                               E-way Bill
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
+                            <div className="h-px bg-gray-100 my-1"></div>
+                            <DropdownMenuItem
                               onClick={() => handleDelete(bilty.id)}
-                              className="hover:bg-red-50 text-red-600"
+                              className="hover:bg-red-50 text-red-600 focus:bg-red-50 focus:text-red-700 rounded-lg cursor-pointer"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Delete

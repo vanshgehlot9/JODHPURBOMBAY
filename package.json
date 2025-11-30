@@ -49,6 +49,7 @@
     "express": "latest",
     "express-session": "latest",
     "firebase": "^11.10.0",
+    "framer-motion": "^12.23.24",
     "fs": "latest",
     "input-otp": "1.4.1",
     "jspdf": "^3.0.3",

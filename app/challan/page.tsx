@@ -9,15 +9,15 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { 
-  Search, 
-  Download, 
-  Eye, 
-  Edit, 
-  Trash2, 
-  MoreHorizontal, 
-  Plus, 
-  Truck, 
+import {
+  Search,
+  Download,
+  Eye,
+  Edit,
+  Trash2,
+  MoreHorizontal,
+  Plus,
+  Truck,
   Calendar,
   MapPin,
   Users
@@ -112,7 +112,7 @@ export default function ChallanListPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen bg-gray-50">
         <Sidebar />
         <div className="flex-1 flex flex-col">
           <Header title="Challans" subtitle="Manage delivery challans" />
@@ -120,8 +120,8 @@ export default function ChallanListPage() {
             <div className="flex items-center justify-center h-64">
               <div className="text-center space-y-4">
                 <div className="relative">
-                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
-                  <div className="absolute inset-0 rounded-full bg-blue-400/20 blur-xl animate-pulse"></div>
+                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-200 border-t-indigo-600 mx-auto"></div>
+                  <div className="absolute inset-0 rounded-full bg-indigo-400/20 blur-xl animate-pulse"></div>
                 </div>
                 <p className="text-sm text-gray-600 font-medium">Loading challans...</p>
               </div>
@@ -133,21 +133,21 @@ export default function ChallanListPage() {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Header title="Challans" subtitle="Manage delivery challans" />
         <main className="flex-1 p-3 sm:p-6 space-y-4 sm:space-y-6">
           {/* Main Table Card */}
-          <Card className="shadow-sm border-0 ring-1 ring-gray-200/50 slide-up">
-            <CardHeader className="bg-gradient-to-r from-gray-50/50 to-transparent border-b border-gray-100">
+          <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm slide-up">
+            <CardHeader className="bg-gradient-to-r from-indigo-50/30 to-transparent border-b border-gray-100/50 pb-6">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <CardTitle className="text-xl flex items-center gap-2">
-                    <Truck className="h-5 w-5 text-blue-600" />
+                  <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                    <Truck className="h-5 w-5 text-indigo-600" />
                     Delivery Challans
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-gray-500">
                     {filteredChallans.length} of {challans.length} challans
                     {searchTerm && ` matching "${searchTerm}"`}
                   </CardDescription>
@@ -159,11 +159,11 @@ export default function ChallanListPage() {
                       placeholder="Search challans..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 w-full sm:w-80 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="pl-10 w-full sm:w-80 h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white border-gray-200"
                     />
                   </div>
                   <Link href="/challan/create">
-                    <Button className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <Button className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300">
                       <Plus className="h-4 w-4 mr-2" />
                       Create Challan
                     </Button>
@@ -174,19 +174,21 @@ export default function ChallanListPage() {
             <CardContent className="p-0">
               {filteredChallans.length === 0 ? (
                 <div className="text-center py-16">
-                  <Truck className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Truck className="h-10 w-10 text-gray-300" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">
                     {searchTerm ? "No matching challans found" : "No challans created yet"}
                   </h3>
-                  <p className="text-gray-500 mb-6">
-                    {searchTerm 
+                  <p className="text-gray-500 mb-8 max-w-sm mx-auto">
+                    {searchTerm
                       ? "Try adjusting your search terms or clear the search"
                       : "Get started by creating your first challan"
                     }
                   </p>
                   {!searchTerm && (
                     <Link href="/challan/create">
-                      <Button className="bg-blue-600 hover:bg-blue-700">
+                      <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200">
                         <Plus className="h-4 w-4 mr-2" />
                         Create First Challan
                       </Button>
@@ -197,29 +199,29 @@ export default function ChallanListPage() {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-gray-50/50 hover:bg-gray-50/50 border-b border-gray-200">
+                      <TableRow className="bg-gray-50/50 hover:bg-gray-50/50 border-b border-gray-100">
                         <TableHead className="font-semibold text-gray-700">Challan No</TableHead>
                         <TableHead className="font-semibold text-gray-700">
                           <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
+                            <Calendar className="h-4 w-4 text-indigo-400" />
                             Date
                           </div>
                         </TableHead>
                         <TableHead className="font-semibold text-gray-700">
                           <div className="flex items-center gap-2">
-                            <Truck className="h-4 w-4" />
+                            <Truck className="h-4 w-4 text-gray-400" />
                             Truck No
                           </div>
                         </TableHead>
                         <TableHead className="font-semibold text-gray-700">
                           <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4" />
+                            <MapPin className="h-4 w-4 text-gray-400" />
                             Route
                           </div>
                         </TableHead>
                         <TableHead className="font-semibold text-gray-700">
                           <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4" />
+                            <Users className="h-4 w-4 text-gray-400" />
                             Owner
                           </div>
                         </TableHead>
@@ -229,24 +231,30 @@ export default function ChallanListPage() {
                     </TableHeader>
                     <TableBody>
                       {filteredChallans.map((challan) => (
-                        <TableRow 
+                        <TableRow
                           key={challan.id}
-                          className="hover:bg-blue-50/30 transition-colors border-b border-gray-100 group"
+                          className="hover:bg-indigo-50/30 transition-all duration-200 border-b border-gray-50 group"
                         >
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                              #{challan.challanNo}
+                              <div className="w-2 h-2 bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
+                              <span className="text-gray-900 font-mono">#{challan.challanNo}</span>
                             </div>
                           </TableCell>
-                          <TableCell>{formatDate(challan.date)}</TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="font-mono">{challan.truckNo}</Badge>
+                            <div className="text-gray-600 font-medium">
+                              {formatDate(challan.date)}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="font-mono bg-gray-100 text-gray-700 hover:bg-gray-200 border-0">
+                              {challan.truckNo}
+                            </Badge>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1 text-sm">
-                              <span className="font-medium text-blue-600">{challan.from}</span>
-                              <span className="text-gray-400">→</span>
+                              <span className="font-medium text-indigo-600">{challan.from}</span>
+                              <span className="text-gray-300">→</span>
                               <span className="font-medium text-purple-600">{challan.to}</span>
                             </div>
                           </TableCell>
@@ -256,33 +264,46 @@ export default function ChallanListPage() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <span className="font-semibold text-green-600">
+                            <span className="font-bold text-gray-900">
                               ₹{challan.totalFreight?.toFixed(2) || "0.00"}
                             </span>
                           </TableCell>
                           <TableCell>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-indigo-50 text-gray-400 hover:text-indigo-600 rounded-full"
+                                >
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem onClick={() => window.open(`/challan/view/${challan.id}`, "_blank")}>
-                                  <Eye className="mr-2 h-4 w-4" />
+                              <DropdownMenuContent align="end" className="w-48 shadow-xl border-gray-100 rounded-xl p-1">
+                                <DropdownMenuItem
+                                  onClick={() => window.open(`/challan/view/${challan.id}`, "_blank")}
+                                  className="hover:bg-indigo-50 rounded-lg focus:bg-indigo-50 cursor-pointer"
+                                >
+                                  <Eye className="mr-2 h-4 w-4 text-indigo-600" />
                                   View
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => (window.location.href = `/challan/edit/${challan.id}`)}>
-                                  <Edit className="mr-2 h-4 w-4" />
+                                <DropdownMenuItem
+                                  onClick={() => (window.location.href = `/challan/edit/${challan.id}`)}
+                                  className="hover:bg-indigo-50 rounded-lg focus:bg-indigo-50 cursor-pointer"
+                                >
+                                  <Edit className="mr-2 h-4 w-4 text-indigo-600" />
                                   Edit
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => window.open(`/api/challan/${challan.id}/pdf`, "_blank")}>
-                                  <Download className="mr-2 h-4 w-4" />
+                                <DropdownMenuItem
+                                  onClick={() => window.open(`/api/challan/${challan.id}/pdf`, "_blank")}
+                                  className="hover:bg-indigo-50 rounded-lg focus:bg-indigo-50 cursor-pointer"
+                                >
+                                  <Download className="mr-2 h-4 w-4 text-indigo-600" />
                                   Download PDF
                                 </DropdownMenuItem>
-                                <DropdownMenuItem 
+                                <div className="h-px bg-gray-100 my-1"></div>
+                                <DropdownMenuItem
                                   onClick={() => handleDelete(challan.id)}
-                                  className="text-red-600 focus:text-red-600"
+                                  className="hover:bg-red-50 text-red-600 focus:bg-red-50 focus:text-red-700 rounded-lg cursor-pointer"
                                 >
                                   <Trash2 className="mr-2 h-4 w-4" />
                                   Delete

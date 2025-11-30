@@ -5,7 +5,6 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as Sonner } from "@/components/ui/sonner"
 import { AuthProvider } from "@/components/auth/auth-provider"
-import { OfflineIndicator } from "@/components/offline-indicator"
 import { ServiceWorkerProvider } from "@/components/service-worker-provider"
 
 export const metadata: Metadata = {
@@ -24,7 +23,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#3b82f6',
+  themeColor: '#4f46e5',
 }
 
 export default function RootLayout({
@@ -49,7 +48,6 @@ export default function RootLayout({
               {children}
               <Toaster />
               <Sonner />
-              <OfflineIndicator />
             </AuthProvider>
           </ThemeProvider>
         </ServiceWorkerProvider>

@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { createChallan } from "@/lib/firestore";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -114,13 +113,13 @@ export default function CreateChallanForm() {
         const response = await fetch('/api/bilty');
         if (response.ok) {
           const bilties = await response.json();
-          
+
           // Get today's date in YYYY-MM-DD format
           const today = new Date().toISOString().split("T")[0];
-          
+
           // Filter bilties created today
           const todaysBilties = bilties.filter((bilty: any) => {
-            const biltyDate = bilty.biltyDate?.toDate 
+            const biltyDate = bilty.biltyDate?.toDate
               ? bilty.biltyDate.toDate().toISOString().split("T")[0]
               : new Date(bilty.biltyDate).toISOString().split("T")[0];
             return biltyDate === today;
@@ -144,11 +143,11 @@ export default function CreateChallanForm() {
             });
 
             setForm(f => ({ ...f, items: autoItems }));
-            
+
             // Calculate total freight
             const newTotal = autoItems.reduce((sum: number, item: any) => sum + (item.total || 0), 0);
             setTotalFreight(newTotal);
-            
+
             toast({
               title: "Today's Bilties Loaded",
               description: `Automatically loaded ${todaysBilties.length} bilty(s) created today`,
@@ -166,19 +165,19 @@ export default function CreateChallanForm() {
   // Auto-fetch bilty details when bilty number is entered
   const fetchBiltyDetails = async (biltyNo: string, itemIndex: number) => {
     if (!biltyNo) return;
-    
+
     try {
       // First try to get all bilties and find the matching one
       const response = await fetch('/api/bilty');
       if (response.ok) {
         const bilties = await response.json();
         const bilty = bilties.find((b: any) => b.biltyNo.toString() === biltyNo.toString());
-        
+
         if (bilty) {
           const updated = [...form.items];
           // Get first item details if available
           const firstItem = bilty.items && bilty.items[0];
-          
+
           updated[itemIndex] = {
             ...updated[itemIndex],
             biltyNo: biltyNo,
@@ -191,13 +190,13 @@ export default function CreateChallanForm() {
             rate: firstItem?.rate ? parseFloat(firstItem.rate) : 0,
             total: bilty.charges?.freight || 0,
           };
-          
+
           setForm(f => ({ ...f, items: updated }));
-          
+
           // Update total freight
           const newTotal = updated.reduce((sum, item) => sum + (item.total || 0), 0);
           setTotalFreight(newTotal);
-          
+
           toast({
             title: "Bilty Details Loaded",
             description: `Successfully loaded details for bilty #${biltyNo}`,
@@ -350,12 +349,12 @@ export default function CreateChallanForm() {
       }
 
       const result = await response.json();
-      
+
       toast({
         title: "Success",
         description: `Challan #${result.challanNo} created successfully!`,
       });
-      
+
       handleReset();
       router.push("/");
     } catch (err) {
@@ -371,324 +370,332 @@ export default function CreateChallanForm() {
   };
 
   return (
-    <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
-      <CardHeader className="bg-gradient-to-r from-blue-50/50 to-transparent border-b border-gray-100">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Truck className="h-5 w-5 text-blue-600" />
-          </div>
+
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-lg p-6 shadow-sm">
+        <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-xl">Create Delivery Challan</CardTitle>
-            <CardDescription>Fill in the challan details below. Today's bilties are auto-loaded.</CardDescription>
+            <h1 className="text-2xl font-bold text-gray-900">Create Delivery Challan</h1>
+            <p className="text-gray-600">Fill in the challan details below. Today's bilties are auto-loaded.</p>
           </div>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/challan")}
+            className="hover:bg-indigo-50 border-indigo-200 text-indigo-700"
+          >
+            <Truck className="mr-2 h-4 w-4" />
+            View Challans
+          </Button>
         </div>
-      </CardHeader>
-      <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Details Section */}
-            <div className="bg-gradient-to-br from-gray-50/80 to-blue-50/30 p-6 rounded-xl border border-gray-200/50">
-              <h3 className="text-base font-semibold mb-5 flex items-center gap-2 text-gray-800">
-                <div className="p-1.5 bg-blue-100 rounded-lg">
-                  <MapPin className="h-4 w-4 text-blue-600" />
-                </div>
-                Basic Details
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
-                <div className="space-y-2">
-                  <Label htmlFor="date" className="text-sm font-medium text-gray-700">
-                    Date <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={form.date}
-                    onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
-                    required
-                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                
-                <div className="space-y-2" ref={truckDropdownRef}>
-                  <Label htmlFor="truckNo" className="text-sm font-medium text-gray-700">
-                    Truck Number <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="truckNo"
-                      value={form.truckNo}
-                      onChange={e => {
-                        const value = e.target.value.toUpperCase();
-                        setForm(f => ({ ...f, truckNo: value }));
-                        fetchSuggestions('truck', value);
-                      }}
-                      placeholder="e.g., RJ14GA1234"
-                      required
-                      className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    {showTruckDropdown && truckSuggestions.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
-                        {truckSuggestions.map((suggestion, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            className="w-full px-4 py-2.5 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0 flex items-center gap-2"
-                            onClick={() => {
-                              setForm(f => ({ ...f, truckNo: suggestion }));
-                              setShowTruckDropdown(false);
-                            }}
-                          >
-                            <Truck className="h-4 w-4 text-blue-600" />
-                            <span className="font-medium text-gray-900">{suggestion}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
+      </div>
 
-                <div className="space-y-2" ref={ownerDropdownRef}>
-                  <Label htmlFor="truckOwnerName" className="text-sm font-medium text-gray-700">
-                    Owner Name <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="truckOwnerName"
-                      value={form.truckOwnerName}
-                      onChange={e => {
-                        const value = e.target.value;
-                        setForm(f => ({ ...f, truckOwnerName: value }));
-                        fetchSuggestions('owner', value);
-                      }}
-                      placeholder="Owner name"
-                      required
-                      className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    {showOwnerDropdown && ownerSuggestions.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
-                        {ownerSuggestions.map((suggestion, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            className="w-full px-4 py-2.5 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0 flex items-center gap-2"
-                            onClick={() => {
-                              setForm(f => ({ ...f, truckOwnerName: suggestion }));
-                              setShowOwnerDropdown(false);
-                            }}
-                          >
-                            <User className="h-4 w-4 text-blue-600" />
-                            <span className="font-medium text-gray-900">{suggestion}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="from" className="text-sm font-medium text-gray-700">
-                    From <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="from"
-                    value={form.from}
-                    onChange={e => setForm(f => ({ ...f, from: e.target.value }))}
-                    placeholder="Origin city"
-                    required
-                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="to" className="text-sm font-medium text-gray-700">
-                    To <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="to"
-                    value={form.to}
-                    onChange={e => setForm(f => ({ ...f, to: e.target.value }))}
-                    placeholder="Destination city"
-                    required
-                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Basic Details Section */}
+        <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-indigo-50/50 to-transparent border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-indigo-100 rounded-lg">
+                <MapPin className="h-5 w-5 text-indigo-600" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">Basic Details</CardTitle>
+                <CardDescription>Route and transport information</CardDescription>
               </div>
             </div>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="date" className="text-sm font-semibold text-gray-700">
+                  Date <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={form.date}
+                  onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
+                  required
+                  className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white border-gray-200"
+                />
+              </div>
 
-            {/* Bilty Items Table */}
-            <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
-              <CardHeader className="bg-gradient-to-r from-green-50/50 to-transparent border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <Plus className="h-5 w-5 text-green-600" />
+              <div className="space-y-2" ref={truckDropdownRef}>
+                <Label htmlFor="truckNo" className="text-sm font-semibold text-gray-700">
+                  Truck Number <span className="text-red-500">*</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="truckNo"
+                    value={form.truckNo}
+                    onChange={e => {
+                      const value = e.target.value.toUpperCase();
+                      setForm(f => ({ ...f, truckNo: value }));
+                      fetchSuggestions('truck', value);
+                    }}
+                    placeholder="e.g., RJ14GA1234"
+                    required
+                    className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white border-gray-200"
+                  />
+                  {showTruckDropdown && truckSuggestions.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-60 overflow-auto ring-1 ring-black/5">
+                      {truckSuggestions.map((suggestion, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className="w-full px-4 py-3 text-left hover:bg-indigo-50 focus:bg-indigo-50 focus:outline-none border-b border-gray-50 last:border-b-0 flex items-center gap-3 transition-colors"
+                          onClick={() => {
+                            setForm(f => ({ ...f, truckNo: suggestion }));
+                            setShowTruckDropdown(false);
+                          }}
+                        >
+                          <Truck className="h-4 w-4 text-indigo-600" />
+                          <span className="font-medium text-gray-900 font-mono">{suggestion}</span>
+                        </button>
+                      ))}
                     </div>
-                    <div>
-                      <CardTitle className="text-xl">Bilty Items</CardTitle>
-                      <CardDescription>Add bilty items to this challan</CardDescription>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2" ref={ownerDropdownRef}>
+                <Label htmlFor="truckOwnerName" className="text-sm font-semibold text-gray-700">
+                  Owner Name <span className="text-red-500">*</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="truckOwnerName"
+                    value={form.truckOwnerName}
+                    onChange={e => {
+                      const value = e.target.value;
+                      setForm(f => ({ ...f, truckOwnerName: value }));
+                      fetchSuggestions('owner', value);
+                    }}
+                    placeholder="Owner name"
+                    required
+                    className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white border-gray-200"
+                  />
+                  {showOwnerDropdown && ownerSuggestions.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-60 overflow-auto ring-1 ring-black/5">
+                      {ownerSuggestions.map((suggestion, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className="w-full px-4 py-3 text-left hover:bg-indigo-50 focus:bg-indigo-50 focus:outline-none border-b border-gray-50 last:border-b-0 flex items-center gap-3 transition-colors"
+                          onClick={() => {
+                            setForm(f => ({ ...f, truckOwnerName: suggestion }));
+                            setShowOwnerDropdown(false);
+                          }}
+                        >
+                          <User className="h-4 w-4 text-indigo-600" />
+                          <span className="font-medium text-gray-900">{suggestion}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="from" className="text-sm font-semibold text-gray-700">
+                  From <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="from"
+                  value={form.from}
+                  onChange={e => setForm(f => ({ ...f, from: e.target.value }))}
+                  placeholder="Origin city"
+                  required
+                  className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white border-gray-200"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="to" className="text-sm font-semibold text-gray-700">
+                  To <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="to"
+                  value={form.to}
+                  onChange={e => setForm(f => ({ ...f, to: e.target.value }))}
+                  placeholder="Destination city"
+                  required
+                  className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white border-gray-200"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Bilty Items Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Plus className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Bilty Items</h2>
+                <p className="text-gray-500 text-sm">Add bilty items to this challan</p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              onClick={addItem}
+              size="sm"
+              className="bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-200"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Item
+            </Button>
+          </div>
+
+          <div className="space-y-4">
+            {form.items.map((item, idx) => (
+              <Card key={idx} className="shadow-sm border border-gray-200 hover:border-purple-200 transition-colors bg-white/50 backdrop-blur-sm">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Item #{idx + 1}</span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => removeItem(idx)}
+                      disabled={form.items.length === 1}
+                      className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                    {/* Row 1 */}
+                    <div className="md:col-span-2 space-y-2">
+                      <Label className="text-xs font-medium text-gray-500">Bilty No</Label>
+                      <Input
+                        value={item.biltyNo}
+                        onChange={e => handleBiltyNumberChange(idx, e.target.value)}
+                        placeholder="15"
+                        className="h-9 font-mono focus:ring-purple-500 focus:border-purple-500"
+                      />
+                    </div>
+                    <div className="md:col-span-5 space-y-2">
+                      <Label className="text-xs font-medium text-gray-500">Consignor</Label>
+                      <Input
+                        value={item.consignorName || ""}
+                        readOnly
+                        className="h-9 bg-gray-50 border-gray-200 text-gray-600"
+                      />
+                    </div>
+                    <div className="md:col-span-5 space-y-2">
+                      <Label className="text-xs font-medium text-gray-500">Consignee</Label>
+                      <Input
+                        value={item.consigneeName || ""}
+                        readOnly
+                        className="h-9 bg-gray-50 border-gray-200 text-gray-600"
+                      />
+                    </div>
+
+                    {/* Row 2 */}
+                    <div className="md:col-span-12 space-y-2">
+                      <Label className="text-xs font-medium text-gray-500">Description</Label>
+                      <Input
+                        value={item.description || ""}
+                        readOnly
+                        className="h-9 bg-gray-50 border-gray-200 text-gray-600"
+                      />
+                    </div>
+
+                    {/* Row 3 */}
+                    <div className="md:col-span-2 space-y-2">
+                      <Label className="text-xs font-medium text-gray-500">Qty</Label>
+                      <Input
+                        type="number"
+                        value={item.quantity || 0}
+                        readOnly
+                        className="h-9 text-right bg-gray-50 border-gray-200 text-gray-600"
+                      />
+                    </div>
+                    <div className="md:col-span-2 space-y-2">
+                      <Label className="text-xs font-medium text-gray-500">Weight</Label>
+                      <Input
+                        type="number"
+                        value={item.weight || 0}
+                        readOnly
+                        className="h-9 text-right bg-gray-50 border-gray-200 text-gray-600"
+                      />
+                    </div>
+                    <div className="md:col-span-3 space-y-2">
+                      <Label className="text-xs font-medium text-gray-500">Freight</Label>
+                      <Input
+                        type="number"
+                        value={item.freight || 0}
+                        readOnly
+                        className="h-9 text-right bg-gray-50 border-gray-200 text-gray-600"
+                      />
+                    </div>
+                    <div className="md:col-span-2 space-y-2">
+                      <Label className="text-xs font-medium text-gray-500">Rate</Label>
+                      <Input
+                        type="number"
+                        value={item.rate || 0}
+                        readOnly
+                        className="h-9 text-right bg-gray-50 border-gray-200 text-gray-600"
+                      />
+                    </div>
+                    <div className="md:col-span-3 space-y-2">
+                      <Label className="text-xs font-medium text-gray-500">Total</Label>
+                      <Input
+                        type="number"
+                        value={item.total || 0}
+                        readOnly
+                        className="h-9 text-right font-bold text-gray-900 bg-purple-50/50 border-purple-100"
+                      />
                     </div>
                   </div>
-                  <Button
-                    type="button"
-                    onClick={addItem}
-                    size="sm"
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Row
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="p-3 text-xs font-semibold text-gray-700 text-left border-r border-gray-200">Sr</th>
-                      <th className="p-3 text-xs font-semibold text-gray-700 text-left border-r border-gray-200">Bilty No</th>
-                      <th className="p-3 text-xs font-semibold text-gray-700 text-left border-r border-gray-200">Consignor</th>
-                      <th className="p-3 text-xs font-semibold text-gray-700 text-left border-r border-gray-200">Consignee</th>
-                      <th className="p-3 text-xs font-semibold text-gray-700 text-left border-r border-gray-200">Description</th>
-                      <th className="p-3 text-xs font-semibold text-gray-700 text-right border-r border-gray-200">Qty</th>
-                      <th className="p-3 text-xs font-semibold text-gray-700 text-right border-r border-gray-200">Weight</th>
-                      <th className="p-3 text-xs font-semibold text-gray-700 text-right border-r border-gray-200">Freight</th>
-                      <th className="p-3 text-xs font-semibold text-gray-700 text-right border-r border-gray-200">Rate</th>
-                      <th className="p-3 text-xs font-semibold text-gray-700 text-right border-r border-gray-200">Total</th>
-                      <th className="p-3 text-xs font-semibold text-gray-700 text-center">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {form.items.map((item, idx) => (
-                      <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                        <td className="p-2 text-sm font-medium text-center border-r border-gray-100">{idx + 1}</td>
-                        <td className="p-2 border-r border-gray-200">
-                          <Input
-                            value={item.biltyNo}
-                            onChange={e => handleBiltyNumberChange(idx, e.target.value)}
-                            placeholder="15"
-                            className="w-20 h-8 text-xs"
-                          />
-                        </td>
-                        <td className="p-2 border-r border-gray-200">
-                          <Input
-                            value={item.consignorName || ""}
-                            readOnly
-                            className="w-32 h-8 text-xs bg-gray-50"
-                          />
-                        </td>
-                        <td className="p-2 border-r border-gray-200">
-                          <Input
-                            value={item.consigneeName || ""}
-                            readOnly
-                            className="w-32 h-8 text-xs bg-gray-50"
-                          />
-                        </td>
-                        <td className="p-2 border-r border-gray-200">
-                          <Input
-                            value={item.description || ""}
-                            readOnly
-                            className="w-36 h-8 text-xs bg-gray-50"
-                          />
-                        </td>
-                        <td className="p-2 border-r border-gray-200">
-                          <Input
-                            type="number"
-                            value={item.quantity || 0}
-                            readOnly
-                            className="w-16 h-8 text-xs text-right bg-gray-50"
-                          />
-                        </td>
-                        <td className="p-2 border-r border-gray-200">
-                          <Input
-                            type="number"
-                            value={item.weight || 0}
-                            readOnly
-                            className="w-20 h-8 text-xs text-right bg-gray-50"
-                          />
-                        </td>
-                        <td className="p-2 border-r border-gray-200">
-                          <Input
-                            type="number"
-                            value={item.freight || 0}
-                            readOnly
-                            className="w-20 h-8 text-xs text-right bg-gray-50"
-                          />
-                        </td>
-                        <td className="p-2 border-r border-gray-200">
-                          <Input
-                            type="number"
-                            value={item.rate || 0}
-                            readOnly
-                            className="w-20 h-8 text-xs text-right bg-gray-50"
-                          />
-                        </td>
-                        <td className="p-2 border-r border-gray-200">
-                          <Input
-                            type="number"
-                            value={item.total || 0}
-                            readOnly
-                            className="w-24 h-8 text-xs text-right font-semibold bg-gray-50"
-                          />
-                        </td>
-                        <td className="p-2 text-center">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => removeItem(idx)}
-                            disabled={form.items.length === 1}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr className="bg-gradient-to-r from-green-50/50 to-transparent border-t-2 border-gray-200">
-                      <td colSpan={9} className="p-4 text-right font-semibold text-sm text-gray-700">
-                        Total Freight:
-                      </td>
-                      <td colSpan={2} className="p-4 text-right font-bold text-lg text-green-700">
-                        ₹ {totalFreight.toFixed(2)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Total Freight Summary */}
+          <Card className="bg-purple-50/50 border-purple-100">
+            <CardContent className="p-6 flex items-center justify-between">
+              <span className="font-bold text-gray-700 uppercase tracking-wide">Total Freight</span>
+              <span className="font-bold text-2xl text-purple-700">₹ {totalFreight.toFixed(2)}</span>
             </CardContent>
           </Card>
+        </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleReset}
-                disabled={loading}
-                className="px-6"
-              >
-                Reset Form
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="px-8 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating Challan...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Create Challan
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+        {/* Action Buttons */}
+        <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-100">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleReset}
+            disabled={loading}
+            className="px-6 h-12 border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+          >
+            Reset Form
+          </Button>
+          <Button
+            type="submit"
+            disabled={loading}
+            className="px-8 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Creating Challan...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-5 w-5" />
+                Create Challan
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
+    </div>
   )
 }

@@ -113,13 +113,13 @@ export default function LedgerPage() {
 
     if (authLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="flex flex-col items-center gap-4">
                     <div className="relative">
-                        <div className="h-12 w-12 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin"></div>
-                        <div className="absolute inset-0 rounded-full border-4 border-blue-400/30 blur-sm animate-pulse"></div>
+                        <div className="h-12 w-12 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin"></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-indigo-400/30 blur-sm animate-pulse"></div>
                     </div>
-                    <p className="text-slate-500 font-medium animate-pulse">Loading Ledger...</p>
+                    <p className="text-gray-500 font-medium animate-pulse">Loading Ledger...</p>
                 </div>
             </div>
         );
@@ -130,7 +130,7 @@ export default function LedgerPage() {
     }
 
     return (
-        <div className="flex min-h-screen bg-slate-50/50">
+        <div className="flex min-h-screen bg-gray-50">
             <Sidebar />
             <div className="flex-1 flex flex-col overflow-hidden">
                 <Header title="Ledger Account" subtitle="Financial transactions & statements" />
@@ -138,13 +138,13 @@ export default function LedgerPage() {
                 <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
                     {/* Filter Section with Glassmorphism */}
                     <div className="relative overflow-hidden rounded-xl border border-white/20 bg-white/70 backdrop-blur-xl shadow-lg animate-in slide-in-from-top-4 duration-500">
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-indigo-50/50 to-purple-50/50 opacity-50"></div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/50 via-purple-50/50 to-pink-50/50 opacity-50"></div>
                         <div className="relative p-6">
                             <div className="flex flex-col md:flex-row gap-6 items-end">
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 w-full">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                                            <CalendarIcon className="h-4 w-4 text-blue-500" />
+                                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                            <CalendarIcon className="h-4 w-4 text-indigo-500" />
                                             From Date
                                         </label>
                                         <div className="relative group">
@@ -152,14 +152,14 @@ export default function LedgerPage() {
                                                 type="date"
                                                 value={fromDate}
                                                 onChange={(e) => setFromDate(e.target.value)}
-                                                className="bg-white/80 border-slate-200 focus:border-blue-500 focus:ring-blue-500 transition-all duration-300 group-hover:shadow-md"
+                                                className="bg-white/80 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 transition-all duration-300 group-hover:shadow-md"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                                            <CalendarIcon className="h-4 w-4 text-indigo-500" />
+                                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                            <CalendarIcon className="h-4 w-4 text-purple-500" />
                                             To Date
                                         </label>
                                         <div className="relative group">
@@ -167,14 +167,14 @@ export default function LedgerPage() {
                                                 type="date"
                                                 value={toDate}
                                                 onChange={(e) => setToDate(e.target.value)}
-                                                className="bg-white/80 border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 transition-all duration-300 group-hover:shadow-md"
+                                                className="bg-white/80 border-gray-200 focus:border-purple-500 focus:ring-purple-500 transition-all duration-300 group-hover:shadow-md"
                                             />
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                                            <Search className="h-4 w-4 text-purple-500" />
+                                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                            <Search className="h-4 w-4 text-indigo-500" />
                                             Party Name
                                         </label>
                                         <div className="relative group">
@@ -183,7 +183,7 @@ export default function LedgerPage() {
                                                 value={partyName}
                                                 onChange={(e) => setPartyName(e.target.value)}
                                                 placeholder="Search party..."
-                                                className="bg-white/80 border-slate-200 focus:border-purple-500 focus:ring-purple-500 transition-all duration-300 group-hover:shadow-md"
+                                                className="bg-white/80 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 transition-all duration-300 group-hover:shadow-md"
                                             />
                                         </div>
                                     </div>
@@ -193,7 +193,7 @@ export default function LedgerPage() {
                                     <Button
                                         onClick={clearFilters}
                                         variant="outline"
-                                        className="flex-1 md:flex-none border-slate-300 hover:bg-slate-100 hover:text-slate-900 transition-all duration-300"
+                                        className="flex-1 md:flex-none border-gray-300 hover:bg-gray-100 hover:text-gray-900 transition-all duration-300"
                                     >
                                         <RefreshCcw className="h-4 w-4 mr-2" />
                                         Clear
@@ -201,7 +201,7 @@ export default function LedgerPage() {
                                     <Button
                                         onClick={generateLedger}
                                         disabled={loading}
-                                        className="flex-1 md:flex-none bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-blue-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
+                                        className="flex-1 md:flex-none bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
                                     >
                                         {loading ? (
                                             <>
@@ -230,16 +230,16 @@ export default function LedgerPage() {
                     {/* Summary Cards */}
                     {summary && (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-in slide-in-from-bottom-4 duration-500 delay-100">
-                            <Card className="border-none shadow-lg bg-gradient-to-br from-white to-slate-50 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
+                            <Card className="border-none shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium text-slate-500">Opening Balance</CardTitle>
-                                    <div className="h-8 w-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <CardTitle className="text-sm font-medium text-gray-500">Opening Balance</CardTitle>
+                                    <div className="h-8 w-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
                                         <Wallet className="h-4 w-4" />
                                     </div>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-2xl font-bold text-slate-900">{formatCurrency(summary.openingBalance)}</div>
-                                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                                    <div className="text-2xl font-bold text-gray-900">{formatCurrency(summary.openingBalance)}</div>
+                                    <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                                         <span className={cn("inline-block h-2 w-2 rounded-full", summary.openingBalance >= 0 ? "bg-emerald-500" : "bg-rose-500")}></span>
                                         {summary.openingBalance >= 0 ? "Receivable" : "Payable"}
                                     </p>
@@ -272,16 +272,16 @@ export default function LedgerPage() {
                                 </CardContent>
                             </Card>
 
-                            <Card className="border-none shadow-lg bg-gradient-to-br from-slate-900 to-slate-800 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
+                            <Card className="border-none shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium text-slate-300">Closing Balance</CardTitle>
+                                    <CardTitle className="text-sm font-medium text-gray-300">Closing Balance</CardTitle>
                                     <div className="h-8 w-8 rounded-lg bg-white/10 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
                                         <ArrowRightLeft className="h-4 w-4" />
                                     </div>
                                 </CardHeader>
                                 <CardContent>
                                     <div className="text-2xl font-bold text-white">{formatCurrency(summary.closingBalance)}</div>
-                                    <p className="text-xs text-slate-400 mt-1">
+                                    <p className="text-xs text-gray-400 mt-1">
                                         {summary.closingBalance >= 0 ? "Net Receivable" : "Net Payable"}
                                     </p>
                                 </CardContent>
@@ -291,10 +291,10 @@ export default function LedgerPage() {
 
                     {/* Transactions Table */}
                     <Card className="border-none shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden animate-in slide-in-from-bottom-8 duration-700 delay-200">
-                        <CardHeader className="border-b border-slate-100 bg-slate-50/50 flex flex-row items-center justify-between">
+                        <CardHeader className="border-b border-gray-100 bg-gray-50/50 flex flex-row items-center justify-between">
                             <div className="space-y-1">
-                                <CardTitle className="text-lg font-bold text-slate-800">Transactions</CardTitle>
-                                <p className="text-sm text-slate-500">
+                                <CardTitle className="text-lg font-bold text-gray-800">Transactions</CardTitle>
+                                <p className="text-sm text-gray-500">
                                     {transactions.length > 0
                                         ? `Showing ${transactions.length} transaction${transactions.length === 1 ? '' : 's'}`
                                         : "No transactions to display"}
@@ -327,13 +327,13 @@ export default function LedgerPage() {
                             <div className="overflow-x-auto">
                                 <Table>
                                     <TableHeader>
-                                        <TableRow className="bg-slate-50/50 hover:bg-slate-50/80">
-                                            <TableHead className="w-[120px] font-semibold text-slate-700">Date</TableHead>
-                                            <TableHead className="w-[150px] font-semibold text-slate-700">Type</TableHead>
-                                            <TableHead className="min-w-[300px] font-semibold text-slate-700">Particulars</TableHead>
+                                        <TableRow className="bg-gray-50/50 hover:bg-gray-50/80">
+                                            <TableHead className="w-[120px] font-semibold text-gray-700">Date</TableHead>
+                                            <TableHead className="w-[150px] font-semibold text-gray-700">Type</TableHead>
+                                            <TableHead className="min-w-[300px] font-semibold text-gray-700">Particulars</TableHead>
                                             <TableHead className="text-right font-semibold text-emerald-600">Debit (₹)</TableHead>
                                             <TableHead className="text-right font-semibold text-rose-600">Credit (₹)</TableHead>
-                                            <TableHead className="text-right font-bold text-slate-800">Balance (₹)</TableHead>
+                                            <TableHead className="text-right font-bold text-gray-800">Balance (₹)</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -341,8 +341,8 @@ export default function LedgerPage() {
                                             <TableRow>
                                                 <TableCell colSpan={6} className="h-48 text-center">
                                                     <div className="flex flex-col items-center justify-center gap-3">
-                                                        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                                                        <p className="text-slate-500 font-medium">Fetching transaction data...</p>
+                                                        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+                                                        <p className="text-gray-500 font-medium">Fetching transaction data...</p>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
@@ -350,14 +350,14 @@ export default function LedgerPage() {
                                             <TableRow>
                                                 <TableCell colSpan={6} className="h-64 text-center">
                                                     <div className="flex flex-col items-center justify-center gap-4">
-                                                        <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center">
-                                                            <FileText className="h-8 w-8 text-slate-400" />
+                                                        <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
+                                                            <FileText className="h-8 w-8 text-gray-400" />
                                                         </div>
                                                         <div className="space-y-1">
-                                                            <p className="text-lg font-medium text-slate-700">
+                                                            <p className="text-lg font-medium text-gray-700">
                                                                 {hasSearched ? "No transactions found" : "Ready to generate report"}
                                                             </p>
-                                                            <p className="text-sm text-slate-500 max-w-xs mx-auto">
+                                                            <p className="text-sm text-gray-500 max-w-xs mx-auto">
                                                                 {hasSearched
                                                                     ? "Try adjusting your date range or filters to see more results."
                                                                     : "Select your date range and click 'Generate Report' to view the ledger."}
@@ -375,9 +375,9 @@ export default function LedgerPage() {
                                             transactions.map((t, index) => (
                                                 <TableRow
                                                     key={index}
-                                                    className="group hover:bg-blue-50/30 transition-colors duration-200"
+                                                    className="group hover:bg-indigo-50/30 transition-colors duration-200"
                                                 >
-                                                    <TableCell className="font-medium text-slate-700">
+                                                    <TableCell className="font-medium text-gray-700">
                                                         {format(new Date(t.date), "dd MMM yyyy")}
                                                     </TableCell>
                                                     <TableCell>
@@ -385,7 +385,7 @@ export default function LedgerPage() {
                                                             variant="outline"
                                                             className={cn(
                                                                 "font-medium border-0",
-                                                                t.voucherType === 'Bilty' ? 'bg-blue-100 text-blue-700' :
+                                                                t.voucherType === 'Bilty' ? 'bg-indigo-100 text-indigo-700' :
                                                                     t.voucherType === 'Payment' ? 'bg-emerald-100 text-emerald-700' :
                                                                         'bg-amber-100 text-amber-700'
                                                             )}
@@ -393,7 +393,7 @@ export default function LedgerPage() {
                                                             {t.voucherType}
                                                         </Badge>
                                                     </TableCell>
-                                                    <TableCell className="text-slate-600 font-medium group-hover:text-slate-900 transition-colors">
+                                                    <TableCell className="text-gray-600 font-medium group-hover:text-gray-900 transition-colors">
                                                         {t.particulars}
                                                     </TableCell>
                                                     <TableCell className="text-right font-medium text-emerald-600">
@@ -410,7 +410,7 @@ export default function LedgerPage() {
                                                             </span>
                                                         ) : "-"}
                                                     </TableCell>
-                                                    <TableCell className="text-right font-bold text-slate-800">
+                                                    <TableCell className="text-right font-bold text-gray-800">
                                                         {formatCurrency(t.balance)}
                                                     </TableCell>
                                                 </TableRow>

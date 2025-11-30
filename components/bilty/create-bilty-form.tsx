@@ -11,14 +11,14 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { 
-  Plus, 
-  Minus, 
-  Save, 
-  X, 
-  Truck, 
-  Users, 
-  Package, 
+import {
+  Plus,
+  Minus,
+  Save,
+  X,
+  Truck,
+  Users,
+  Package,
   Calculator,
   FileText,
   CheckCircle,
@@ -72,7 +72,7 @@ export function CreateBiltyForm() {
   const [showConsignorSuggestions, setShowConsignorSuggestions] = useState(false)
   const [showConsigneeSuggestions, setShowConsigneeSuggestions] = useState(false)
   const [showTruckSuggestions, setShowTruckSuggestions] = useState(false)
-  
+
   const consignorRef = useRef<HTMLDivElement>(null)
   const consigneeRef = useRef<HTMLDivElement>(null)
   const truckRef = useRef<HTMLDivElement>(null)
@@ -182,11 +182,11 @@ export function CreateBiltyForm() {
             displayGst: party.gstin,
             score: 100 // Exact matches from database
           }))
-          
+
           if (field === 'consignor') setConsignorSuggestions(mappedSuggestions)
           if (field === 'consignee') setConsigneeSuggestions(mappedSuggestions)
         }
-      } 
+      }
       // For truck, use the existing fuzzy matching
       else if (field === 'truck') {
         const response = await fetch(`/api/bilty/suggestions?field=${field}&q=${encodeURIComponent(searchTerm)}`)
@@ -250,7 +250,7 @@ export function CreateBiltyForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // Validate GST numbers
     if (!formData.consignorGst.trim()) {
       toast({
@@ -260,7 +260,7 @@ export function CreateBiltyForm() {
       })
       return
     }
-    
+
     if (!formData.consigneeGst.trim()) {
       toast({
         title: "Validation Error",
@@ -269,7 +269,7 @@ export function CreateBiltyForm() {
       })
       return
     }
-    
+
     if (formData.consignorGst.length !== 15) {
       toast({
         title: "Validation Error",
@@ -278,7 +278,7 @@ export function CreateBiltyForm() {
       })
       return
     }
-    
+
     if (formData.consigneeGst.length !== 15) {
       toast({
         title: "Validation Error",
@@ -287,7 +287,7 @@ export function CreateBiltyForm() {
       })
       return
     }
-    
+
     setLoading(true)
 
     try {
@@ -327,63 +327,63 @@ export function CreateBiltyForm() {
   return (
     <div className="space-y-8">
       {/* Progress Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Create New Bilty</h1>
             <p className="text-gray-600">Fill in the details to generate a new transport document</p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+            <Badge variant="outline" className="bg-white text-indigo-700 border-indigo-200 shadow-sm">
               <FileText className="h-3 w-3 mr-1" />
               Draft
             </Badge>
           </div>
         </div>
-        
+
         {/* Progress Steps */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-medium">
+            <div className="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md shadow-indigo-200">
               1
             </div>
-            <span className="text-sm font-medium text-blue-600">Transport Details</span>
+            <span className="text-sm font-bold text-indigo-700">Transport Details</span>
           </div>
-          <div className="w-8 h-0.5 bg-gray-300"></div>
+          <div className="w-8 h-0.5 bg-indigo-100"></div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-medium">
+            <div className="w-8 h-8 bg-white border-2 border-indigo-100 text-gray-400 rounded-full flex items-center justify-center text-sm font-medium">
               2
             </div>
-            <span className="text-sm text-gray-600">Parties & Items</span>
+            <span className="text-sm text-gray-500">Parties & Items</span>
           </div>
-          <div className="w-8 h-0.5 bg-gray-300"></div>
+          <div className="w-8 h-0.5 bg-gray-100"></div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-medium">
+            <div className="w-8 h-8 bg-white border-2 border-gray-100 text-gray-400 rounded-full flex items-center justify-center text-sm font-medium">
               3
             </div>
-            <span className="text-sm text-gray-600">Charges & Submit</span>
+            <span className="text-sm text-gray-500">Charges & Submit</span>
           </div>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Transport Information */}
-        <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
-          <CardHeader className="bg-gradient-to-r from-blue-50/50 to-transparent border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Truck className="h-5 w-5 text-blue-600" />
+        <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="border-b border-gray-100/50 pb-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-indigo-50 rounded-2xl">
+                <Truck className="h-6 w-6 text-indigo-600" />
               </div>
               <div>
-                <CardTitle className="text-xl">Transport Information</CardTitle>
-                <CardDescription>Basic bilty and transport details</CardDescription>
+                <CardTitle className="text-xl font-bold text-gray-900">Transport Information</CardTitle>
+                <CardDescription className="text-gray-500">Basic bilty and transport details</CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-6">
+          <CardContent className="pt-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="biltyDate" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="biltyDate" className="text-sm font-semibold text-gray-700">
                   Bilty Date <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -391,12 +391,12 @@ export function CreateBiltyForm() {
                   type="date"
                   value={formData.biltyDate}
                   onChange={(e) => setFormData((prev) => ({ ...prev, biltyDate: e.target.value }))}
-                  className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50/50 border-gray-200"
                   required
                 />
               </div>
               <div className="space-y-2" ref={truckRef}>
-                <Label htmlFor="truckNo" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="truckNo" className="text-sm font-semibold text-gray-700">
                   Truck Number <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative">
@@ -412,13 +412,13 @@ export function CreateBiltyForm() {
                       if (formData.truckNo.length >= 2) setShowTruckSuggestions(true)
                     }}
                     placeholder="e.g., RJ14GA1234"
-                    className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50/50 border-gray-200"
                     required
                   />
                   {showTruckSuggestions && truckSuggestions.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-auto">
-                      <div className="px-3 py-2 bg-gradient-to-r from-orange-50 to-amber-50 border-b border-orange-200">
-                        <span className="text-xs font-semibold text-orange-700 uppercase tracking-wide flex items-center gap-1">
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-60 overflow-auto ring-1 ring-black/5">
+                      <div className="px-4 py-3 bg-gray-50/80 backdrop-blur-sm border-b border-gray-100 sticky top-0">
+                        <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider flex items-center gap-2">
                           <Truck className="h-3 w-3" />
                           Similar Trucks ({truckSuggestions.length})
                         </span>
@@ -428,23 +428,23 @@ export function CreateBiltyForm() {
                           key={idx}
                           type="button"
                           onClick={() => handleTruckSelect(suggestion)}
-                          className="w-full px-4 py-3 text-left hover:bg-gradient-to-r hover:from-orange-50 hover:to-amber-50 focus:bg-orange-50 focus:outline-none border-b border-gray-100 last:border-b-0 transition-all duration-150 group"
+                          className="w-full px-4 py-3 text-left hover:bg-indigo-50/50 focus:bg-indigo-50 focus:outline-none border-b border-gray-50 last:border-b-0 transition-all duration-150 group"
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
-                              <div className="font-medium text-gray-900 group-hover:text-orange-700 transition-colors font-mono">
+                              <div className="font-medium text-gray-900 group-hover:text-indigo-700 transition-colors font-mono">
                                 {suggestion.displayTruckNo}
                               </div>
                               {suggestion.lastConsignor && (
-                                <div className="text-xs text-gray-500 mt-1">
-                                  <span className="bg-gray-100 px-2 py-0.5 rounded">
+                                <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                                  <span className="bg-gray-100 px-2 py-0.5 rounded-md text-gray-600">
                                     Last: {suggestion.lastConsignor} → {suggestion.lastConsignee}
                                   </span>
                                 </div>
                               )}
                             </div>
                             {suggestion.score && suggestion.score > 80 && (
-                              <Badge variant="outline" className="ml-2 text-xs bg-orange-50 text-orange-700 border-orange-200">
+                              <Badge variant="secondary" className="ml-2 text-xs bg-indigo-100 text-indigo-700">
                                 {suggestion.score >= 100 ? 'Exact' : suggestion.score >= 90 ? 'High' : 'Match'}
                               </Badge>
                             )}
@@ -456,7 +456,7 @@ export function CreateBiltyForm() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="from" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="from" className="text-sm font-semibold text-gray-700">
                   From <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -464,12 +464,12 @@ export function CreateBiltyForm() {
                   value={formData.from}
                   onChange={(e) => setFormData((prev) => ({ ...prev, from: e.target.value }))}
                   placeholder="Origin city"
-                  className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50/50 border-gray-200"
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="to" className="text-sm font-medium text-gray-700">
+                <Label htmlFor="to" className="text-sm font-semibold text-gray-700">
                   To <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -477,7 +477,7 @@ export function CreateBiltyForm() {
                   value={formData.to}
                   onChange={(e) => setFormData((prev) => ({ ...prev, to: e.target.value }))}
                   placeholder="Destination city"
-                  className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50/50 border-gray-200"
                   required
                 />
               </div>
@@ -486,35 +486,38 @@ export function CreateBiltyForm() {
         </Card>
 
         {/* Parties Information */}
-        <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
-          <CardHeader className="bg-gradient-to-r from-green-50/50 to-transparent border-b border-gray-100">
+        <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="border-b border-gray-100/50 pb-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Users className="h-5 w-5 text-green-600" />
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-purple-50 rounded-2xl">
+                  <Users className="h-6 w-6 text-purple-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl">Parties Information</CardTitle>
-                  <CardDescription>Start typing to see parties from your database</CardDescription>
+                  <CardTitle className="text-xl font-bold text-gray-900">Parties Information</CardTitle>
+                  <CardDescription className="text-gray-500">Start typing to see parties from your database</CardDescription>
                 </div>
               </div>
-              <a 
-                href="/parties" 
+              <a
+                href="/parties"
                 target="_blank"
-                className="text-sm text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1"
+                className="text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
               >
                 <Plus className="h-4 w-4" />
                 Add New Party
               </a>
             </div>
           </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <h3 className="font-semibold text-gray-900 border-b border-gray-200 pb-2">Consignor Details</h3>
-                <div className="space-y-4">
+          <CardContent className="pt-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 border-b border-gray-100 pb-2">
+                  <div className="h-8 w-1 bg-indigo-500 rounded-full"></div>
+                  <h3 className="font-bold text-gray-900">Consignor Details</h3>
+                </div>
+                <div className="space-y-5">
                   <div className="space-y-2" ref={consignorRef}>
-                    <Label htmlFor="consignorName" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="consignorName" className="text-sm font-semibold text-gray-700">
                       Consignor Name <span className="text-red-500">*</span>
                     </Label>
                     <div className="relative">
@@ -530,13 +533,13 @@ export function CreateBiltyForm() {
                           if (formData.consignorName.length >= 2) setShowConsignorSuggestions(true)
                         }}
                         placeholder="Company or person name"
-                        className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50/50 border-gray-200"
                         required
                       />
                       {showConsignorSuggestions && consignorSuggestions.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-auto">
-                          <div className="px-3 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200">
-                            <span className="text-xs font-semibold text-blue-700 uppercase tracking-wide">
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-60 overflow-auto ring-1 ring-black/5">
+                          <div className="px-4 py-3 bg-gray-50/80 backdrop-blur-sm border-b border-gray-100 sticky top-0">
+                            <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">
                               Party Database ({consignorSuggestions.length})
                             </span>
                           </div>
@@ -545,21 +548,21 @@ export function CreateBiltyForm() {
                               key={idx}
                               type="button"
                               onClick={() => handleConsignorSelect(suggestion)}
-                              className="w-full px-4 py-3 text-left hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0 transition-all duration-150 group"
+                              className="w-full px-4 py-3 text-left hover:bg-indigo-50/50 focus:bg-indigo-50 focus:outline-none border-b border-gray-50 last:border-b-0 transition-all duration-150 group"
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex-1">
-                                  <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">
+                                  <div className="font-medium text-gray-900 group-hover:text-indigo-700 transition-colors">
                                     {suggestion.displayName}
                                   </div>
                                   {suggestion.displayGst && (
                                     <div className="text-xs text-gray-500 mt-1">
-                                      <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">GST: {suggestion.displayGst}</span>
+                                      <span className="font-mono bg-gray-100 px-2 py-0.5 rounded-md text-gray-600">GST: {suggestion.displayGst}</span>
                                     </div>
                                   )}
                                 </div>
                                 {suggestion.score && suggestion.score > 80 && (
-                                  <Badge variant="outline" className="ml-2 text-xs bg-green-50 text-green-700 border-green-200">
+                                  <Badge variant="secondary" className="ml-2 text-xs bg-indigo-100 text-indigo-700">
                                     {suggestion.score >= 100 ? 'Exact' : suggestion.score >= 90 ? 'High' : 'Match'}
                                   </Badge>
                                 )}
@@ -571,7 +574,7 @@ export function CreateBiltyForm() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="consignorGst" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="consignorGst" className="text-sm font-semibold text-gray-700">
                       Consignor GST <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -580,17 +583,20 @@ export function CreateBiltyForm() {
                       onChange={(e) => setFormData((prev) => ({ ...prev, consignorGst: e.target.value.toUpperCase() }))}
                       placeholder="15-digit GST number"
                       maxLength={15}
-                      className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                      className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono bg-gray-50/50 border-gray-200"
                       required
                     />
                   </div>
                 </div>
               </div>
-              <div className="space-y-4">
-                <h3 className="font-semibold text-gray-900 border-b border-gray-200 pb-2">Consignee Details</h3>
-                <div className="space-y-4">
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 border-b border-gray-100 pb-2">
+                  <div className="h-8 w-1 bg-purple-500 rounded-full"></div>
+                  <h3 className="font-bold text-gray-900">Consignee Details</h3>
+                </div>
+                <div className="space-y-5">
                   <div className="space-y-2" ref={consigneeRef}>
-                    <Label htmlFor="consigneeName" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="consigneeName" className="text-sm font-semibold text-gray-700">
                       Consignee Name <span className="text-red-500">*</span>
                     </Label>
                     <div className="relative">
@@ -606,13 +612,13 @@ export function CreateBiltyForm() {
                           if (formData.consigneeName.length >= 2) setShowConsigneeSuggestions(true)
                         }}
                         placeholder="Company or person name"
-                        className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50/50 border-gray-200"
                         required
                       />
                       {showConsigneeSuggestions && consigneeSuggestions.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-auto">
-                          <div className="px-3 py-2 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200">
-                            <span className="text-xs font-semibold text-green-700 uppercase tracking-wide">
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-60 overflow-auto ring-1 ring-black/5">
+                          <div className="px-4 py-3 bg-gray-50/80 backdrop-blur-sm border-b border-gray-100 sticky top-0">
+                            <span className="text-xs font-bold text-purple-600 uppercase tracking-wider">
                               Party Database ({consigneeSuggestions.length})
                             </span>
                           </div>
@@ -621,21 +627,21 @@ export function CreateBiltyForm() {
                               key={idx}
                               type="button"
                               onClick={() => handleConsigneeSelect(suggestion)}
-                              className="w-full px-4 py-3 text-left hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 focus:bg-green-50 focus:outline-none border-b border-gray-100 last:border-b-0 transition-all duration-150 group"
+                              className="w-full px-4 py-3 text-left hover:bg-purple-50/50 focus:bg-purple-50 focus:outline-none border-b border-gray-50 last:border-b-0 transition-all duration-150 group"
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex-1">
-                                  <div className="font-medium text-gray-900 group-hover:text-green-700 transition-colors">
+                                  <div className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors">
                                     {suggestion.displayName}
                                   </div>
                                   {suggestion.displayGst && (
                                     <div className="text-xs text-gray-500 mt-1">
-                                      <span className="font-mono bg-gray-100 px-2 py-0.5 rounded">GST: {suggestion.displayGst}</span>
+                                      <span className="font-mono bg-gray-100 px-2 py-0.5 rounded-md text-gray-600">GST: {suggestion.displayGst}</span>
                                     </div>
                                   )}
                                 </div>
                                 {suggestion.score && suggestion.score > 80 && (
-                                  <Badge variant="outline" className="ml-2 text-xs bg-green-50 text-green-700 border-green-200">
+                                  <Badge variant="secondary" className="ml-2 text-xs bg-purple-100 text-purple-700">
                                     {suggestion.score >= 100 ? 'Exact' : suggestion.score >= 90 ? 'High' : 'Match'}
                                   </Badge>
                                 )}
@@ -647,7 +653,7 @@ export function CreateBiltyForm() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="consigneeGst" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="consigneeGst" className="text-sm font-semibold text-gray-700">
                       Consignee GST <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -656,7 +662,7 @@ export function CreateBiltyForm() {
                       onChange={(e) => setFormData((prev) => ({ ...prev, consigneeGst: e.target.value.toUpperCase() }))}
                       placeholder="15-digit GST number"
                       maxLength={15}
-                      className="focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono"
+                      className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono bg-gray-50/50 border-gray-200"
                       required
                     />
                   </div>
@@ -667,114 +673,114 @@ export function CreateBiltyForm() {
         </Card>
 
         {/* Items */}
-        <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
-          <CardHeader className="bg-gradient-to-r from-purple-50/50 to-transparent border-b border-gray-100">
+        <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="border-b border-gray-100/50 pb-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Package className="h-5 w-5 text-purple-600" />
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-indigo-50 rounded-2xl">
+                  <Package className="h-6 w-6 text-indigo-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl">Items Details</CardTitle>
-                  <CardDescription>Goods description and specifications</CardDescription>
+                  <CardTitle className="text-xl font-bold text-gray-900">Items Details</CardTitle>
+                  <CardDescription className="text-gray-500">Goods description and specifications</CardDescription>
                 </div>
               </div>
-              <Button 
-                type="button" 
-                onClick={addItem} 
-                size="sm"
-                className="bg-purple-600 hover:bg-purple-700"
+              <Button
+                type="button"
+                onClick={addItem}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Item
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="pt-6">
+          <CardContent className="pt-8">
             <div className="space-y-6">
               {items.map((item, index) => (
-                <div 
-                  key={index} 
-                  className="p-6 border border-gray-200 rounded-lg bg-gray-50/30 hover:bg-gray-50/50 transition-colors"
+                <div
+                  key={index}
+                  className="p-6 border border-gray-100 rounded-2xl bg-gray-50/30 hover:bg-white hover:shadow-md transition-all duration-300"
                 >
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-sm font-medium">
+                  <div className="flex justify-between items-center mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center text-sm font-bold">
                         {index + 1}
                       </div>
-                      <h4 className="font-semibold text-gray-900">Item {index + 1}</h4>
+                      <h4 className="font-bold text-gray-900">Item Details</h4>
                     </div>
                     {items.length > 1 && (
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => removeItem(index)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
                       >
-                        <Minus className="h-4 w-4" />
+                        <Minus className="h-4 w-4 mr-1" />
+                        Remove
                       </Button>
                     )}
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Quantity</Label>
+                      <Label className="text-sm font-semibold text-gray-700">Quantity</Label>
                       <Input
                         type="number"
                         value={item.quantity}
                         onChange={(e) => updateItem(index, "quantity", Number(e.target.value))}
                         placeholder="Pkgs"
-                        className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
                     <div className="md:col-span-2 space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Description</Label>
+                      <Label className="text-sm font-semibold text-gray-700">Description</Label>
                       <Input
                         value={item.goodsDescription}
                         onChange={(e) => updateItem(index, "goodsDescription", e.target.value)}
                         placeholder="Goods description"
-                        className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">HSN Code</Label>
+                      <Label className="text-sm font-semibold text-gray-700">HSN Code</Label>
                       <Input
                         value={item.hsnCode}
                         onChange={(e) => updateItem(index, "hsnCode", e.target.value)}
                         placeholder="HSN"
-                        className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Actual Kg</Label>
+                      <Label className="text-sm font-semibold text-gray-700">Actual Kg</Label>
                       <Input
                         type="number"
                         step="0.01"
                         value={item.weight}
                         onChange={(e) => updateItem(index, "weight", Number(e.target.value))}
                         placeholder="Weight"
-                        className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Charged Kg</Label>
+                      <Label className="text-sm font-semibold text-gray-700">Charged Kg</Label>
                       <Input
                         type="number"
                         step="0.01"
                         value={item.chargedWeight}
                         onChange={(e) => updateItem(index, "chargedWeight", Number(e.target.value))}
                         placeholder="Charged"
-                        className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-gray-700">Rate</Label>
+                      <Label className="text-sm font-semibold text-gray-700">Rate</Label>
                       <Input
                         value={item.rate}
                         onChange={(e) => updateItem(index, "rate", e.target.value)}
                         placeholder="Rate"
-                        className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        className="h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       />
                     </div>
                   </div>
@@ -785,19 +791,19 @@ export function CreateBiltyForm() {
         </Card>
 
         {/* Charges */}
-        <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
-          <CardHeader className="bg-gradient-to-r from-orange-50/50 to-transparent border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Calculator className="h-5 w-5 text-orange-600" />
+        <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="border-b border-gray-100/50 pb-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-50 rounded-2xl">
+                <Calculator className="h-6 w-6 text-purple-600" />
               </div>
               <div>
-                <CardTitle className="text-xl">Charges & Billing</CardTitle>
-                <CardDescription>Financial details and tax information</CardDescription>
+                <CardTitle className="text-xl font-bold text-gray-900">Charges & Billing</CardTitle>
+                <CardDescription className="text-gray-500">Financial details and tax information</CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-6 space-y-6">
+          <CardContent className="pt-8 space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="freight" className="text-sm font-medium text-gray-700">Freight</Label>
@@ -900,11 +906,11 @@ export function CreateBiltyForm() {
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-700">Sub Total</Label>
                 <div className="relative">
-                  <Input 
-                    type="number" 
-                    value={charges.total} 
-                    readOnly 
-                    className="bg-gray-50 border-gray-300 text-gray-700 font-medium pr-8" 
+                  <Input
+                    type="number"
+                    value={charges.total}
+                    readOnly
+                    className="bg-gray-50 border-gray-300 text-gray-700 font-medium pr-8"
                   />
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-500" />
@@ -914,11 +920,11 @@ export function CreateBiltyForm() {
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-gray-700">Grand Total</Label>
                 <div className="relative">
-                  <Input 
-                    type="number" 
-                    value={charges.grandTotal} 
-                    readOnly 
-                    className="bg-blue-50 border-blue-300 text-blue-700 font-bold text-lg pr-8" 
+                  <Input
+                    type="number"
+                    value={charges.grandTotal}
+                    readOnly
+                    className="bg-blue-50 border-blue-300 text-blue-700 font-bold text-lg pr-8"
                   />
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                     <CheckCircle className="h-5 w-5 text-blue-500" />
@@ -1020,17 +1026,17 @@ export function CreateBiltyForm() {
             <span>Please review all information before creating the bilty</span>
           </div>
           <div className="flex items-center gap-3">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => router.back()}
               className="hover:bg-gray-50"
             >
               <X className="h-4 w-4 mr-2" />
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={loading}
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 min-w-[140px]"
             >

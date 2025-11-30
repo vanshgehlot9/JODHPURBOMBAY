@@ -70,19 +70,19 @@ export function QuickActions() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {quickActions.map((action, index) => {
             const CardWrapper = action.external ? 'a' : Link
-            const extraProps = action.external 
-              ? { target: "_blank", rel: "noopener noreferrer" } 
+            const extraProps = action.external
+              ? { target: "_blank", rel: "noopener noreferrer" }
               : {}
-            
+
             return (
               <CardWrapper key={index} href={action.href} className="group" {...extraProps}>
                 <div className={`relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-${action.iconColor}/20`}>
                   {/* Background gradient on hover */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
-                  
+
                   {/* Decorative circles */}
                   <div className={`absolute -right-6 -top-6 h-20 w-20 rounded-full ${action.bgLight} opacity-50 group-hover:scale-150 transition-transform duration-500`}></div>
-                  
+
                   <div className="relative flex items-start gap-4">
                     <div className={`flex-shrink-0 h-12 w-12 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
                       <action.icon className="h-6 w-6 text-white" />

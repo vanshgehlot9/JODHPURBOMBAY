@@ -7,12 +7,15 @@ import { useState, useEffect } from 'react'
  * @returns Object containing online status and last offline time
  */
 export function useNetworkStatus() {
+  // Initialize as true to match server render
   const [isOnline, setIsOnline] = useState(true)
   const [lastOfflineTime, setLastOfflineTime] = useState<Date | null>(null)
 
   useEffect(() => {
-    // Check initial status
-    setIsOnline(navigator.onLine)
+    // Check initial status only on client
+    if (typeof window !== 'undefined') {
+      setIsOnline(navigator.onLine)
+    }
 
     const handleOnline = () => {
       console.log('Network: Back online')

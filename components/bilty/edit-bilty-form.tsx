@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { 
-  Plus, 
-  Minus, 
-  Save, 
+import {
+  Plus,
+  Minus,
+  Save,
   ArrowLeft,
-  Truck, 
-  Users, 
-  Package, 
+  Truck,
+  Users,
+  Package,
   Calculator
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
@@ -201,7 +201,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6">
+      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-lg p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Edit Bilty #{bilty.biltyNo}</h1>
@@ -210,7 +210,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
           <Button
             variant="outline"
             onClick={() => router.push("/bilty/view")}
-            className="hover:bg-green-100"
+            className="hover:bg-indigo-50 border-indigo-200 text-indigo-700"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to List
@@ -220,11 +220,11 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Route & Transport Information */}
-        <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
-          <CardHeader className="bg-gradient-to-r from-blue-50/50 to-transparent border-b border-gray-100">
+        <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-indigo-50/50 to-transparent border-b border-gray-100">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Truck className="h-5 w-5 text-blue-600" />
+              <div className="p-2 bg-indigo-100 rounded-lg">
+                <Truck className="h-5 w-5 text-indigo-600" />
               </div>
               <div>
                 <CardTitle className="text-xl">Route & Transport</CardTitle>
@@ -243,6 +243,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   onChange={handleInputChange}
                   placeholder="MH12AB1234"
                   required
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2">
@@ -254,6 +255,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   onChange={handleInputChange}
                   placeholder="Origin city"
                   required
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2">
@@ -265,6 +267,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   onChange={handleInputChange}
                   placeholder="Destination city"
                   required
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
             </div>
@@ -272,11 +275,11 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
         </Card>
 
         {/* Parties Information */}
-        <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
-          <CardHeader className="bg-gradient-to-r from-green-50/50 to-transparent border-b border-gray-100">
+        <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-purple-50/50 to-transparent border-b border-gray-100">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Users className="h-5 w-5 text-green-600" />
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Users className="h-5 w-5 text-purple-600" />
               </div>
               <div>
                 <CardTitle className="text-xl">Parties Information</CardTitle>
@@ -297,6 +300,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                       value={formData.consignorName}
                       onChange={handleInputChange}
                       required
+                      className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     />
                   </div>
                   <div className="space-y-2">
@@ -307,7 +311,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                       value={formData.consignorGst}
                       onChange={handleInputChange}
                       maxLength={15}
-                      className="font-mono"
+                      className="font-mono focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       required
                     />
                   </div>
@@ -324,6 +328,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                       value={formData.consigneeName}
                       onChange={handleInputChange}
                       required
+                      className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                     />
                   </div>
                   <div className="space-y-2">
@@ -334,7 +339,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                       value={formData.consigneeGst}
                       onChange={handleInputChange}
                       maxLength={15}
-                      className="font-mono"
+                      className="font-mono focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       required
                     />
                   </div>
@@ -345,8 +350,8 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
         </Card>
 
         {/* Invoice & Eway Bill */}
-        <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
-          <CardHeader className="bg-gradient-to-r from-purple-50/50 to-transparent border-b border-gray-100">
+        <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-indigo-50/50 to-transparent border-b border-gray-100">
             <CardTitle className="text-xl">Invoice & E-way Bill Details</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
@@ -358,6 +363,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   name="transporterId"
                   value={formData.transporterId}
                   onChange={handleInputChange}
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2">
@@ -367,6 +373,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   name="invoiceNo"
                   value={formData.invoiceNo}
                   onChange={handleInputChange}
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2">
@@ -376,6 +383,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   name="ewayNo"
                   value={formData.ewayNo}
                   onChange={handleInputChange}
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2">
@@ -386,6 +394,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   type="date"
                   value={formData.ewayDate}
                   onChange={handleInputChange}
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2">
@@ -396,6 +405,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   type="number"
                   value={formData.grossValue}
                   onChange={handleInputChange}
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2">
@@ -405,6 +415,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   name="totalPackages"
                   value={formData.totalPackages}
                   onChange={handleInputChange}
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
@@ -414,6 +425,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   name="specialInstruction"
                   value={formData.specialInstruction}
                   onChange={handleInputChange}
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
             </div>
@@ -421,19 +433,19 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
         </Card>
 
         {/* Items */}
-        <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
-          <CardHeader className="bg-gradient-to-r from-orange-50/50 to-transparent border-b border-gray-100">
+        <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-purple-50/50 to-transparent border-b border-gray-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Package className="h-5 w-5 text-orange-600" />
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Package className="h-5 w-5 text-purple-600" />
                 </div>
                 <div>
                   <CardTitle className="text-xl">Goods Details</CardTitle>
                   <CardDescription>Items being transported</CardDescription>
                 </div>
               </div>
-              <Button type="button" onClick={addItem} size="sm" variant="outline">
+              <Button type="button" onClick={addItem} size="sm" variant="outline" className="border-purple-200 text-purple-700 hover:bg-purple-50">
                 <Plus className="h-4 w-4 mr-1" />
                 Add Item
               </Button>
@@ -442,7 +454,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
           <CardContent className="pt-6">
             <div className="space-y-4">
               {items.map((item, index) => (
-                <div key={index} className="p-4 border border-gray-200 rounded-lg space-y-4 bg-gray-50/50">
+                <div key={index} className="p-4 border border-gray-200 rounded-lg space-y-4 bg-gray-50/50 hover:bg-gray-50 transition-colors">
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium text-gray-700">Item #{index + 1}</h4>
                     {items.length > 1 && (
@@ -466,6 +478,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                         value={item.quantity}
                         onChange={(e) => handleItemChange(index, "quantity", Number(e.target.value))}
                         required
+                        className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       />
                     </div>
                     <div className="space-y-2 col-span-2">
@@ -474,6 +487,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                         value={item.goodsDescription}
                         onChange={(e) => handleItemChange(index, "goodsDescription", e.target.value)}
                         required
+                        className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       />
                     </div>
                     <div className="space-y-2">
@@ -481,6 +495,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                       <Input
                         value={item.hsnCode}
                         onChange={(e) => handleItemChange(index, "hsnCode", e.target.value)}
+                        className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       />
                     </div>
                     <div className="space-y-2">
@@ -490,6 +505,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                         value={item.weight}
                         onChange={(e) => handleItemChange(index, "weight", Number(e.target.value))}
                         required
+                        className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       />
                     </div>
                     <div className="space-y-2">
@@ -499,6 +515,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                         value={item.chargedWeight}
                         onChange={(e) => handleItemChange(index, "chargedWeight", Number(e.target.value))}
                         required
+                        className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       />
                     </div>
                     <div className="space-y-2 col-span-2 md:col-span-6">
@@ -506,6 +523,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                       <Input
                         value={item.rate}
                         onChange={(e) => handleItemChange(index, "rate", e.target.value)}
+                        className="focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       />
                     </div>
                   </div>
@@ -516,7 +534,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
         </Card>
 
         {/* Charges */}
-        <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
+        <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
           <CardHeader className="bg-gradient-to-r from-indigo-50/50 to-transparent border-b border-gray-100">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-indigo-100 rounded-lg">
@@ -536,6 +554,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   type="number"
                   value={charges.freight}
                   onChange={(e) => handleChargeChange("freight", Number(e.target.value))}
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2">
@@ -544,6 +563,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   type="number"
                   value={charges.pf}
                   onChange={(e) => handleChargeChange("pf", Number(e.target.value))}
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2">
@@ -552,6 +572,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   type="number"
                   value={charges.lc}
                   onChange={(e) => handleChargeChange("lc", Number(e.target.value))}
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2">
@@ -560,6 +581,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   type="number"
                   value={charges.bc}
                   onChange={(e) => handleChargeChange("bc", Number(e.target.value))}
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2">
@@ -577,6 +599,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   type="number"
                   value={charges.cgst}
                   onChange={(e) => handleChargeChange("cgst", Number(e.target.value))}
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2">
@@ -585,6 +608,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   type="number"
                   value={charges.sgst}
                   onChange={(e) => handleChargeChange("sgst", Number(e.target.value))}
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2">
@@ -593,6 +617,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   type="number"
                   value={charges.igst}
                   onChange={(e) => handleChargeChange("igst", Number(e.target.value))}
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2">
@@ -601,6 +626,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   type="number"
                   value={charges.advance}
                   onChange={(e) => handleChargeChange("advance", Number(e.target.value))}
+                  className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
               <div className="space-y-2 md:col-span-3">
@@ -609,7 +635,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   type="number"
                   value={charges.grandTotal}
                   disabled
-                  className="bg-blue-50 font-bold text-lg"
+                  className="bg-indigo-50 font-bold text-lg text-indigo-700 border-indigo-200"
                 />
               </div>
             </div>
@@ -623,11 +649,12 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
             variant="outline"
             onClick={() => router.push("/bilty/view")}
             disabled={loading}
+            className="hover:bg-gray-100"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Cancel
           </Button>
-          <Button type="submit" disabled={loading} size="lg" className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
+          <Button type="submit" disabled={loading} size="lg" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-indigo-500/30 transition-all duration-300">
             {loading ? (
               <>
                 <span className="animate-spin mr-2">⏳</span>

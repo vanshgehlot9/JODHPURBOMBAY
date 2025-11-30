@@ -9,7 +9,7 @@ import { Bilty } from "@/lib/firestore"
 export default async function EditBiltyPage({ params }: { params: { id: string } }) {
   const biltyId = params.id
   let bilty: Bilty | null = null
-  
+
   try {
     const docRef = doc(db, "bilties", biltyId)
     const docSnap = await getDoc(docRef)
@@ -38,7 +38,7 @@ export default async function EditBiltyPage({ params }: { params: { id: string }
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50/50">
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Header title={`Edit Bilty #${bilty.biltyNo || bilty.id}`} subtitle="Update bilty details" />

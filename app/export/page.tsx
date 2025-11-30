@@ -4,7 +4,7 @@ import { ExportForm } from "@/components/export/export-form"
 
 export default function ExportPage() {
   return (
-    <div className="flex min-h-screen bg-gray-50/50">
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Header title="Export Data" subtitle="Export bilty data to Excel format" />

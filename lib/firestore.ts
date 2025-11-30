@@ -263,7 +263,7 @@ export async function getNextChallanNumber(): Promise<number> {
 export async function getChallan(id: string): Promise<any | null> {
   const docRef = doc(db, "challans", id);
   const docSnap = await getDoc(docRef);
-  
+
   if (docSnap.exists()) {
     return { id: docSnap.id, ...docSnap.data() };
   } else {
@@ -313,14 +313,14 @@ export async function createParty(
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
-  
+
   // Only add optional fields if they have values
   if (partyData.type) cleanedData.type = partyData.type;
   if (partyData.address) cleanedData.address = partyData.address;
   if (partyData.contactPerson) cleanedData.contactPerson = partyData.contactPerson;
   if (partyData.phone) cleanedData.phone = partyData.phone;
   if (partyData.email) cleanedData.email = partyData.email;
-  
+
   const docRef = await addDoc(collection(db, "parties"), cleanedData);
   return docRef.id;
 }
@@ -360,15 +360,15 @@ export async function searchParties(searchTerm: string): Promise<Party[]> {
   try {
     const partiesRef = collection(db, "parties");
     const snapshot = await getDocs(partiesRef);
-    
+
     const searchLower = searchTerm.toLowerCase();
     const filtered = snapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() } as Party))
-      .filter(party => 
+      .filter(party =>
         party.name.toLowerCase().includes(searchLower) ||
         party.gstin.toLowerCase().includes(searchLower)
       );
-    
+
     return filtered;
   } catch (error) {
     console.error("Error searching parties:", error);
@@ -389,4 +389,28 @@ export async function updateParty(id: string, partyData: Partial<Party>): Promis
 export async function deleteParty(id: string): Promise<void> {
   const partyRef = doc(db, "parties", id);
   await deleteDoc(partyRef);
+}
+
+// ============ PAYMENT MANAGEMENT ============
+
+export interface Payment {
+  id?: string;
+  date: Date | Timestamp;
+  partyName: string;
+  amount: number;
+  paymentMode: string;
+  referenceNo?: string;
+  biltyNo?: number;
+  remarks?: string;
+  createdAt: Date | Timestamp;
+}
+
+// Create a new payment
+export async function createPayment(paymentData: Omit<Payment, "id" | "createdAt">): Promise<string> {
+  const newPayment = {
+    ...paymentData,
+    createdAt: serverTimestamp(),
+  };
+  const docRef = await addDoc(collection(db, "payments"), newPayment);
+  return docRef.id;
 }
