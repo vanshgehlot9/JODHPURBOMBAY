@@ -82,6 +82,7 @@ export async function GET(request: NextRequest) {
 
         // --- Calculate Period Transactions ---
         const transactions: any[] = [];
+        const paymentTransactions: any[] = []; // Track payments separately
 
         for (const b of bilties) {
             const bDate = toDate(b.biltyDate);
@@ -113,12 +114,13 @@ export async function GET(request: NextRequest) {
             }
         }
 
+        // Process Payments (Credit) - Track separately for balance calculation
         for (const p of payments) {
             const pDate = toDate(p.date);
             if (!pDate) continue;
             if (party && !p.partyName?.toLowerCase().includes(party)) continue;
             if (pDate >= from && pDate <= to) {
-                transactions.push({
+                paymentTransactions.push({
                     date: pDate,
                     voucherType: "Payment",
                     particulars: p.partyName || "Payment",
@@ -128,7 +130,9 @@ export async function GET(request: NextRequest) {
             }
         }
 
-        transactions.sort((a, b) => a.date.getTime() - b.date.getTime());
+        // Combine all transactions for balance calculation
+        const allTransactions = [...transactions, ...paymentTransactions];
+        allTransactions.sort((a, b) => a.date.getTime() - b.date.getTime());
 
         // --- Generate Excel ---
         const workbook = new ExcelJS.Workbook();
@@ -139,22 +143,22 @@ export async function GET(request: NextRequest) {
         const centerAlign = { horizontal: "center" as const, vertical: "middle" as const };
 
         // Header
-        worksheet.mergeCells("A1:F1");
+        worksheet.mergeCells("A1:E1");
         worksheet.getCell("A1").value = "Jodhpur Bombay Road Carrier";
         worksheet.getCell("A1").font = { bold: true, size: 16 };
         worksheet.getCell("A1").alignment = centerAlign;
 
-        worksheet.mergeCells("A2:F2");
-        worksheet.getCell("A2").value = "Ledger Account";
+        worksheet.mergeCells("A2:E2");
+        worksheet.getCell("A2").value = "Ledger Account (Dues)";
         worksheet.getCell("A2").font = { size: 12 };
         worksheet.getCell("A2").alignment = centerAlign;
 
-        worksheet.mergeCells("A3:F3");
+        worksheet.mergeCells("A3:E3");
         worksheet.getCell("A3").value = `From: ${from.toLocaleDateString()}   To: ${to.toLocaleDateString()}`;
         worksheet.getCell("A3").alignment = centerAlign;
 
         if (party) {
-            worksheet.mergeCells("A4:F4");
+            worksheet.mergeCells("A4:E4");
             worksheet.getCell("A4").value = `Party: ${party.toUpperCase()}`;
             worksheet.getCell("A4").font = boldFont;
             worksheet.getCell("A4").alignment = centerAlign;
@@ -163,7 +167,7 @@ export async function GET(request: NextRequest) {
         // Table Header
         const headerRowIdx = party ? 6 : 5;
         const headerRow = worksheet.getRow(headerRowIdx);
-        headerRow.values = ["Date", "Voucher Type", "Particulars", "Debit", "Credit", "Balance"];
+        headerRow.values = ["Date", "Voucher Type", "Particulars", "Debit", "Balance"];
         headerRow.font = boldFont;
         headerRow.alignment = { horizontal: "center" };
 
@@ -173,7 +177,6 @@ export async function GET(request: NextRequest) {
             { width: 15 }, // Voucher
             { width: 40 }, // Particulars
             { width: 15 }, // Debit
-            { width: 15 }, // Credit
             { width: 15 }, // Balance
         ];
 
@@ -185,42 +188,49 @@ export async function GET(request: NextRequest) {
             "",
             "Opening Balance",
             openingDebit,
-            openingCredit,
             openingBalance
         ];
         openingRow.font = { italic: true };
         currentRowIdx++;
 
-        // Transaction Rows
+        // Transaction Rows - Calculate balance with all transactions
         let runningBalance = openingBalance;
-        let totalDebit = 0;
-        let totalCredit = 0;
+        let totalDebitAll = 0;
+        let totalCreditAll = 0;
 
-        transactions.forEach(t => {
-            totalDebit += t.debit;
-            totalCredit += t.credit;
+        // First, calculate running balance for all transactions (including payments)
+        const transactionsWithBalance = allTransactions.map(t => {
+            totalDebitAll += t.debit;
+            totalCreditAll += t.credit;
             runningBalance = runningBalance + t.debit - t.credit;
+            return { ...t, balance: runningBalance };
+        });
 
+        // Only display non-payment transactions
+        const displayTransactions = transactionsWithBalance.filter(t => t.voucherType !== 'Payment');
+
+        // Calculate totals for displayed transactions only
+        let displayDebitTotal = 0;
+        displayTransactions.forEach(t => {
+            displayDebitTotal += t.debit;
             const row = worksheet.getRow(currentRowIdx);
             row.values = [
                 t.date,
                 t.voucherType,
                 t.particulars,
                 t.debit || "",
-                t.credit || "",
-                runningBalance
+                t.balance
             ];
             currentRowIdx++;
         });
 
-        // Closing Balance Row
+        // Closing Balance Row - show only displayed debit total
         const closingRow = worksheet.getRow(currentRowIdx);
         closingRow.values = [
             "",
             "",
             "Total / Closing Balance",
-            totalDebit,
-            totalCredit,
+            displayDebitTotal,
             runningBalance
         ];
         closingRow.font = boldFont;
@@ -228,10 +238,17 @@ export async function GET(request: NextRequest) {
         // Generate Buffer
         const buffer = await workbook.xlsx.writeBuffer();
 
+        // Add timestamp to filename to prevent caching
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+        const filename = `Ledger_${party || 'General'}_${timestamp}.xlsx`;
+
         return new NextResponse(buffer, {
             headers: {
                 "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "Content-Disposition": `attachment; filename="Ledger_${party || 'General'}.xlsx"`,
+                "Content-Disposition": `attachment; filename="${filename}"`,
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
             },
         });
 

@@ -356,7 +356,8 @@ export default function CreateChallanForm() {
       });
 
       handleReset();
-      router.push("/");
+      router.push("/challan");
+      router.refresh();
     } catch (err) {
       console.error("Error creating challan:", err);
       toast({

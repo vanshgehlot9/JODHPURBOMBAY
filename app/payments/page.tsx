@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { Input } from "@/components/ui/input";
@@ -22,8 +22,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Search, Calendar, CreditCard, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
-import { getBilties, createPayment, Bilty } from "@/lib/firestore";
+import { Search, Calendar, CreditCard, CheckCircle2, Loader2, ArrowRight, TrendingDown, Download } from "lucide-react";
+import { getBilties, createPayment, getRecentPayments, Bilty, Payment } from "@/lib/firestore";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { Toaster } from "@/components/ui/toaster";
@@ -35,6 +35,49 @@ export default function PaymentEntryPage() {
     const [searching, setSearching] = useState(false);
     const [selectedBilty, setSelectedBilty] = useState<Bilty | null>(null);
     const [submitting, setSubmitting] = useState(false);
+    const [totalCredit, setTotalCredit] = useState<number | null>(null);
+    const [recentPayments, setRecentPayments] = useState<Payment[]>([]);
+    const [biltyBalances, setBiltyBalances] = useState<Map<string, number>>(new Map()); // Track outstanding balance per bilty
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                // Fetch Credit Summary
+                const today = new Date();
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                const from = format(firstDay, "yyyy-MM-dd");
+                const to = format(today, "yyyy-MM-dd");
+
+                const ledgerRes = await fetch(`/api/ledger?from=${from}&to=${to}`);
+                const ledgerData = await ledgerRes.json();
+                if (ledgerData.summary) {
+                    setTotalCredit(ledgerData.summary.totalCredit);
+                }
+
+                // Fetch Recent Payments
+                const payments = await getRecentPayments(5);
+                setRecentPayments(payments);
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
+            }
+        };
+        fetchData();
+    }, [submitting]); // Refresh when a new payment is submitted
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat("en-IN", {
+            style: "currency",
+            currency: "INR",
+        }).format(amount);
+    };
+
+    const downloadReport = () => {
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        const from = format(firstDay, "yyyy-MM-dd");
+        const to = format(today, "yyyy-MM-dd");
+        window.open(`/api/payments/export?from=${from}&to=${to}`, "_blank");
+    };
 
     // Form State
     const [paymentDate, setPaymentDate] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -52,6 +95,21 @@ export default function PaymentEntryPage() {
             // Search by string (bilty no, name, etc.)
             const results = await getBilties({ search: searchQuery, limit: 10 });
             setSearchResults(results);
+
+            // Fetch all payments to calculate outstanding balances
+            const allPayments = await getRecentPayments(1000); // Get all payments
+            const balances = new Map<string, number>();
+
+            results.forEach(bilty => {
+                const biltyTotal = bilty.charges?.grandTotal || 0;
+                // Find payments for this bilty number
+                const paymentsForBilty = allPayments.filter(p => p.biltyNo === bilty.biltyNo);
+                const totalPaid = paymentsForBilty.reduce((sum, p) => sum + (p.amount || 0), 0);
+                const outstanding = biltyTotal - totalPaid;
+                balances.set(bilty.id || '', outstanding);
+            });
+
+            setBiltyBalances(balances);
         } catch (error) {
             console.error("Search error:", error);
             toast({
@@ -69,7 +127,9 @@ export default function PaymentEntryPage() {
         // Auto-fill form
         // Defaulting to Consignor Name, but user can change
         setPartyName(bilty.consignorName);
-        setAmount(bilty.charges?.grandTotal?.toString() || "0");
+        // Set amount to outstanding balance instead of total
+        const outstanding = biltyBalances.get(bilty.id || '') || bilty.charges?.grandTotal || 0;
+        setAmount(outstanding.toString());
         setRemarks(`Payment for Bilty No: ${bilty.biltyNo}`);
 
         // Scroll to form
@@ -136,6 +196,33 @@ export default function PaymentEntryPage() {
                 <Header title="Payment Entry" subtitle="Record received payments" />
 
                 <main className="flex-1 p-4 sm:p-6 space-y-6 max-w-6xl mx-auto w-full">
+                    {/* Credit Summary Card */}
+                    {totalCredit !== null && (
+                        <Card className="border-none shadow-lg bg-gradient-to-br from-white to-rose-50/30">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium text-rose-600">Total Credit (This Month)</CardTitle>
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 bg-white/50 hover:bg-white border-rose-200 text-rose-700 hover:text-rose-800"
+                                        onClick={downloadReport}
+                                    >
+                                        <Download className="h-3.5 w-3.5 mr-1.5" />
+                                        Report
+                                    </Button>
+                                    <div className="h-8 w-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
+                                        <TrendingDown className="h-4 w-4" />
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-rose-700">{formatCurrency(totalCredit)}</div>
+                                <p className="text-xs text-rose-600/80 mt-1">Total Received</p>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {/* Search Section */}
                     <Card className="border-none shadow-md bg-white">
                         <CardHeader>
@@ -161,6 +248,7 @@ export default function PaymentEntryPage() {
                                 </Button>
                             </div>
 
+
                             {/* Results Table */}
                             {searchResults.length > 0 && (
                                 <div className="rounded-md border border-gray-200 overflow-x-auto animate-in fade-in slide-in-from-top-2">
@@ -171,34 +259,53 @@ export default function PaymentEntryPage() {
                                                 <TableHead>Date</TableHead>
                                                 <TableHead>Consignor</TableHead>
                                                 <TableHead>Consignee</TableHead>
-                                                <TableHead className="text-right">Amount</TableHead>
+                                                <TableHead className="text-right">Total</TableHead>
+                                                <TableHead className="text-right">Outstanding</TableHead>
                                                 <TableHead></TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {searchResults.map((bilty) => (
-                                                <TableRow key={bilty.id} className="hover:bg-indigo-50/30">
-                                                    <TableCell className="font-medium">#{bilty.biltyNo}</TableCell>
-                                                    <TableCell>
-                                                        {bilty.biltyDate ? format(new Date(bilty.biltyDate instanceof Object && 'toDate' in bilty.biltyDate ? (bilty.biltyDate as any).toDate() : bilty.biltyDate), "dd MMM yyyy") : "-"}
-                                                    </TableCell>
-                                                    <TableCell>{bilty.consignorName}</TableCell>
-                                                    <TableCell>{bilty.consigneeName}</TableCell>
-                                                    <TableCell className="text-right font-medium text-gray-900">
-                                                        ₹{bilty.charges?.grandTotal?.toLocaleString() || 0}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                                                            onClick={() => handleSelectBilty(bilty)}
-                                                        >
-                                                            Select <ArrowRight className="ml-1 h-4 w-4" />
-                                                        </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
+                                            {searchResults.map((bilty) => {
+                                                const outstanding = biltyBalances.get(bilty.id || '') || 0;
+                                                const total = bilty.charges?.grandTotal || 0;
+                                                const isPaid = outstanding <= 0;
+
+                                                return (
+                                                    <TableRow key={bilty.id} className={`hover:bg-indigo-50/30 ${isPaid ? 'opacity-50' : ''}`}>
+                                                        <TableCell className="font-medium">#{bilty.biltyNo}</TableCell>
+                                                        <TableCell>
+                                                            {bilty.biltyDate ? format(new Date(bilty.biltyDate instanceof Object && 'toDate' in bilty.biltyDate ? (bilty.biltyDate as any).toDate() : bilty.biltyDate), "dd MMM yyyy") : "-"}
+                                                        </TableCell>
+                                                        <TableCell>{bilty.consignorName}</TableCell>
+                                                        <TableCell>{bilty.consigneeName}</TableCell>
+                                                        <TableCell className="text-right font-medium text-gray-600">
+                                                            ₹{total.toLocaleString()}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            {isPaid ? (
+                                                                <span className="text-green-600 font-semibold text-sm">
+                                                                    ✓ Paid
+                                                                </span>
+                                                            ) : (
+                                                                <span className="font-bold text-orange-600">
+                                                                    ₹{outstanding.toLocaleString()}
+                                                                </span>
+                                                            )}
+                                                        </TableCell>
+                                                        <TableCell className="text-right">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                className={isPaid ? "text-gray-400" : "text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"}
+                                                                onClick={() => handleSelectBilty(bilty)}
+                                                                disabled={isPaid}
+                                                            >
+                                                                {isPaid ? "Paid" : "Select"} <ArrowRight className="ml-1 h-4 w-4" />
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
                                         </TableBody>
                                     </Table>
                                 </div>
@@ -323,6 +430,51 @@ export default function PaymentEntryPage() {
                                     </Button>
                                 </div>
                             </form>
+                        </CardContent>
+                    </Card>
+                    {/* Recent Payments Table */}
+                    <Card className="border-none shadow-md bg-white">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <CreditCard className="h-5 w-5 text-indigo-500" />
+                                Recent Payments
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="rounded-md border border-gray-200 overflow-x-auto">
+                                <Table>
+                                    <TableHeader className="bg-gray-50">
+                                        <TableRow>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead>Party Name</TableHead>
+                                            <TableHead>Mode</TableHead>
+                                            <TableHead className="text-right">Amount</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {recentPayments.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="text-center py-4 text-gray-500">
+                                                    No recent payments found.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            recentPayments.map((payment) => (
+                                                <TableRow key={payment.id} className="hover:bg-gray-50">
+                                                    <TableCell>
+                                                        {payment.date ? format(new Date(payment.date instanceof Object && 'toDate' in payment.date ? (payment.date as any).toDate() : payment.date), "dd MMM yyyy") : "-"}
+                                                    </TableCell>
+                                                    <TableCell className="font-medium">{payment.partyName}</TableCell>
+                                                    <TableCell>{payment.paymentMode}</TableCell>
+                                                    <TableCell className="text-right font-bold text-green-600">
+                                                        {formatCurrency(payment.amount)}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
                         </CardContent>
                     </Card>
                 </main>

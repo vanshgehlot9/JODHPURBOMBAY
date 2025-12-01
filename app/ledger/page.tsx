@@ -259,18 +259,7 @@ export default function LedgerPage() {
                                 </CardContent>
                             </Card>
 
-                            <Card className="border-none shadow-lg bg-gradient-to-br from-white to-rose-50/30 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium text-rose-600">Total Credit</CardTitle>
-                                    <div className="h-8 w-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <TrendingDown className="h-4 w-4" />
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold text-rose-700">{formatCurrency(summary.totalCredit)}</div>
-                                    <p className="text-xs text-rose-600/80 mt-1">Total Received</p>
-                                </CardContent>
-                            </Card>
+
 
                             <Card className="border-none shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -332,7 +321,6 @@ export default function LedgerPage() {
                                             <TableHead className="w-[150px] font-semibold text-gray-700">Type</TableHead>
                                             <TableHead className="min-w-[300px] font-semibold text-gray-700">Particulars</TableHead>
                                             <TableHead className="text-right font-semibold text-emerald-600">Debit (₹)</TableHead>
-                                            <TableHead className="text-right font-semibold text-rose-600">Credit (₹)</TableHead>
                                             <TableHead className="text-right font-bold text-gray-800">Balance (₹)</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -400,13 +388,6 @@ export default function LedgerPage() {
                                                         {t.debit > 0 ? (
                                                             <span className="bg-emerald-50 px-2 py-1 rounded text-emerald-700">
                                                                 {formatCurrency(t.debit)}
-                                                            </span>
-                                                        ) : "-"}
-                                                    </TableCell>
-                                                    <TableCell className="text-right font-medium text-rose-600">
-                                                        {t.credit > 0 ? (
-                                                            <span className="bg-rose-50 px-2 py-1 rounded text-rose-700">
-                                                                {formatCurrency(t.credit)}
                                                             </span>
                                                         ) : "-"}
                                                     </TableCell>

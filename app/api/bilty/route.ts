@@ -3,6 +3,9 @@ import { getBilties, createBilty } from "@/lib/firestore"
 import { Timestamp } from "firebase/firestore"
 import { retryOperation, getErrorMessage, isNetworkError } from "@/lib/network-utils"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -30,7 +33,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Retry the operation with exponential backoff
-    const bilties = await retryOperation(() => getBilties(filters), 3, 1000);
+    const bilties = await retryOperation(() => getBilties(filters), 2, 300);
 
     // Convert Firestore Timestamps to ISO strings for JSON serialization
     const serializedBilties = bilties.map((bilty) => ({
@@ -73,8 +76,8 @@ export async function POST(request: NextRequest) {
     // Convert date string to Date object
     biltyData.biltyDate = new Date(biltyData.biltyDate)
 
-    // Retry the operation with exponential backoff
-    const result = await retryOperation(() => createBilty(biltyData), 3, 1000);
+    // Create bilty directly (no retry for write operations to avoid duplicates)
+    const result = await createBilty(biltyData);
 
     return NextResponse.json(
       {

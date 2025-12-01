@@ -193,6 +193,15 @@ export async function deleteChallan(id: string): Promise<void> {
   await deleteDoc(docRef)
 }
 
+// Update a challan
+export async function updateChallan(id: string, updates: Partial<any>): Promise<void> {
+  const docRef = doc(db, "challans", id)
+  await updateDoc(docRef, {
+    ...updates,
+    updatedAt: serverTimestamp(),
+  })
+}
+
 // Get dashboard stats
 export async function getDashboardStats() {
   const today = new Date()
@@ -413,4 +422,19 @@ export async function createPayment(paymentData: Omit<Payment, "id" | "createdAt
   };
   const docRef = await addDoc(collection(db, "payments"), newPayment);
   return docRef.id;
+}
+
+// Get recent payments
+export async function getRecentPayments(limitCount = 10): Promise<Payment[]> {
+  try {
+    const q = query(collection(db, "payments"), orderBy("date", "desc"), limit(limitCount));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as Payment[];
+  } catch (error) {
+    console.error("Error fetching recent payments:", error);
+    return [];
+  }
 }

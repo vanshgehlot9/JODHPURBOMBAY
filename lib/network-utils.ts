@@ -5,29 +5,29 @@
 /**
  * Retry an async operation with exponential backoff
  * @param operation - The async function to retry
- * @param maxRetries - Maximum number of retry attempts (default: 3)
- * @param initialDelay - Initial delay in milliseconds (default: 1000)
+ * @param maxRetries - Maximum number of retry attempts (default: 2)
+ * @param initialDelay - Initial delay in milliseconds (default: 300)
  * @returns Promise with the operation result
  */
 export async function retryOperation<T>(
   operation: () => Promise<T>,
-  maxRetries = 3,
-  initialDelay = 1000
+  maxRetries = 2,
+  initialDelay = 300
 ): Promise<T> {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await operation();
     } catch (error: any) {
       const isLastAttempt = attempt === maxRetries - 1;
-      const isNetworkError =
+      const isRetryableError =
         error?.code === 'unavailable' ||
         error?.code === 'failed-precondition' ||
         error?.message?.includes('offline') ||
         error?.message?.includes('ECONNRESET') ||
         error?.message?.includes('UNAVAILABLE');
 
-      // If it's the last attempt or not a network error, throw immediately
-      if (isLastAttempt || !isNetworkError) {
+      // If it's the last attempt or not a retryable error, throw immediately
+      if (isLastAttempt || !isRetryableError) {
         throw error;
       }
 

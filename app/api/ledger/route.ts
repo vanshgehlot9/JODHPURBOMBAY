@@ -136,6 +136,8 @@ export async function GET(request: NextRequest) {
 
     // --- 2. Calculate Period Transactions (Between 'from' and 'to') ---
     const transactions: any[] = [];
+    const paymentTransactions: any[] = []; // Track payments separately for balance calculation
+
 
     // Process Bilties (Debit)
     for (const b of bilties) {
@@ -186,7 +188,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Process Payments (Credit)
+    // Process Payments (Credit) - Track separately for balance calculation
     for (const p of payments) {
       const pDate = toDate(p.date);
       if (!pDate) continue;
@@ -197,7 +199,7 @@ export async function GET(request: NextRequest) {
       }
 
       if (pDate >= from && pDate <= to) {
-        transactions.push({
+        paymentTransactions.push({
           id: p.id,
           date: pDate,
           voucherType: "Payment",
@@ -208,15 +210,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Sort transactions by date
-    transactions.sort((a, b) => a.date.getTime() - b.date.getTime());
+    // Combine all transactions (bilties, challans, payments) for proper balance calculation
+    const allTransactions = [...transactions, ...paymentTransactions];
+    allTransactions.sort((a, b) => a.date.getTime() - b.date.getTime());
 
     // --- 3. Calculate Running Balance ---
     let runningBalance = openingBalance;
     let totalDebit = 0;
     let totalCredit = 0;
 
-    const ledgerRows = transactions.map(t => {
+    // Calculate balance with all transactions
+    const ledgerRows = allTransactions.map(t => {
       totalDebit += t.debit;
       totalCredit += t.credit;
 
@@ -229,10 +233,13 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    // Filter out payments from display (but they were used in balance calculation)
+    const displayRows = ledgerRows.filter(t => t.voucherType !== 'Payment');
+
     const closingBalance = openingBalance + totalDebit - totalCredit;
 
     return NextResponse.json({
-      data: ledgerRows,
+      data: displayRows,
       summary: {
         openingBalance,
         totalDebit,

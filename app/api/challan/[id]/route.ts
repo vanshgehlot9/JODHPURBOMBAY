@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getChallan, deleteChallan } from '@/lib/firestore';
+import { getChallan, deleteChallan, updateChallan } from '@/lib/firestore';
 
 export async function GET(
   request: NextRequest,
@@ -17,6 +17,33 @@ export async function GET(
     console.error('Error fetching challan:', error);
     return NextResponse.json(
       { error: 'Failed to fetch challan' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const challanData = await request.json();
+    
+    // Convert date string to Date object if needed
+    if (typeof challanData.date === "string") {
+      challanData.date = new Date(challanData.date);
+    }
+
+    await updateChallan(params.id, challanData);
+    
+    return NextResponse.json({ 
+      message: 'Challan updated successfully',
+      challanId: params.id
+    });
+  } catch (error) {
+    console.error('Error updating challan:', error);
+    return NextResponse.json(
+      { error: 'Failed to update challan' },
       { status: 500 }
     );
   }

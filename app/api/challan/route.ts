@@ -1,10 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createChallan, getAllChallans } from "@/lib/firestore";
+import { Timestamp } from "firebase/firestore";
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function GET() {
   try {
     const challans = await getAllChallans();
-    return NextResponse.json(challans);
+    
+    // Serialize Firestore Timestamps to ISO strings
+    const serializedChallans = challans.map((challan: any) => ({
+      ...challan,
+      date: challan.date instanceof Timestamp 
+        ? challan.date.toDate().toISOString() 
+        : (challan.date?.seconds ? new Date(challan.date.seconds * 1000).toISOString() : challan.date),
+      createdAt: challan.createdAt instanceof Timestamp 
+        ? challan.createdAt.toDate().toISOString() 
+        : (challan.createdAt?.seconds ? new Date(challan.createdAt.seconds * 1000).toISOString() : challan.createdAt),
+    }));
+    
+    return NextResponse.json(serializedChallans);
   } catch (error) {
     console.error("Error fetching challans:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });

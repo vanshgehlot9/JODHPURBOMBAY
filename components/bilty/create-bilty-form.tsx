@@ -310,6 +310,7 @@ export function CreateBiltyForm() {
           description: `Bilty #${result.biltyNo} created successfully!`,
         })
         router.push("/bilty/view")
+        router.refresh()
       } else {
         throw new Error("Failed to create bilty")
       }

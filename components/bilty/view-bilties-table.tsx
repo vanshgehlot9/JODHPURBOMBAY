@@ -106,7 +106,12 @@ export function ViewBiltiesTable() {
 
   const fetchBilties = async () => {
     try {
-      const response = await fetch("/api/bilty")
+      const response = await fetch("/api/bilty", {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      })
       if (response.ok) {
         const data = await response.json()
         setBilties(data)

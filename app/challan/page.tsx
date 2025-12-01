@@ -31,7 +31,7 @@ interface Challan {
   truckNo: string;
   from: string;
   to: string;
-  ownerName: string;
+  truckOwnerName: string;
   totalFreight: number;
 }
 
@@ -51,7 +51,7 @@ export default function ChallanListPage() {
       (challan) =>
         challan.challanNo.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
         (challan.truckNo && challan.truckNo.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (challan.ownerName && challan.ownerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (challan.truckOwnerName && challan.truckOwnerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (challan.from && challan.from.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (challan.to && challan.to.toLowerCase().includes(searchTerm.toLowerCase()))
     );
@@ -60,7 +60,12 @@ export default function ChallanListPage() {
 
   const fetchChallans = async () => {
     try {
-      const response = await fetch('/api/challan');
+      const response = await fetch('/api/challan', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch challans');
       }
@@ -106,8 +111,21 @@ export default function ChallanListPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-GB');
+  const formatDate = (dateValue: any) => {
+    if (!dateValue) return "N/A";
+    
+    try {
+      // Handle Firestore Timestamp object
+      if (dateValue?.seconds) {
+        return new Date(dateValue.seconds * 1000).toLocaleDateString('en-GB');
+      }
+      // Handle ISO string or other date formats
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return "N/A";
+      return date.toLocaleDateString('en-GB');
+    } catch {
+      return "N/A";
+    }
   };
 
   if (loading) {
@@ -260,7 +278,7 @@ export default function ChallanListPage() {
                           </TableCell>
                           <TableCell>
                             <div className="max-w-[150px] truncate font-medium text-gray-900">
-                              {challan.ownerName}
+                              {challan.truckOwnerName}
                             </div>
                           </TableCell>
                           <TableCell>
