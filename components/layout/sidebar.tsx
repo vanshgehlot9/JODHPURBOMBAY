@@ -121,18 +121,18 @@ export function Sidebar() {
               </div>
               <div className="flex flex-col min-w-0 py-1">
                 <h1 className="text-lg font-black bg-gradient-to-r from-indigo-900 via-purple-800 to-indigo-900 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient tracking-tight truncate">
-                  JBRC
+                  Jodhpur Bombay
                 </h1>
                 <p className="text-[10px] font-bold text-indigo-400/90 uppercase tracking-[0.2em] truncate leading-tight">
-                  Logistics
+                  Road Carrier
                 </p>
               </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <ScrollArea className="flex-1 px-4 py-6">
-            <nav className="space-y-1.5">
+          <ScrollArea className="flex-1 px-4 py-4">
+            <nav className="space-y-1">
               {navigation.map((item) => {
                 const isActive = isItemActive(item)
                 const isExternal = item.external
@@ -146,7 +146,7 @@ export function Sidebar() {
                       rel="noopener noreferrer"
                       onClick={() => setIsOpen(false)}
                       className={cn(
-                        "group flex items-center px-4 py-3 text-sm font-medium rounded-2xl transition-all duration-300",
+                        "group flex items-center px-4 py-2.5 text-sm font-medium rounded-2xl transition-all duration-300",
                         "text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 hover:shadow-sm hover:translate-x-1"
                       )}
                     >
@@ -162,7 +162,7 @@ export function Sidebar() {
                     href={item.href}
                     onClick={() => setIsOpen(false)}
                     className={cn(
-                      "group flex items-center px-4 py-3 text-sm font-medium rounded-2xl transition-all duration-300 relative overflow-hidden",
+                      "group flex items-center px-4 py-2.5 text-sm font-medium rounded-2xl transition-all duration-300 relative overflow-hidden",
                       isActive
                         ? "text-white shadow-lg shadow-indigo-500/30 translate-x-1 scale-[1.02]"
                         : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 hover:translate-x-1"
