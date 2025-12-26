@@ -326,16 +326,16 @@ export function CreateBiltyForm() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Progress Header */}
-      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-6">
+      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Create New Bilty</h1>
-            <p className="text-gray-600">Fill in the details to generate a new transport document</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Create New Bilty</h1>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">Fill in the details to generate a new transport document</p>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-white text-indigo-700 border-indigo-200 shadow-sm">
+            <Badge variant="outline" className="bg-white text-indigo-700 border-indigo-200 shadow-sm text-xs">
               <FileText className="h-3 w-3 mr-1" />
               Draft
             </Badge>
@@ -343,7 +343,7 @@ export function CreateBiltyForm() {
         </div>
 
         {/* Progress Steps */}
-        <div className="flex items-center gap-4">
+        <div className="hidden sm:flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-md shadow-indigo-200">
               1
@@ -365,24 +365,44 @@ export function CreateBiltyForm() {
             <span className="text-sm text-gray-500">Charges & Submit</span>
           </div>
         </div>
+        
+        {/* Mobile Progress - Simplified */}
+        <div className="sm:hidden flex items-center justify-center gap-2">
+          <div className="w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
+          <div className="w-6 h-0.5 bg-indigo-200"></div>
+          <div className="w-6 h-6 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-xs">2</div>
+          <div className="w-6 h-0.5 bg-gray-200"></div>
+          <div className="w-6 h-6 bg-gray-200 text-gray-400 rounded-full flex items-center justify-center text-xs">3</div>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Transport Information */}
+      <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+        {/* Single Card with All Sections */}
         <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
-          <CardHeader className="border-b border-gray-100/50 pb-6">
+          <CardHeader className="border-b border-gray-100/50 pb-4 sm:pb-6 px-4 sm:px-6">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-indigo-50 rounded-2xl">
-                <Truck className="h-6 w-6 text-indigo-600" />
+                <FileText className="h-6 w-6 text-indigo-600" />
               </div>
               <div>
-                <CardTitle className="text-xl font-bold text-gray-900">Transport Information</CardTitle>
-                <CardDescription className="text-gray-500">Basic bilty and transport details</CardDescription>
+                <CardTitle className="text-xl font-bold text-gray-900">Create New Bilty</CardTitle>
+                <CardDescription className="text-gray-500">Complete bilty details in one form</CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <CardContent className="pt-4 sm:pt-6 lg:pt-8 space-y-6 sm:space-y-8 lg:space-y-10 px-4 sm:px-6">
+            {/* Transport Information Section */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-indigo-50 rounded-xl">
+                  <Truck className="h-5 w-5 text-indigo-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Transport Information</h3>
+                  <p className="text-sm text-gray-500">Basic bilty and transport details</p>
+                </div>
+              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <div className="space-y-2">
                 <Label htmlFor="biltyDate" className="text-sm font-semibold text-gray-700">
                   Bilty Date <span className="text-red-500">*</span>
@@ -483,34 +503,32 @@ export function CreateBiltyForm() {
                 />
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Parties Information */}
-        <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
-          <CardHeader className="border-b border-gray-100/50 pb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-50 rounded-2xl">
-                  <Users className="h-6 w-6 text-purple-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-bold text-gray-900">Parties Information</CardTitle>
-                  <CardDescription className="text-gray-500">Start typing to see parties from your database</CardDescription>
-                </div>
-              </div>
-              <a
-                href="/parties"
-                target="_blank"
-                className="text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Add New Party
-              </a>
             </div>
-          </CardHeader>
-          <CardContent className="pt-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+
+            <Separator className="my-8" />
+
+            {/* Parties Information Section */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-purple-50 rounded-xl">
+                    <Users className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">Parties Information</h3>
+                    <p className="text-sm text-gray-500">Start typing to see parties from your database</p>
+                  </div>
+                </div>
+                <a
+                  href="/parties"
+                  target="_blank"
+                  className="text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add New Party
+                </a>
+              </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-10">
               <div className="space-y-6">
                 <div className="flex items-center gap-3 border-b border-gray-100 pb-2">
                   <div className="h-8 w-1 bg-indigo-500 rounded-full"></div>
@@ -670,33 +688,31 @@ export function CreateBiltyForm() {
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Items */}
-        <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
-          <CardHeader className="border-b border-gray-100/50 pb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-indigo-50 rounded-2xl">
-                  <Package className="h-6 w-6 text-indigo-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-bold text-gray-900">Items Details</CardTitle>
-                  <CardDescription className="text-gray-500">Goods description and specifications</CardDescription>
-                </div>
-              </div>
-              <Button
-                type="button"
-                onClick={addItem}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Item
-              </Button>
             </div>
-          </CardHeader>
-          <CardContent className="pt-8">
+
+            <Separator className="my-8" />
+
+            {/* Items Section */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-indigo-50 rounded-xl">
+                    <Package className="h-5 w-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">Items Details</h3>
+                    <p className="text-sm text-gray-500">Goods description and specifications</p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  onClick={addItem}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Item
+                </Button>
+              </div>
             <div className="space-y-6">
               {items.map((item, index) => (
                 <div
@@ -724,7 +740,7 @@ export function CreateBiltyForm() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-6 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 sm:gap-6">
                     <div className="col-span-1 space-y-2">
                       <Label className="text-sm font-semibold text-gray-700">Quantity</Label>
                       <Input
@@ -788,23 +804,21 @@ export function CreateBiltyForm() {
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Charges */}
-        <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
-          <CardHeader className="border-b border-gray-100/50 pb-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-50 rounded-2xl">
-                <Calculator className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <CardTitle className="text-xl font-bold text-gray-900">Charges & Billing</CardTitle>
-                <CardDescription className="text-gray-500">Financial details and tax information</CardDescription>
-              </div>
             </div>
-          </CardHeader>
-          <CardContent className="pt-8 space-y-6">
+
+            <Separator className="my-8" />
+
+            {/* Charges Section */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-purple-50 rounded-xl">
+                  <Calculator className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Charges & Billing</h3>
+                  <p className="text-sm text-gray-500">Financial details and tax information</p>
+                </div>
+              </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="freight" className="text-sm font-medium text-gray-700">Freight</Label>
@@ -933,23 +947,21 @@ export function CreateBiltyForm() {
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Additional Information */}
-        <Card className="shadow-sm border-0 ring-1 ring-gray-200/50">
-          <CardHeader className="bg-gradient-to-r from-indigo-50/50 to-transparent border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <FileText className="h-5 w-5 text-indigo-600" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">Additional Information</CardTitle>
-                <CardDescription>Extra details and documentation</CardDescription>
-              </div>
             </div>
-          </CardHeader>
-          <CardContent className="pt-6 space-y-6">
+
+            <Separator className="my-8" />
+
+            {/* Additional Information Section */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-indigo-50 rounded-xl">
+                  <FileText className="h-5 w-5 text-indigo-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Additional Information</h3>
+                  <p className="text-sm text-gray-500">Extra details and documentation</p>
+                </div>
+              </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="invoiceNo" className="text-sm font-medium text-gray-700">Invoice No.</Label>
@@ -1016,6 +1028,7 @@ export function CreateBiltyForm() {
                   className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
               </div>
+            </div>
             </div>
           </CardContent>
         </Card>

@@ -190,25 +190,25 @@ export default function PaymentEntryPage() {
     };
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
+        <div className="flex min-h-screen flex-col md:flex-row bg-gray-50">
             <Sidebar />
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col min-w-0">
                 <Header title="Payment Entry" subtitle="Record received payments" />
 
-                <main className="flex-1 p-4 sm:p-6 space-y-6 max-w-6xl mx-auto w-full">
+                <main className="flex-1 p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-6xl mx-auto w-full">
                     {/* Credit Summary Card */}
                     {totalCredit !== null && (
                         <Card className="border-none shadow-lg bg-gradient-to-br from-white to-rose-50/30">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0 pb-4 px-4 sm:px-6">
                                 <CardTitle className="text-sm font-medium text-rose-600">Total Credit (This Month)</CardTitle>
                                 <div className="flex gap-2">
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="h-8 bg-white/50 hover:bg-white border-rose-200 text-rose-700 hover:text-rose-800"
+                                        className="h-8 bg-white/50 hover:bg-white border-rose-200 text-rose-700 hover:text-rose-800 text-xs"
                                         onClick={downloadReport}
                                     >
-                                        <Download className="h-3.5 w-3.5 mr-1.5" />
+                                        <Download className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" />
                                         Report
                                     </Button>
                                     <div className="h-8 w-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
@@ -216,8 +216,8 @@ export default function PaymentEntryPage() {
                                     </div>
                                 </div>
                             </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold text-rose-700">{formatCurrency(totalCredit)}</div>
+                            <CardContent className="px-4 sm:px-6">
+                                <div className="text-xl sm:text-2xl font-bold text-rose-700">{formatCurrency(totalCredit)}</div>
                                 <p className="text-xs text-rose-600/80 mt-1">Total Received</p>
                             </CardContent>
                         </Card>
@@ -225,25 +225,25 @@ export default function PaymentEntryPage() {
 
                     {/* Search Section */}
                     <Card className="border-none shadow-md bg-white">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Search className="h-5 w-5 text-indigo-500" />
+                        <CardHeader className="px-4 sm:px-6">
+                            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                                <Search className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-500" />
                                 Find Bilty
                             </CardTitle>
-                            <CardDescription>
+                            <CardDescription className="text-xs sm:text-sm">
                                 Search by Bilty Number, Party Name, or Date to find the transaction.
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="flex gap-3">
+                        <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
+                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                                 <Input
                                     placeholder="Enter Bilty No, Party Name..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                    className="flex-1 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                    className="flex-1 h-9 sm:h-10 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                 />
-                                <Button onClick={handleSearch} disabled={searching} className="bg-indigo-600 hover:bg-indigo-700">
+                                <Button onClick={handleSearch} disabled={searching} className="bg-indigo-600 hover:bg-indigo-700 h-9 sm:h-10 text-sm">
                                     {searching ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
                                 </Button>
                             </div>

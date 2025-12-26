@@ -130,21 +130,21 @@ export default function LedgerPage() {
     }
 
     return (
-        <div className="flex min-h-screen bg-gray-50">
+        <div className="flex min-h-screen flex-col md:flex-row bg-gray-50">
             <Sidebar />
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden min-w-0">
                 <Header title="Ledger Account" subtitle="Financial transactions & statements" />
 
-                <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+                <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
                     {/* Filter Section with Glassmorphism */}
                     <div className="relative overflow-hidden rounded-xl border border-white/20 bg-white/70 backdrop-blur-xl shadow-lg animate-in slide-in-from-top-4 duration-500">
                         <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/50 via-purple-50/50 to-pink-50/50 opacity-50"></div>
-                        <div className="relative p-6">
-                            <div className="flex flex-col md:flex-row gap-6 items-end">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 w-full">
+                        <div className="relative p-4 sm:p-6">
+                            <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-stretch lg:items-end">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 flex-1 w-full">
                                     <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                            <CalendarIcon className="h-4 w-4 text-indigo-500" />
+                                        <label className="text-xs sm:text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                            <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-500" />
                                             From Date
                                         </label>
                                         <div className="relative group">

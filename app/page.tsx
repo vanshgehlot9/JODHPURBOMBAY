@@ -31,11 +31,11 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen flex-col md:flex-row">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <Header title="Dashboard" subtitle="Overview" />
-        <main className="flex-1 p-4 sm:p-8 space-y-8">
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
           {/* Modern Welcome Section */}
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 p-8 sm:p-10 text-white shadow-2xl animate-in ring-1 ring-white/10">
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-soft-light"></div>

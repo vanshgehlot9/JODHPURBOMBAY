@@ -94,6 +94,14 @@ export function Sidebar() {
         {isOpen ? <X className="h-6 w-6 text-gray-700" /> : <Menu className="h-6 w-6 text-gray-700" />}
       </Button>
 
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <div
         className={cn(

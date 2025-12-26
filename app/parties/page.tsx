@@ -206,31 +206,31 @@ export default function PartiesPage() {
 	}
 
 	return (
-		<div className="flex min-h-screen bg-gray-50">
+		<div className="flex min-h-screen flex-col md:flex-row bg-gray-50">
 			<Sidebar />
-			<div className="flex-1 flex flex-col">
+			<div className="flex-1 flex flex-col min-w-0">
 				<Header title="Parties" subtitle="Manage your parties" />
-				<main className="flex-1 p-3 sm:p-6 space-y-6">
+				<main className="flex-1 p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
 					<Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
-						<CardHeader className="bg-gradient-to-r from-indigo-50/30 to-transparent border-b border-gray-100/50 pb-6">
-							<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+						<CardHeader className="bg-gradient-to-r from-indigo-50/30 to-transparent border-b border-gray-100/50 pb-4 sm:pb-6 px-4 sm:px-6">
+							<div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
 								<div>
-									<CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
-										<Building2 className="h-5 w-5 text-indigo-600" />
+									<CardTitle className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
+										<Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
 										All Parties
 									</CardTitle>
-									<CardDescription className="text-gray-500">
+									<CardDescription className="text-xs sm:text-sm text-gray-500 mt-1">
 										Manage your consignors and consignees
 									</CardDescription>
 								</div>
-								<div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-									<div className="relative">
+								<div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+									<div className="relative flex-1 sm:flex-initial">
 										<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
 										<Input
 											placeholder="Search parties..."
 											value={searchTerm}
 											onChange={(e) => setSearchTerm(e.target.value)}
-											className="pl-10 w-full sm:w-80 h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white border-gray-200"
+											className="pl-10 w-full sm:w-60 lg:w-80 h-9 sm:h-10 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white border-gray-200"
 										/>
 									</div>
 
@@ -239,15 +239,15 @@ export default function PartiesPage() {
 										if (!open) resetForm();
 									}}>
 										<DialogTrigger asChild>
-											<Button className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300">
-												<Plus className="h-4 w-4 mr-2" />
+											<Button className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 h-9 sm:h-10 text-sm">
+												<Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
 												Add Party
 											</Button>
 										</DialogTrigger>
-										<DialogContent className="sm:max-w-[600px]">
+										<DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto mx-4">
 											<DialogHeader>
-												<DialogTitle>{editingParty ? "Edit Party" : "Add New Party"}</DialogTitle>
-												<DialogDescription>
+												<DialogTitle className="text-lg sm:text-xl">{editingParty ? "Edit Party" : "Add New Party"}</DialogTitle>
+												<DialogDescription className="text-xs sm:text-sm">
 													{editingParty ? "Update the party details below." : "Enter the details for the new party."}
 												</DialogDescription>
 											</DialogHeader>

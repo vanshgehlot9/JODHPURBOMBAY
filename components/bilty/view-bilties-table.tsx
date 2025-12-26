@@ -233,50 +233,52 @@ export function ViewBiltiesTable() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className=\"space-y-4 sm:space-y-6\">
       {/* Main Table */}
-      <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
-        <CardHeader className="border-b border-gray-100/50 pb-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <Card className=\"shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm\">
+        <CardHeader className=\"border-b border-gray-100/50 pb-4 sm:pb-6 px-4 sm:px-6\">
+          <div className=\"flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4\">
             <div>
-              <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <FileText className="h-5 w-5 text-indigo-600" />
+              <CardTitle className=\"text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2\">
+                <FileText className=\"h-4 w-4 sm:h-5 sm:w-5 text-indigo-600\" />
                 Bilty Documents
               </CardTitle>
-              <CardDescription className="text-gray-500">
+              <CardDescription className=\"text-xs sm:text-sm text-gray-500 mt-1\">
                 {filteredBilties.length} of {bilties.length} bilties
                 {searchTerm && ` matching "${searchTerm}"`}
               </CardDescription>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-              <div className="relative">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-initial">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
-                  placeholder="Search bilties, clients, routes..."
+                  placeholder="Search bilties..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-full sm:w-80 h-10 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50/50 border-gray-200"
+                  className="pl-10 w-full sm:w-60 lg:w-80 h-9 sm:h-10 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50/50 border-gray-200"
                 />
               </div>
               {selectedBilties.size > 0 && (
                 <Button
                   onClick={handleBulkDelete}
                   variant="destructive"
+                  size="sm"
                   disabled={isDeleting}
-                  className="hover:bg-red-600 shadow-md shadow-red-200"
+                  className="hover:bg-red-600 shadow-md shadow-red-200 text-xs sm:text-sm h-9 sm:h-10"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <Trash2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Delete ({selectedBilties.size})
                 </Button>
               )}
-              <Button onClick={handleExport} variant="outline" className="hover:bg-indigo-50 border-gray-200 text-gray-700">
-                <Download className="h-4 w-4 mr-2" />
-                Export All
+              <Button onClick={handleExport} variant="outline" size="sm" className="hover:bg-indigo-50 border-gray-200 text-gray-700 text-xs sm:text-sm h-9 sm:h-10">
+                <Download className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Export All</span>
+                <span className="sm:hidden">Export</span>
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className="p-0 overflow-x-auto">
           {filteredBilties.length === 0 ? (
             <div className="text-center py-16">
               <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">

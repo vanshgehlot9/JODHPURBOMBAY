@@ -147,17 +147,17 @@ export default function StatementsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen flex-col md:flex-row bg-gray-50">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         <Header title="Financial Statements" subtitle="Generate and view financial statements" />
-        <main className="flex-1 p-3 sm:p-6 space-y-4 sm:space-y-6">
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
           {/* Filters Card */}
           <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
-            <CardHeader className="bg-gradient-to-r from-indigo-50/30 to-transparent border-b border-gray-100/50">
-              <CardTitle className="flex items-center gap-2 text-gray-900">
-                <div className="p-2 bg-indigo-100 rounded-lg">
-                  <BarChart3 className="h-5 w-5 text-indigo-600" />
+            <CardHeader className="bg-gradient-to-r from-indigo-50/30 to-transparent border-b border-gray-100/50 px-4 sm:px-6">
+              <CardTitle className="flex items-center gap-2 text-gray-900 text-lg sm:text-xl">
+                <div className="p-1.5 sm:p-2 bg-indigo-100 rounded-lg">
+                  <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
                 </div>
                 Statement Generator
               </CardTitle>

@@ -21,11 +21,11 @@ export async function RecentBilties() {
 
   return (
     <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
-      <CardHeader className="border-b border-gray-100/50 pb-6">
-        <div className="flex flex-row items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-indigo-50 rounded-2xl">
-              <FileText className="h-6 w-6 text-indigo-600" />
+      <CardHeader className="border-b border-gray-100/50 pb-4 sm:pb-6 px-4 sm:px-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="p-2 sm:p-3 bg-indigo-50 rounded-xl sm:rounded-2xl">
+              <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
             </div>
             <div>
               <CardTitle className="text-xl font-bold text-gray-900">Recent Bilties</CardTitle>
@@ -64,15 +64,15 @@ export async function RecentBilties() {
               return (
                 <div
                   key={bilty.id}
-                  className="p-6 hover:bg-indigo-50/30 transition-all duration-300 group"
+                  className="p-3 sm:p-4 lg:p-6 hover:bg-indigo-50/30 transition-all duration-300 group"
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-start sm:items-center justify-between flex-col sm:flex-row gap-3 sm:gap-0">
                     <div className="flex-1">
                       <div className="flex items-center gap-6">
                         {/* ID Badge */}
-                        <div className="flex flex-col items-center justify-center w-16 h-16 bg-white border border-indigo-100 rounded-2xl shadow-sm group-hover:shadow-md transition-all group-hover:border-indigo-200">
-                          <span className="text-xs text-gray-400 font-medium uppercase">No.</span>
-                          <span className="text-lg font-bold text-indigo-600">#{bilty.biltyNo}</span>
+                        <div className="flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-white border border-indigo-100 rounded-xl sm:rounded-2xl shadow-sm group-hover:shadow-md transition-all group-hover:border-indigo-200">
+                          <span className="text-[10px] sm:text-xs text-gray-400 font-medium uppercase">No.</span>
+                          <span className="text-sm sm:text-lg font-bold text-indigo-600">#{bilty.biltyNo}</span>
                         </div>
 
                         <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -145,7 +145,7 @@ export async function RecentBilties() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-x-2 group-hover:translate-x-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2 sm:ml-4 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 transform sm:translate-x-2 sm:group-hover:translate-x-0 w-full sm:w-auto justify-end">
                       <Link href={`/bilty/view/${bilty.id}`}>
                         <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-indigo-50 text-gray-400 hover:text-indigo-600">
                           <Eye className="h-4 w-4" />
