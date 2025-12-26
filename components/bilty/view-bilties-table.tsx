@@ -233,17 +233,17 @@ export function ViewBiltiesTable() {
   }
 
   return (
-    <div className=\"space-y-4 sm:space-y-6\">
+    <div className="space-y-4 sm:space-y-6">
       {/* Main Table */}
-      <Card className=\"shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm\">
-        <CardHeader className=\"border-b border-gray-100/50 pb-4 sm:pb-6 px-4 sm:px-6\">
-          <div className=\"flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4\">
+      <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
+        <CardHeader className="border-b border-gray-100/50 pb-4 sm:pb-6 px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
             <div>
-              <CardTitle className=\"text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2\">
-                <FileText className=\"h-4 w-4 sm:h-5 sm:w-5 text-indigo-600\" />
+              <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
                 Bilty Documents
               </CardTitle>
-              <CardDescription className=\"text-xs sm:text-sm text-gray-500 mt-1\">
+              <CardDescription className="text-xs sm:text-sm text-gray-500 mt-1">
                 {filteredBilties.length} of {bilties.length} bilties
                 {searchTerm && ` matching "${searchTerm}"`}
               </CardDescription>
