@@ -38,6 +38,9 @@
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
     "@react-pdf/renderer": "^4.3.0",
+    "@react-three/drei": "^9.88.17",
+    "@react-three/fiber": "^8.15.12",
+    "@types/three": "^0.182.0",
     "autoprefixer": "^10.4.20",
     "body-parser": "latest",
     "class-variance-authority": "^0.7.1",
@@ -69,6 +72,7 @@
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
+    "three": "^0.160.0",
     "vaul": "^0.9.6",
     "xlsx": "^0.18.5",
     "zod": "^3.24.1"

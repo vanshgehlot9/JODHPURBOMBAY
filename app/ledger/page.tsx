@@ -16,7 +16,12 @@ import {
     TrendingUp,
     TrendingDown,
     ArrowRightLeft,
-    FileText
+    FileText,
+    PieChart,
+    Banknote,
+    Filter,
+    ArrowUpRight,
+    ArrowDownLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -108,19 +113,14 @@ export default function LedgerPage() {
         return new Intl.NumberFormat("en-IN", {
             style: "currency",
             currency: "INR",
+            maximumFractionDigits: 0,
         }).format(amount);
     };
 
     if (authLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="relative">
-                        <div className="h-12 w-12 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin"></div>
-                        <div className="absolute inset-0 rounded-full border-4 border-indigo-400/30 blur-sm animate-pulse"></div>
-                    </div>
-                    <p className="text-gray-500 font-medium animate-pulse">Loading Ledger...</p>
-                </div>
+            <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA]">
+                <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
             </div>
         );
     }
@@ -130,268 +130,211 @@ export default function LedgerPage() {
     }
 
     return (
-        <div className="flex min-h-screen flex-col md:flex-row bg-gray-50">
+        <div className="flex min-h-screen flex-col md:flex-row bg-[#F8F9FA]">
             <Sidebar />
-            <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-                <Header title="Ledger Account" subtitle="Financial transactions & statements" />
+            <div className="flex-1 flex flex-col overflow-hidden min-w-0 font-sans">
+                <Header title="Ledger Account" subtitle="Financial Statements & Transaction History" />
 
-                <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
-                    {/* Filter Section with Glassmorphism */}
-                    <div className="relative overflow-hidden rounded-xl border border-white/20 bg-white/70 backdrop-blur-xl shadow-lg animate-in slide-in-from-top-4 duration-500">
-                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-50/50 via-purple-50/50 to-pink-50/50 opacity-50"></div>
-                        <div className="relative p-4 sm:p-6">
-                            <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 items-stretch lg:items-end">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 flex-1 w-full">
-                                    <div className="space-y-2">
-                                        <label className="text-xs sm:text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                            <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4 text-indigo-500" />
-                                            From Date
-                                        </label>
-                                        <div className="relative group">
-                                            <Input
-                                                type="date"
-                                                value={fromDate}
-                                                onChange={(e) => setFromDate(e.target.value)}
-                                                className="bg-white/80 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 transition-all duration-300 group-hover:shadow-md"
-                                            />
-                                        </div>
-                                    </div>
+                <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto w-full space-y-6">
 
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                            <CalendarIcon className="h-4 w-4 text-purple-500" />
-                                            To Date
-                                        </label>
-                                        <div className="relative group">
-                                            <Input
-                                                type="date"
-                                                value={toDate}
-                                                onChange={(e) => setToDate(e.target.value)}
-                                                className="bg-white/80 border-gray-200 focus:border-purple-500 focus:ring-purple-500 transition-all duration-300 group-hover:shadow-md"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                            <Search className="h-4 w-4 text-indigo-500" />
-                                            Party Name
-                                        </label>
-                                        <div className="relative group">
-                                            <Input
-                                                type="text"
-                                                value={partyName}
-                                                onChange={(e) => setPartyName(e.target.value)}
-                                                placeholder="Search party..."
-                                                className="bg-white/80 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 transition-all duration-300 group-hover:shadow-md"
-                                            />
-                                        </div>
-                                    </div>
+                    {/* Filter Bar */}
+                    <div className="bg-white rounded-[1.5rem] p-5 shadow-sm border border-gray-100 flex flex-col lg:flex-row gap-4 items-end lg:items-center justify-between sticky top-0 z-20 backdrop-blur-xl bg-white/90">
+                        <div className="flex flex-col sm:flex-row gap-4 flex-1 w-full lg:w-auto">
+                            <div className="relative group flex-1">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <CalendarIcon className="h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
                                 </div>
-
-                                <div className="flex gap-3 w-full md:w-auto">
-                                    <Button
-                                        onClick={clearFilters}
-                                        variant="outline"
-                                        className="flex-1 md:flex-none border-gray-300 hover:bg-gray-100 hover:text-gray-900 transition-all duration-300"
-                                    >
-                                        <RefreshCcw className="h-4 w-4 mr-2" />
-                                        Clear
-                                    </Button>
-                                    <Button
-                                        onClick={generateLedger}
-                                        disabled={loading}
-                                        className="flex-1 md:flex-none bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-indigo-500/30 transition-all duration-300 transform hover:-translate-y-0.5"
-                                    >
-                                        {loading ? (
-                                            <>
-                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                                Generating...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <FileText className="h-4 w-4 mr-2" />
-                                                Generate Report
-                                            </>
-                                        )}
-                                    </Button>
-                                </div>
+                                <Input
+                                    type="date"
+                                    value={fromDate}
+                                    onChange={(e) => setFromDate(e.target.value)}
+                                    className="pl-10 h-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-indigo-500 rounded-lg text-sm font-medium"
+                                />
                             </div>
-
-                            {error && (
-                                <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg flex items-center gap-2 text-sm animate-in slide-in-from-top-2">
-                                    <div className="h-2 w-2 rounded-full bg-red-500"></div>
-                                    {error}
+                            <div className="flex items-center text-gray-400 font-bold px-1">to</div>
+                            <div className="relative group flex-1">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <CalendarIcon className="h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
                                 </div>
-                            )}
+                                <Input
+                                    type="date"
+                                    value={toDate}
+                                    onChange={(e) => setToDate(e.target.value)}
+                                    className="pl-10 h-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-indigo-500 rounded-lg text-sm font-medium"
+                                />
+                            </div>
+                            <div className="relative group flex-[1.5]">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Search className="h-4 w-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+                                </div>
+                                <Input
+                                    type="text"
+                                    value={partyName}
+                                    onChange={(e) => setPartyName(e.target.value)}
+                                    placeholder="Search Party Name..."
+                                    className="pl-10 h-10 bg-gray-50 border-gray-200 focus:bg-white focus:border-indigo-500 rounded-lg text-sm font-medium"
+                                />
+                            </div>
+                        </div>
+                        <div className="flex gap-2 w-full lg:w-auto">
+                            <Button
+                                onClick={clearFilters}
+                                variant="outline"
+                                className="h-10 w-10 p-0 rounded-lg border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                                title="Reset"
+                            >
+                                <RefreshCcw className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                onClick={generateLedger}
+                                disabled={loading}
+                                className="h-10 px-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-sm shadow-indigo-200 flex-1 lg:flex-none"
+                            >
+                                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Generate Statement"}
+                            </Button>
                         </div>
                     </div>
 
                     {/* Summary Cards */}
-                    {summary && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-in slide-in-from-bottom-4 duration-500 delay-100">
-                            <Card className="border-none shadow-lg bg-gradient-to-br from-white to-gray-50 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium text-gray-500">Opening Balance</CardTitle>
-                                    <div className="h-8 w-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <Wallet className="h-4 w-4" />
+                    {summary ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            {/* Opening Balance */}
+                            <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-[1.5rem] border border-gray-200 relative overflow-hidden group">
+                                <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <Wallet className="h-24 w-24 -rotate-12" />
+                                </div>
+                                <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">Opening Balance</p>
+                                <h3 className="text-3xl font-black text-gray-800 tracking-tight">{formatCurrency(summary.openingBalance)}</h3>
+                                <div className={`inline-flex items-center mt-3 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${summary.openingBalance >= 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'}`}>
+                                    {summary.openingBalance >= 0 ? "Credit" : "Debit"}
+                                </div>
+                            </div>
+
+                            {/* Total Debit */}
+                            <div className="bg-white p-6 rounded-[1.5rem] border border-gray-100 shadow-sm relative overflow-hidden group hover:border-emerald-200 hover:shadow-md transition-all">
+                                <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <TrendingUp className="h-24 w-24 text-emerald-600 -rotate-12" />
+                                </div>
+                                <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">Total Billed</p>
+                                <h3 className="text-3xl font-black text-emerald-600 tracking-tight flex items-center gap-2">
+                                    <ArrowUpRight className="h-6 w-6" />
+                                    {formatCurrency(summary.totalDebit)}
+                                </h3>
+                                <p className="text-emerald-800/60 text-xs font-medium mt-2">Money Out</p>
+                            </div>
+
+                            {/* Total Credit */}
+                            <div className="bg-white p-6 rounded-[1.5rem] border border-gray-100 shadow-sm relative overflow-hidden group hover:border-blue-200 hover:shadow-md transition-all">
+                                <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                    <Banknote className="h-24 w-24 text-blue-600 -rotate-12" />
+                                </div>
+                                <p className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2">Total Received</p>
+                                <h3 className="text-3xl font-black text-blue-600 tracking-tight flex items-center gap-2">
+                                    <ArrowDownLeft className="h-6 w-6" />
+                                    {formatCurrency(summary.totalCredit || 0)}
+                                </h3>
+                                <p className="text-blue-800/60 text-xs font-medium mt-2">Money In</p>
+                            </div>
+
+                            {/* Closing Balance */}
+                            <div className="relative overflow-hidden rounded-[1.5rem] bg-gradient-to-br from-[#1E1B4B] to-[#312E81] p-6 text-white shadow-xl shadow-indigo-900/20 group">
+                                <div className="absolute -right-6 -top-6 bg-indigo-500 rounded-full w-32 h-32 blur-3xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
+                                <div className="relative z-10">
+                                    <p className="text-indigo-200 text-xs font-bold uppercase tracking-wider mb-2">Net Closing</p>
+                                    <h3 className="text-3xl font-black tracking-tight">{formatCurrency(summary.closingBalance)}</h3>
+                                    <div className="mt-4 pt-4 border-t border-indigo-100/10 flex items-center justify-between">
+                                        <span className="text-indigo-200 text-xs">Status</span>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide ${summary.closingBalance >= 0 ? 'bg-emerald-500/20 text-emerald-200' : 'bg-rose-500/20 text-rose-200'}`}>
+                                            {summary.closingBalance >= 0 ? "Receivable" : "Payable"}
+                                        </span>
                                     </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold text-gray-900">{formatCurrency(summary.openingBalance)}</div>
-                                    <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                                        <span className={cn("inline-block h-2 w-2 rounded-full", summary.openingBalance >= 0 ? "bg-emerald-500" : "bg-rose-500")}></span>
-                                        {summary.openingBalance >= 0 ? "Receivable" : "Payable"}
-                                    </p>
-                                </CardContent>
-                            </Card>
-
-                            <Card className="border-none shadow-lg bg-gradient-to-br from-white to-emerald-50/30 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium text-emerald-600">Total Debit</CardTitle>
-                                    <div className="h-8 w-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <TrendingUp className="h-4 w-4" />
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold text-emerald-700">{formatCurrency(summary.totalDebit)}</div>
-                                    <p className="text-xs text-emerald-600/80 mt-1">Total Billed Amount</p>
-                                </CardContent>
-                            </Card>
-
-
-
-                            <Card className="border-none shadow-lg bg-gradient-to-br from-gray-900 to-gray-800 text-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                    <CardTitle className="text-sm font-medium text-gray-300">Closing Balance</CardTitle>
-                                    <div className="h-8 w-8 rounded-lg bg-white/10 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <ArrowRightLeft className="h-4 w-4" />
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-2xl font-bold text-white">{formatCurrency(summary.closingBalance)}</div>
-                                    <p className="text-xs text-gray-400 mt-1">
-                                        {summary.closingBalance >= 0 ? "Net Receivable" : "Net Payable"}
-                                    </p>
-                                </CardContent>
-                            </Card>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 opacity-40">
+                            {/* Placeholders */}
+                            {[1, 2, 3, 4].map(i => (
+                                <div key={i} className="bg-gray-50 h-36 rounded-[1.5rem] border border-dashed border-gray-200 flex items-center justify-center">
+                                    <div className="h-8 w-24 bg-gray-200 rounded animate-pulse"></div>
+                                </div>
+                            ))}
                         </div>
                     )}
 
-                    {/* Transactions Table */}
-                    <Card className="border-none shadow-xl bg-white/80 backdrop-blur-sm overflow-hidden animate-in slide-in-from-bottom-8 duration-700 delay-200">
-                        <CardHeader className="border-b border-gray-100 bg-gray-50/50 flex flex-row items-center justify-between">
-                            <div className="space-y-1">
-                                <CardTitle className="text-lg font-bold text-gray-800">Transactions</CardTitle>
-                                <p className="text-sm text-gray-500">
-                                    {transactions.length > 0
-                                        ? `Showing ${transactions.length} transaction${transactions.length === 1 ? '' : 's'}`
-                                        : "No transactions to display"}
-                                </p>
+                    {/* Transactions Section */}
+                    {summary && (
+                        <div className="bg-white rounded-[1.5rem] border border-gray-100 shadow-sm overflow-hidden flex flex-col min-h-[500px] animate-in slide-in-from-bottom-8 duration-700">
+                            <div className="p-6 border-b border-gray-100 bg-gray-50/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-10 w-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-sm text-indigo-600">
+                                        <ArrowRightLeft className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-base font-bold text-gray-900">Transaction History</h3>
+                                        <p className="text-xs text-gray-500 font-medium">
+                                            {transactions.length} records found
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <Button variant="outline" onClick={printLedger} size="sm" className="h-8 text-xs">
+                                        <Printer className="h-3 w-3 mr-2" /> Print
+                                    </Button>
+                                    <Button onClick={exportToExcel} size="sm" className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white border-0">
+                                        <Download className="h-3 w-3 mr-2" /> Excel Export
+                                    </Button>
+                                </div>
                             </div>
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={printLedger}
-                                    disabled={!summary}
-                                    className="hidden sm:flex"
-                                >
-                                    <Printer className="h-4 w-4 mr-2" />
-                                    Print
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={exportToExcel}
-                                    disabled={!summary}
-                                    className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:text-green-800 hover:border-green-300"
-                                >
-                                    <Download className="h-4 w-4 mr-2" />
-                                    Export Excel
-                                </Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                            <div className="overflow-x-auto">
+
+                            <div className="flex-1">
                                 <Table>
                                     <TableHeader>
-                                        <TableRow className="bg-gray-50/50 hover:bg-gray-50/80">
-                                            <TableHead className="w-[120px] font-semibold text-gray-700">Date</TableHead>
-                                            <TableHead className="w-[150px] font-semibold text-gray-700">Type</TableHead>
-                                            <TableHead className="min-w-[300px] font-semibold text-gray-700">Particulars</TableHead>
-                                            <TableHead className="text-right font-semibold text-emerald-600">Debit (₹)</TableHead>
-                                            <TableHead className="text-right font-bold text-gray-800">Balance (₹)</TableHead>
+                                        <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
+                                            <TableHead className="w-[120px] font-bold text-gray-600 text-[11px] uppercase tracking-wider pl-6 py-3">Date</TableHead>
+                                            <TableHead className="w-[100px] font-bold text-gray-600 text-[11px] uppercase tracking-wider py-3">Type</TableHead>
+                                            <TableHead className="min-w-[300px] font-bold text-gray-600 text-[11px] uppercase tracking-wider py-3">Description</TableHead>
+                                            <TableHead className="text-right font-bold text-emerald-600 text-[11px] uppercase tracking-wider py-3">Debit</TableHead>
+                                            <TableHead className="text-right font-bold text-blue-600 text-[11px] uppercase tracking-wider py-3">Credit</TableHead>
+                                            <TableHead className="text-right font-bold text-gray-900 text-[11px] uppercase tracking-wider pr-6 py-3">Balance</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {loading ? (
-                                            <TableRow>
-                                                <TableCell colSpan={6} className="h-48 text-center">
-                                                    <div className="flex flex-col items-center justify-center gap-3">
-                                                        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
-                                                        <p className="text-gray-500 font-medium">Fetching transaction data...</p>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ) : transactions.length === 0 ? (
+                                        {transactions.length === 0 ? (
                                             <TableRow>
                                                 <TableCell colSpan={6} className="h-64 text-center">
-                                                    <div className="flex flex-col items-center justify-center gap-4">
-                                                        <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center">
-                                                            <FileText className="h-8 w-8 text-gray-400" />
-                                                        </div>
-                                                        <div className="space-y-1">
-                                                            <p className="text-lg font-medium text-gray-700">
-                                                                {hasSearched ? "No transactions found" : "Ready to generate report"}
-                                                            </p>
-                                                            <p className="text-sm text-gray-500 max-w-xs mx-auto">
-                                                                {hasSearched
-                                                                    ? "Try adjusting your date range or filters to see more results."
-                                                                    : "Select your date range and click 'Generate Report' to view the ledger."}
-                                                            </p>
-                                                        </div>
-                                                        {!hasSearched && (
-                                                            <Button onClick={generateLedger} variant="outline" className="mt-2">
-                                                                Generate Now
-                                                            </Button>
-                                                        )}
+                                                    <div className="flex flex-col items-center justify-center gap-2 text-gray-400">
+                                                        <FileText className="h-10 w-10 opacity-20" />
+                                                        <p className="text-sm">No transactions found for this period</p>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
                                             transactions.map((t, index) => (
-                                                <TableRow
-                                                    key={index}
-                                                    className="group hover:bg-indigo-50/30 transition-colors duration-200"
-                                                >
-                                                    <TableCell className="font-medium text-gray-700">
-                                                        {format(new Date(t.date), "dd MMM yyyy")}
+                                                <TableRow key={index} className="group hover:bg-gray-50 transition-colors border-gray-50">
+                                                    <TableCell className="font-semibold text-gray-700 text-xs pl-6 py-3.5">
+                                                        {format(new Date(t.date), "dd MMM, yyyy")}
                                                     </TableCell>
-                                                    <TableCell>
-                                                        <Badge
-                                                            variant="outline"
-                                                            className={cn(
-                                                                "font-medium border-0",
-                                                                t.voucherType === 'Bilty' ? 'bg-indigo-100 text-indigo-700' :
-                                                                    t.voucherType === 'Payment' ? 'bg-emerald-100 text-emerald-700' :
-                                                                        'bg-amber-100 text-amber-700'
-                                                            )}
-                                                        >
+                                                    <TableCell className="py-3.5">
+                                                        <span className={cn(
+                                                            "px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wide",
+                                                            t.voucherType === 'Bilty' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' :
+                                                                t.voucherType === 'Payment' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                                                                    'bg-amber-50 text-amber-700 border-amber-100'
+                                                        )}>
                                                             {t.voucherType}
-                                                        </Badge>
+                                                        </span>
                                                     </TableCell>
-                                                    <TableCell className="text-gray-600 font-medium group-hover:text-gray-900 transition-colors">
+                                                    <TableCell className="text-gray-600 font-medium text-sm py-3.5 max-w-[300px] truncate" title={t.particulars}>
                                                         {t.particulars}
                                                     </TableCell>
-                                                    <TableCell className="text-right font-medium text-emerald-600">
-                                                        {t.debit > 0 ? (
-                                                            <span className="bg-emerald-50 px-2 py-1 rounded text-emerald-700">
-                                                                {formatCurrency(t.debit)}
-                                                            </span>
-                                                        ) : "-"}
+                                                    <TableCell className="text-right font-bold text-emerald-600 text-sm py-3.5 tabular-nums">
+                                                        {t.debit > 0 ? formatCurrency(t.debit) : "-"}
                                                     </TableCell>
-                                                    <TableCell className="text-right font-bold text-gray-800">
+                                                    <TableCell className="text-right font-bold text-blue-600 text-sm py-3.5 tabular-nums">
+                                                        {t.credit > 0 ? formatCurrency(t.credit) : (t.amount && !t.debit ? formatCurrency(t.amount) : "-")}
+                                                    </TableCell>
+                                                    <TableCell className="text-right font-black text-gray-800 text-sm py-3.5 pr-6 tabular-nums">
                                                         {formatCurrency(t.balance)}
                                                     </TableCell>
                                                 </TableRow>
@@ -400,8 +343,15 @@ export default function LedgerPage() {
                                     </TableBody>
                                 </Table>
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                    )}
+
+                    {error && (
+                        <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl flex items-center gap-3 text-sm animate-in slide-in-from-top-2">
+                            <div className="h-2 w-2 rounded-full bg-red-500"></div>
+                            {error}
+                        </div>
+                    )}
                 </main>
             </div>
         </div>

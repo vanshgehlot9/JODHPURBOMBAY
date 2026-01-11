@@ -1,12 +1,12 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Trash2, Truck, MapPin, User, Save } from "lucide-react";
+import { Loader2, Plus, Trash2, Truck, MapPin, User, Save, Calendar, Search } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 // Define types for item and challanData
 interface ChallanItem {
@@ -57,6 +57,8 @@ export default function CreateChallanForm() {
     items: [{ ...defaultItem }],
   });
   const [totalFreight, setTotalFreight] = useState(0);
+  const [dateBiltyCount, setDateBiltyCount] = useState<number>(0);
+  const [loadingBilties, setLoadingBilties] = useState(false);
 
   // Autocomplete states
   const [truckSuggestions, setTruckSuggestions] = useState<string[]>([]);
@@ -65,6 +67,7 @@ export default function CreateChallanForm() {
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
   const truckDropdownRef = useRef<HTMLDivElement>(null);
   const ownerDropdownRef = useRef<HTMLDivElement>(null);
+  const biltyFetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch suggestions for autocomplete
   const fetchSuggestions = async (type: 'truck' | 'owner', searchTerm: string) => {
@@ -106,60 +109,87 @@ export default function CreateChallanForm() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Auto-fetch today's bilties when form loads
+  // Cleanup debounce timeout on unmount
   useEffect(() => {
-    const fetchTodaysBilties = async () => {
-      try {
-        const response = await fetch('/api/bilty');
-        if (response.ok) {
-          const bilties = await response.json();
-
-          // Get today's date in YYYY-MM-DD format
-          const today = new Date().toISOString().split("T")[0];
-
-          // Filter bilties created today
-          const todaysBilties = bilties.filter((bilty: any) => {
-            const biltyDate = bilty.biltyDate?.toDate
-              ? bilty.biltyDate.toDate().toISOString().split("T")[0]
-              : new Date(bilty.biltyDate).toISOString().split("T")[0];
-            return biltyDate === today;
-          });
-
-          if (todaysBilties.length > 0) {
-            // Auto-populate items with today's bilties
-            const autoItems = todaysBilties.map((bilty: any) => {
-              const firstItem = bilty.items && bilty.items[0];
-              return {
-                biltyNo: bilty.biltyNo.toString(),
-                consignorName: bilty.consignorName || "",
-                consigneeName: bilty.consigneeName || "",
-                description: firstItem?.goodsDescription || "",
-                quantity: firstItem?.quantity || 0,
-                weight: firstItem?.weight || 0,
-                freight: bilty.charges?.freight || 0,
-                rate: firstItem?.rate ? parseFloat(firstItem.rate) : 0,
-                total: bilty.charges?.freight || 0,
-              };
-            });
-
-            setForm(f => ({ ...f, items: autoItems }));
-
-            // Calculate total freight
-            const newTotal = autoItems.reduce((sum: number, item: any) => sum + (item.total || 0), 0);
-            setTotalFreight(newTotal);
-
-            toast({
-              title: "Today's Bilties Loaded",
-              description: `Automatically loaded ${todaysBilties.length} bilty(s) created today`,
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching today's bilties:", error);
+    return () => {
+      if (biltyFetchTimeoutRef.current) {
+        clearTimeout(biltyFetchTimeoutRef.current);
       }
     };
+  }, []);
 
-    fetchTodaysBilties();
+  // Fetch bilties by date - reusable function
+  const fetchBiltiesByDate = async (selectedDate: string, autoPopulate: boolean = true) => {
+    if (!selectedDate) return;
+
+    setLoadingBilties(true);
+    try {
+      const response = await fetch('/api/bilty');
+      if (response.ok) {
+        const bilties = await response.json();
+
+        // Filter bilties by selected date
+        const filteredBilties = bilties.filter((bilty: any) => {
+          const biltyDate = bilty.biltyDate?.toDate
+            ? bilty.biltyDate.toDate().toISOString().split("T")[0]
+            : new Date(bilty.biltyDate).toISOString().split("T")[0];
+          return biltyDate === selectedDate;
+        });
+
+        // Update bilty count for selected date
+        setDateBiltyCount(filteredBilties.length);
+
+        if (autoPopulate && filteredBilties.length > 0) {
+          // Auto-populate items with filtered bilties
+          const autoItems = filteredBilties.map((bilty: any) => {
+            const firstItem = bilty.items && bilty.items[0];
+            return {
+              biltyNo: bilty.biltyNo.toString(),
+              consignorName: bilty.consignorName || "",
+              consigneeName: bilty.consigneeName || "",
+              description: firstItem?.goodsDescription || "",
+              quantity: firstItem?.quantity || 0,
+              weight: firstItem?.weight || 0,
+              freight: bilty.charges?.freight || 0,
+              rate: firstItem?.rate ? parseFloat(firstItem.rate) : 0,
+              total: bilty.charges?.freight || 0,
+            };
+          });
+
+          setForm(f => ({ ...f, items: autoItems }));
+
+          // Calculate total freight
+          const newTotal = autoItems.reduce((sum: number, item: any) => sum + (item.total || 0), 0);
+          setTotalFreight(newTotal);
+
+          const dateLabel = selectedDate === new Date().toISOString().split("T")[0] ? "today" : selectedDate;
+          toast({
+            title: "Bilties Loaded",
+            description: `Found ${filteredBilties.length} bilty(s) for ${dateLabel}`,
+          });
+        } else if (autoPopulate && filteredBilties.length === 0) {
+          // Reset to default if no bilties found
+          setForm(f => ({ ...f, items: [{ ...defaultItem }] }));
+          setTotalFreight(0);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching bilties by date:", error);
+    } finally {
+      setLoadingBilties(false);
+    }
+  };
+
+  // Handle date change - auto-detect bilties for selected date
+  const handleDateChange = (newDate: string) => {
+    setForm(f => ({ ...f, date: newDate }));
+    fetchBiltiesByDate(newDate, true);
+  };
+
+  // Auto-fetch today's bilties when form loads
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    fetchBiltiesByDate(today, true);
   }, []);
 
   // Auto-fetch bilty details when bilty number is entered
@@ -230,11 +260,21 @@ export default function CreateChallanForm() {
     setTotalFreight(items.reduce((sum, it) => sum + Number(it.total), 0));
   };
 
-  // Add bilty number auto-fetch to updateItem
+  // Add bilty number auto-fetch to updateItem with debouncing
   const handleBiltyNumberChange = (idx: number, biltyNo: string) => {
     updateItem(idx, "biltyNo", biltyNo);
+
+    // Clear any pending timeout
+    if (biltyFetchTimeoutRef.current) {
+      clearTimeout(biltyFetchTimeoutRef.current);
+    }
+
+    // Only fetch if bilty number is not empty
     if (biltyNo.trim()) {
-      fetchBiltyDetails(biltyNo, idx);
+      // Debounce: wait 500ms after user stops typing before fetching
+      biltyFetchTimeoutRef.current = setTimeout(() => {
+        fetchBiltyDetails(biltyNo, idx);
+      }, 500);
     }
   };
 
@@ -265,7 +305,7 @@ export default function CreateChallanForm() {
   };
 
   // Submit handler
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
@@ -285,10 +325,7 @@ export default function CreateChallanForm() {
         .filter(item => {
           return (
             item.biltyNo &&
-            typeof item.freight === 'number' && !isNaN(item.freight) && item.freight !== null &&
-            typeof item.weight === 'number' && !isNaN(item.weight) && item.weight !== null &&
-            typeof item.rate === 'number' && !isNaN(item.rate) && item.rate !== null &&
-            typeof item.total === 'number' && !isNaN(item.total) && item.total !== null
+            typeof item.freight === 'number' && !isNaN(item.freight) && item.freight !== null
           );
         })
         .map(item => ({
@@ -303,27 +340,16 @@ export default function CreateChallanForm() {
           total: Number(item.total),
         }));
 
-      if (validItems.length !== form.items.length) {
-        toast({
-          title: "Validation Error",
-          description: "One or more items are invalid. Please check all item fields.",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-
       if (validItems.length === 0) {
         toast({
           title: "Validation Error",
-          description: "Please add at least one valid item with all fields filled.",
+          description: "Please add at least one valid item.",
           variant: "destructive",
         });
         setLoading(false);
         return;
       }
 
-      // Clean main form fields
       const challanData: ChallanData = {
         date: form.date || new Date().toISOString().split("T")[0],
         truckNo: String(form.truckNo || ""),
@@ -334,7 +360,6 @@ export default function CreateChallanForm() {
         totalFreight: Number(totalFreight) || 0,
       };
 
-      // Use API endpoint instead of direct Firestore call
       const response = await fetch('/api/challan', {
         method: 'POST',
         headers: {
@@ -362,7 +387,7 @@ export default function CreateChallanForm() {
       console.error("Error creating challan:", err);
       toast({
         title: "Error",
-        description: "Failed to create challan: " + String((err as any)?.message || err),
+        description: "Failed to create challan",
         variant: "destructive",
       });
     } finally {
@@ -371,332 +396,216 @@ export default function CreateChallanForm() {
   };
 
   return (
+    <div className="max-w-[1400px] mx-auto space-y-8 pb-32">
 
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-lg p-6 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Create Delivery Challan</h1>
-            <p className="text-gray-600">Fill in the challan details below. Today's bilties are auto-loaded.</p>
+      {/* Main Form Integrated Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+
+        {/* Section 1: Manifest Details */}
+        <div className="p-6 sm:p-8 space-y-6">
+          <div className="flex items-center gap-2 mb-2">
+            <Truck className="h-5 w-5 text-indigo-900" />
+            <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Manifest Details</h2>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => router.push("/challan")}
-            className="hover:bg-indigo-50 border-indigo-200 text-indigo-700"
-          >
-            <Truck className="mr-2 h-4 w-4" />
-            View Challans
-          </Button>
-        </div>
-      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Basic Details Section */}
-        <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm">
-          <CardHeader className="bg-gradient-to-r from-indigo-50/50 to-transparent border-b border-gray-100">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <MapPin className="h-5 w-5 text-indigo-600" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">Basic Details</CardTitle>
-                <CardDescription>Route and transport information</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="date" className="text-sm font-semibold text-gray-700">
-                  Date <span className="text-red-500">*</span>
-                </Label>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+
+            {/* Date */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-gray-500 uppercase">Date</Label>
+              <div className="relative">
                 <Input
-                  id="date"
                   type="date"
                   value={form.date}
-                  onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
-                  required
-                  className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white border-gray-200"
+                  onChange={e => handleDateChange(e.target.value)}
+                  className="font-medium border-gray-200 focus:border-indigo-500 bg-gray-50/50"
                 />
-              </div>
-
-              <div className="space-y-2" ref={truckDropdownRef}>
-                <Label htmlFor="truckNo" className="text-sm font-semibold text-gray-700">
-                  Truck Number <span className="text-red-500">*</span>
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="truckNo"
-                    value={form.truckNo}
-                    onChange={e => {
-                      const value = e.target.value.toUpperCase();
-                      setForm(f => ({ ...f, truckNo: value }));
-                      fetchSuggestions('truck', value);
-                    }}
-                    placeholder="e.g., RJ14GA1234"
-                    required
-                    className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white border-gray-200"
-                  />
-                  {showTruckDropdown && truckSuggestions.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-60 overflow-auto ring-1 ring-black/5">
-                      {truckSuggestions.map((suggestion, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          className="w-full px-4 py-3 text-left hover:bg-indigo-50 focus:bg-indigo-50 focus:outline-none border-b border-gray-50 last:border-b-0 flex items-center gap-3 transition-colors"
-                          onClick={() => {
-                            setForm(f => ({ ...f, truckNo: suggestion }));
-                            setShowTruckDropdown(false);
-                          }}
-                        >
-                          <Truck className="h-4 w-4 text-indigo-600" />
-                          <span className="font-medium text-gray-900 font-mono">{suggestion}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2" ref={ownerDropdownRef}>
-                <Label htmlFor="truckOwnerName" className="text-sm font-semibold text-gray-700">
-                  Owner Name <span className="text-red-500">*</span>
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="truckOwnerName"
-                    value={form.truckOwnerName}
-                    onChange={e => {
-                      const value = e.target.value;
-                      setForm(f => ({ ...f, truckOwnerName: value }));
-                      fetchSuggestions('owner', value);
-                    }}
-                    placeholder="Owner name"
-                    required
-                    className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white border-gray-200"
-                  />
-                  {showOwnerDropdown && ownerSuggestions.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-100 rounded-xl shadow-2xl max-h-60 overflow-auto ring-1 ring-black/5">
-                      {ownerSuggestions.map((suggestion, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          className="w-full px-4 py-3 text-left hover:bg-indigo-50 focus:bg-indigo-50 focus:outline-none border-b border-gray-50 last:border-b-0 flex items-center gap-3 transition-colors"
-                          onClick={() => {
-                            setForm(f => ({ ...f, truckOwnerName: suggestion }));
-                            setShowOwnerDropdown(false);
-                          }}
-                        >
-                          <User className="h-4 w-4 text-indigo-600" />
-                          <span className="font-medium text-gray-900">{suggestion}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="from" className="text-sm font-semibold text-gray-700">
-                  From <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="from"
-                  value={form.from}
-                  onChange={e => setForm(f => ({ ...f, from: e.target.value }))}
-                  placeholder="Origin city"
-                  required
-                  className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white border-gray-200"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="to" className="text-sm font-semibold text-gray-700">
-                  To <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="to"
-                  value={form.to}
-                  onChange={e => setForm(f => ({ ...f, to: e.target.value }))}
-                  placeholder="Destination city"
-                  required
-                  className="h-11 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white border-gray-200"
-                />
+                {dateBiltyCount > 0 && (
+                  <div className="absolute -bottom-5 left-0 text-[10px] text-green-600 font-medium">
+                    {dateBiltyCount} documents found
+                  </div>
+                )}
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Bilty Items Section */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Plus className="h-5 w-5 text-purple-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Bilty Items</h2>
-                <p className="text-gray-500 text-sm">Add bilty items to this challan</p>
-              </div>
+            {/* Truck No */}
+            <div className="space-y-1.5 relative" ref={truckDropdownRef}>
+              <Label className="text-xs font-bold text-gray-500 uppercase">Truck No</Label>
+              <Input
+                value={form.truckNo}
+                onChange={e => {
+                  const val = e.target.value.toUpperCase();
+                  setForm(f => ({ ...f, truckNo: val }));
+                  fetchSuggestions('truck', val);
+                }}
+                placeholder="RJ..."
+                className="font-bold border-gray-200 focus:border-indigo-500"
+              />
+              {showTruckDropdown && truckSuggestions.length > 0 && (
+                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-100 rounded-lg shadow-lg max-h-48 overflow-auto">
+                  {truckSuggestions.map((s, i) => (
+                    <div key={i} onClick={() => { setForm(f => ({ ...f, truckNo: s })); setShowTruckDropdown(false); }} className="px-3 py-2 text-sm hover:bg-gray-50 cursor-pointer font-bold">{s}</div>
+                  ))}
+                </div>
+              )}
             </div>
-            <Button
-              type="button"
-              onClick={addItem}
-              size="sm"
-              className="bg-purple-600 hover:bg-purple-700 text-white shadow-md shadow-purple-200"
-            >
+
+            {/* Owner */}
+            <div className="space-y-1.5 relative" ref={ownerDropdownRef}>
+              <Label className="text-xs font-bold text-gray-500 uppercase">Owner</Label>
+              <Input
+                value={form.truckOwnerName}
+                onChange={e => {
+                  const val = e.target.value;
+                  setForm(f => ({ ...f, truckOwnerName: val }));
+                  fetchSuggestions('owner', val);
+                }}
+                placeholder="Name..."
+                className="font-medium border-gray-200 focus:border-indigo-500"
+              />
+              {showOwnerDropdown && ownerSuggestions.length > 0 && (
+                <div className="absolute z-20 w-full mt-1 bg-white border border-gray-100 rounded-lg shadow-lg max-h-48 overflow-auto">
+                  {ownerSuggestions.map((s, i) => (
+                    <div key={i} onClick={() => { setForm(f => ({ ...f, truckOwnerName: s })); setShowOwnerDropdown(false); }} className="px-3 py-2 text-sm hover:bg-gray-50 cursor-pointer">{s}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Route */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-gray-500 uppercase">Origin</Label>
+              <Input
+                value={form.from}
+                onChange={e => setForm(f => ({ ...f, from: e.target.value }))}
+                placeholder="City..."
+                className="font-medium border-gray-200 focus:border-indigo-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-gray-500 uppercase">Destination</Label>
+              <Input
+                value={form.to}
+                onChange={e => setForm(f => ({ ...f, to: e.target.value }))}
+                placeholder="City..."
+                className="font-medium border-gray-200 focus:border-indigo-500"
+              />
+            </div>
+          </div>
+        </div>
+
+        <Separator className="bg-gray-100" />
+
+        {/* Section 2: Consignment Details (Items) */}
+        <div className="p-6 sm:p-8 space-y-4">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <Search className="h-5 w-5 text-indigo-900" />
+              <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Consignment Details</h2>
+            </div>
+            <Button onClick={addItem} size="sm" variant="outline" className="text-indigo-900 border-indigo-200 hover:bg-indigo-50">
               <Plus className="h-4 w-4 mr-2" />
               Add Item
             </Button>
           </div>
 
-          <div className="space-y-4">
-            {form.items.map((item, idx) => (
-              <Card key={idx} className="shadow-sm border border-gray-200 hover:border-purple-200 transition-colors bg-white/50 backdrop-blur-sm">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Item #{idx + 1}</span>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <div className="grid grid-cols-[80px_1.5fr_1.5fr_1.5fr_80px_100px_40px] gap-0 bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+              <div className="p-3 border-r border-gray-200">Bilty #</div>
+              <div className="p-3 border-r border-gray-200">Consignor</div>
+              <div className="p-3 border-r border-gray-200">Consignee</div>
+              <div className="p-3 border-r border-gray-200">Description</div>
+              <div className="p-3 text-right border-r border-gray-200">Weight</div>
+              <div className="p-3 text-right border-r border-gray-200">Freight</div>
+              <div className="p-3"></div>
+            </div>
+
+            <div className="divide-y divide-gray-100 bg-white">
+              {form.items.map((item, idx) => (
+                <div key={idx} className="grid grid-cols-[80px_1.5fr_1.5fr_1.5fr_80px_100px_40px] gap-0 group items-stretch">
+                  <div className="p-2 border-r border-gray-100">
+                    <Input
+                      value={item.biltyNo}
+                      onChange={e => handleBiltyNumberChange(idx, e.target.value)}
+                      className="h-8 font-mono font-bold text-indigo-900 border-gray-200 focus:border-indigo-500 px-2 text-center"
+                      placeholder="#"
+                    />
+                  </div>
+                  <div className="p-2 border-r border-gray-100 flex items-center">
+                    <span className="text-xs text-gray-700 truncate px-1">{item.consignorName || "—"}</span>
+                  </div>
+                  <div className="p-2 border-r border-gray-100 flex items-center">
+                    <span className="text-xs text-gray-700 truncate px-1">{item.consigneeName || "—"}</span>
+                  </div>
+                  <div className="p-2 border-r border-gray-100 flex items-center">
+                    <span className="text-xs text-gray-600 truncate px-1">{item.description || "—"}</span>
+                  </div>
+                  <div className="p-2 border-r border-gray-100">
+                    <Input
+                      type="number"
+                      value={item.weight || 0}
+                      onChange={e => updateItem(idx, "weight", Number(e.target.value))}
+                      className="h-8 text-right border-transparent hover:border-gray-200 focus:border-indigo-500 px-1 bg-transparent text-gray-900 font-medium"
+                    />
+                  </div>
+                  <div className="p-2 border-r border-gray-100">
+                    <Input
+                      type="number"
+                      value={item.freight || 0}
+                      onChange={e => updateItem(idx, "freight", Number(e.target.value))}
+                      className="h-8 text-right font-bold text-gray-900 bg-gray-50/50 border-transparent px-1 focus:border-indigo-500"
+                    />
+                  </div>
+                  <div className="p-2 flex items-center justify-center">
+                    <button
                       onClick={() => removeItem(idx)}
+                      className="text-gray-300 hover:text-red-500 transition-colors"
                       disabled={form.items.length === 1}
-                      className="h-8 w-8 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </button>
                   </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-12 gap-4">
-                    {/* Row 1 */}
-                    <div className="col-span-2 md:col-span-2 space-y-2">
-                      <Label className="text-xs font-medium text-gray-500">Bilty No</Label>
-                      <Input
-                        value={item.biltyNo}
-                        onChange={e => handleBiltyNumberChange(idx, e.target.value)}
-                        placeholder="15"
-                        className="h-9 font-mono focus:ring-purple-500 focus:border-purple-500"
-                      />
-                    </div>
-                    <div className="col-span-2 md:col-span-5 space-y-2">
-                      <Label className="text-xs font-medium text-gray-500">Consignor</Label>
-                      <Input
-                        value={item.consignorName || ""}
-                        readOnly
-                        className="h-9 bg-gray-50 border-gray-200 text-gray-600"
-                      />
-                    </div>
-                    <div className="col-span-2 md:col-span-5 space-y-2">
-                      <Label className="text-xs font-medium text-gray-500">Consignee</Label>
-                      <Input
-                        value={item.consigneeName || ""}
-                        readOnly
-                        className="h-9 bg-gray-50 border-gray-200 text-gray-600"
-                      />
-                    </div>
-
-                    {/* Row 2 */}
-                    <div className="col-span-2 md:col-span-12 space-y-2">
-                      <Label className="text-xs font-medium text-gray-500">Description</Label>
-                      <Input
-                        value={item.description || ""}
-                        readOnly
-                        className="h-9 bg-gray-50 border-gray-200 text-gray-600"
-                      />
-                    </div>
-
-                    {/* Row 3 */}
-                    <div className="col-span-1 md:col-span-2 space-y-2">
-                      <Label className="text-xs font-medium text-gray-500">Qty</Label>
-                      <Input
-                        type="number"
-                        value={item.quantity || 0}
-                        readOnly
-                        className="h-9 text-right bg-gray-50 border-gray-200 text-gray-600"
-                      />
-                    </div>
-                    <div className="col-span-1 md:col-span-2 space-y-2">
-                      <Label className="text-xs font-medium text-gray-500">Weight</Label>
-                      <Input
-                        type="number"
-                        value={item.weight || 0}
-                        readOnly
-                        className="h-9 text-right bg-gray-50 border-gray-200 text-gray-600"
-                      />
-                    </div>
-                    <div className="col-span-1 md:col-span-3 space-y-2">
-                      <Label className="text-xs font-medium text-gray-500">Freight</Label>
-                      <Input
-                        type="number"
-                        value={item.freight || 0}
-                        readOnly
-                        className="h-9 text-right bg-gray-50 border-gray-200 text-gray-600"
-                      />
-                    </div>
-                    <div className="col-span-1 md:col-span-2 space-y-2">
-                      <Label className="text-xs font-medium text-gray-500">Rate</Label>
-                      <Input
-                        type="number"
-                        value={item.rate || 0}
-                        readOnly
-                        className="h-9 text-right bg-gray-50 border-gray-200 text-gray-600"
-                      />
-                    </div>
-                    <div className="col-span-2 md:col-span-3 space-y-2">
-                      <Label className="text-xs font-medium text-gray-500">Total</Label>
-                      <Input
-                        type="number"
-                        value={item.total || 0}
-                        readOnly
-                        className="h-9 text-right font-bold text-gray-900 bg-purple-50/50 border-purple-100"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Total Freight Summary */}
-          <Card className="bg-purple-50/50 border-purple-100">
-            <CardContent className="p-6 flex items-center justify-between">
-              <span className="font-bold text-gray-700 uppercase tracking-wide">Total Freight</span>
-              <span className="font-bold text-2xl text-purple-700">₹ {totalFreight.toFixed(2)}</span>
-            </CardContent>
-          </Card>
-        </div>
+          {/* Footer Summary */}
+          <div className="flex justify-end pt-4">
+            <div className="bg-gray-50 px-6 py-4 rounded-lg flex items-center gap-6 border border-gray-100">
+              <div className="text-right">
+                <div className="text-xs font-bold text-gray-500 uppercase tracking-wide">Total Weight</div>
+                <div className="text-lg font-bold text-gray-900">{form.items.reduce((acc, i) => acc + (Number(i.weight) || 0), 0)} kg</div>
+              </div>
+              <div className="h-10 w-px bg-gray-200"></div>
+              <div className="text-right">
+                <div className="text-xs font-bold text-gray-500 uppercase tracking-wide">Total Freight</div>
+                <div className="text-2xl font-bold text-indigo-900">₹ {totalFreight.toLocaleString('en-IN')}</div>
+              </div>
+            </div>
+          </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-4 pt-6 border-t border-gray-100">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleReset}
-            disabled={loading}
-            className="px-6 h-12 border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-          >
-            Reset Form
-          </Button>
-          <Button
-            type="submit"
-            disabled={loading}
-            className="px-8 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Creating Challan...
-              </>
-            ) : (
-              <>
-                <Save className="mr-2 h-5 w-5" />
-                Create Challan
-              </>
-            )}
-          </Button>
         </div>
-      </form>
+      </div>
+
+      {/* Sticky Footer Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-50 md:pl-72">
+        <div className="max-w-[1400px] mx-auto flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            {form.items.length} consignment(s) added
+          </div>
+          <div className="flex gap-3">
+            <Button variant="ghost" onClick={handleReset} className="text-gray-500 hover:text-gray-900">
+              Reset
+            </Button>
+            <Button onClick={handleSubmit} disabled={loading} className="bg-indigo-900 text-white hover:bg-indigo-800 min-w-[160px]">
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {loading ? "Creating..." : "Generate Manifest"}
+            </Button>
+          </div>
+        </div>
+      </div>
+
     </div>
-  )
+  );
 }

@@ -4,31 +4,40 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 240 10% 98%;
+    /* #FAFAFA */
+    --foreground: 231 47% 11%;
+
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 231 47% 11%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 243 75% 59%;
-    /* Indigo 600 */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --popover-foreground: 231 47% 11%;
+
+    --primary: 243 47% 20%;
+    /* #1E1B4B Deep Indigo */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 263 70% 50%;
+    /* #7C3AED Electric Violet */
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 38 92% 50%;
+    /* #F59E0B Golden Amber */
+    --accent-foreground: 243 47% 20%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 5% 45%;
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 243 75% 59%;
-    --radius: 1rem;
 
-    /* Modern gradient colors - Indigo/Purple based */
-    --gradient-start: 243 75% 59%;
-    --gradient-end: 270 50% 40%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 38 92% 50%;
+    /* Focus ring matches accent */
+
+    --radius: 0.75rem;
   }
 
   .dark {
@@ -62,10 +71,7 @@
     color: hsl(var(--foreground));
     min-height: 100vh;
     font-feature-settings: "rlig" 1, "calt" 1;
-    background-image:
-      radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 0) 0, transparent 50%),
-      radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 0) 0, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 0) 0, transparent 50%);
+    overflow-x: hidden;
   }
 
   /* Modern glassmorphism effect - Premium */
@@ -652,27 +658,58 @@ html {
   animation: fade-through 0.4s ease-in-out;
 }
 
-/* Custom Animations for Sidebar */
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient-shift 8s ease infinite;
-}
+/* Enterprise & Logistics Animations */
 
-.animate-gradient-x {
-  background-size: 200% 200%;
-  animation: gradient-x 3s ease infinite;
-}
-
-@keyframes gradient-x {
+@keyframes input-border-sweep {
   0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
+    background-size: 0% 2px;
   }
 
   100% {
-    background-position: 0% 50%;
+    background-size: 100% 2px;
   }
+}
+
+.animate-input-border {
+  animation: input-border-sweep 0.3s ease-out forwards;
+}
+
+@keyframes dispatch-load {
+  0% {
+    width: 0%;
+    opacity: 1;
+  }
+
+  100% {
+    width: 100%;
+    opacity: 1;
+  }
+}
+
+.animate-dispatch-load {
+  animation: dispatch-load 1.5s linear infinite;
+}
+
+@keyframes truck-roll {
+  0% {
+    transform: translateX(-10px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes route-dash-move {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 20px 0;
+  }
+}
+
+.animate-route-dash {
+  animation: route-dash-move 1s linear infinite;
 }

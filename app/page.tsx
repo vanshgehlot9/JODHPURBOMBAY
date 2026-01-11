@@ -7,20 +7,26 @@ import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { TrendingUp } from "lucide-react"
+import { motion } from "framer-motion"
+import {
+  TrendingUp,
+  ArrowRight,
+  Activity,
+  Clock
+} from "lucide-react"
+import Link from "next/link"
 
 export default function Dashboard() {
   const { user, loading } = useAuth()
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/40">
+      <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA]">
         <div className="text-center space-y-4">
           <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-200 border-t-indigo-600 mx-auto"></div>
-            <div className="absolute inset-0 rounded-full bg-indigo-400/20 blur-xl animate-pulse"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-200 border-t-[#1E1B4B] mx-auto"></div>
           </div>
-          <p className="text-sm text-gray-600 font-medium">Loading your dashboard...</p>
+          <p className="text-sm text-slate-500 font-medium tracking-wide">INITIALIZING SYSTEM...</p>
         </div>
       </div>
     )
@@ -31,52 +37,98 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
+    <div className="flex min-h-screen flex-col md:flex-row bg-[#FAFAFA]">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 font-sans">
         <Header title="Dashboard" subtitle="Overview" />
-        <main className="flex-1 p-3 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
-          {/* Modern Welcome Section */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 p-8 sm:p-10 text-white shadow-2xl animate-in ring-1 ring-white/10">
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-soft-light"></div>
-            <div className="absolute top-0 right-0 -mt-20 -mr-20 w-80 h-80 bg-purple-500/30 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-indigo-500/30 rounded-full blur-3xl"></div>
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-8 overflow-y-auto">
 
-            <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center shadow-inner ring-1 ring-white/20">
-                    <TrendingUp className="h-6 w-6 text-indigo-100" />
-                  </div>
-                  <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Welcome back!</h2>
+          {/* Hero Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="relative overflow-hidden rounded-[2rem] bg-[#1E1B4B] text-white shadow-xl shadow-indigo-900/20"
+          >
+            {/* Abstract Background Shapes */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 animate-pulse"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-fuchsia-500/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
+
+            <div className="relative z-10 px-8 py-10 sm:px-10 sm:py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div>
+                <div className="flex items-center gap-2 text-indigo-200 text-sm font-bold uppercase tracking-wider mb-2">
+                  <Activity className="h-4 w-4" />
+                  <span>Overview</span>
                 </div>
-                <p className="text-indigo-100 text-lg max-w-xl leading-relaxed">
-                  Manage your logistics operations with precision and style.
+                <h1 className="text-4xl sm:text-5xl font-black tracking-tight mb-2">
+                  Welcome back!
+                </h1>
+                <p className="text-indigo-100/80 text-lg max-w-lg">
+                  Manage your logistics operations with precision.
                 </p>
               </div>
+            </div>
+          </motion.div>
 
-              {/* Quick Stats Pill */}
-              <div className="hidden sm:flex items-center gap-4 bg-white/10 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 shadow-lg">
-                <div>
-                  <p className="text-xs text-indigo-200 uppercase tracking-wider font-semibold">System Status</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="relative flex h-2.5 w-2.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
-                    </span>
-                    <span className="font-medium">Operational</span>
+          {/* Main Content Split */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Recent Activity Feed */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="lg:col-span-2 space-y-6"
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-gray-400" />
+                  Recent Activity
+                </h2>
+                <Link href="/bilty/view" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
+                  View All <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+
+              <Suspense fallback={<RecentBiltiesLoading />}>
+                <RecentBilties />
+              </Suspense>
+            </motion.div>
+
+            {/* Side Stats / Info */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="space-y-6"
+            >
+              <div className="bg-white rounded-[1.5rem] p-6 border border-gray-100 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Quick Stats</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+                    <span className="text-sm font-medium text-gray-600">Total Billed Today</span>
+                    <span className="font-black text-gray-900">₹45,200</span>
                   </div>
                 </div>
               </div>
-            </div>
+
+              <div className="bg-gradient-to-br from-[#1E1B4B] to-[#2E2A6B] rounded-[1.5rem] p-6 text-white relative overflow-hidden group cursor-pointer">
+                <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <TrendingUp className="h-24 w-24 -rotate-12" />
+                </div>
+                <div className="relative z-10">
+                  <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center mb-4">
+                    <TrendingUp className="h-5 w-5 text-amber-400" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-1">View Reports</h3>
+                  <p className="text-indigo-200 text-sm mb-4">Analyze your monthly performance.</p>
+                  <div className="inline-flex items-center text-xs font-bold uppercase tracking-wider bg-white/10 px-3 py-1.5 rounded-lg group-hover:bg-white/20 transition-colors">
+                    Open Analytics
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
 
-          {/* Main Content Area */}
-          <div className="space-y-6">
-            <Suspense fallback={<RecentBiltiesLoading />}>
-              <RecentBilties />
-            </Suspense>
-          </div>
         </main>
       </div>
     </div>
@@ -85,20 +137,21 @@ export default function Dashboard() {
 
 function RecentBiltiesLoading() {
   return (
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-6 w-32" />
-        <Skeleton className="h-4 w-48" />
+    <Card className="rounded-[1.5rem] border border-gray-100 shadow-sm bg-white overflow-hidden">
+      <CardHeader className="border-b border-gray-50 bg-gray-50/30 pb-4">
+        <Skeleton className="h-6 w-32 bg-gray-200" />
+        <Skeleton className="h-4 w-48 bg-gray-200 mt-2" />
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+      <CardContent className="p-0">
+        <div className="divide-y divide-gray-50">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center space-x-4">
-              <Skeleton className="h-12 w-12 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-48" />
-                <Skeleton className="h-3 w-32" />
+            <div key={i} className="flex items-center space-x-4 p-4">
+              <Skeleton className="h-10 w-10 rounded-full bg-gray-100" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-4 w-32 bg-gray-100" />
+                <Skeleton className="h-3 w-24 bg-gray-100" />
               </div>
+              <Skeleton className="h-6 w-16 bg-gray-100" />
             </div>
           ))}
         </div>

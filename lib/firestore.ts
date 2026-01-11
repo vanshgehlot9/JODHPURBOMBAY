@@ -438,3 +438,79 @@ export async function getRecentPayments(limitCount = 10): Promise<Payment[]> {
     return [];
   }
 }
+
+// ============ PAYMENT REMINDERS ============
+
+export interface PaymentReminder {
+  id?: string
+  partyId?: string
+  partyName: string
+  whatsappNumber: string
+  amount: number
+  message: string
+  scheduledDate: Date | Timestamp
+  status: 'pending' | 'sent' | 'cancelled' | 'failed'
+  frequency?: 'once' | 'daily' | 'weekly'
+  createdAt: Date | Timestamp
+  createdBy?: string
+}
+
+export interface ReminderHistory {
+  id?: string
+  partyName: string
+  phoneNumber: string
+  amount: number
+  message: string
+  sentAt: Date | Timestamp
+  status: 'sent' | 'failed'
+  type: 'manual' | 'scheduled' | 'bulk'
+}
+
+// Schedule a new reminder
+export async function schedulePaymentReminder(data: Omit<PaymentReminder, "id" | "createdAt" | "status">): Promise<string> {
+  const reminder = {
+    ...data,
+    status: 'pending',
+    createdAt: serverTimestamp()
+  }
+  const docRef = await addDoc(collection(db, "paymentReminders"), reminder)
+  return docRef.id
+}
+
+// Get all scheduled reminders
+export async function getScheduledReminders(status: string = 'pending'): Promise<PaymentReminder[]> {
+  const q = query(
+    collection(db, "paymentReminders"),
+    where("status", "==", status),
+    orderBy("scheduledDate", "asc")
+  )
+  const snapshot = await getDocs(q)
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PaymentReminder))
+}
+
+// Update reminder status
+export async function updateReminderStatus(id: string, status: string): Promise<void> {
+  const docRef = doc(db, "paymentReminders", id)
+  await updateDoc(docRef, { status })
+}
+
+// Log to history
+export async function logReminderHistory(data: Omit<ReminderHistory, "id" | "sentAt">): Promise<string> {
+  const history = {
+    ...data,
+    sentAt: serverTimestamp()
+  }
+  const docRef = await addDoc(collection(db, "reminderHistory"), history)
+  return docRef.id
+}
+
+// Get history
+export async function getReminderHistory(limitCount = 20): Promise<ReminderHistory[]> {
+  const q = query(
+    collection(db, "reminderHistory"),
+    orderBy("sentAt", "desc"),
+    limit(limitCount)
+  )
+  const snapshot = await getDocs(q)
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ReminderHistory))
+}

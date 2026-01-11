@@ -1,14 +1,21 @@
 "use client";
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
 import {
   Search,
   Download,
@@ -19,10 +26,13 @@ import {
   Plus,
   Truck,
   Calendar,
+  ArrowRight,
+  FileText,
   MapPin,
-  Users
+  UserCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface Challan {
   id: string;
@@ -37,308 +47,281 @@ interface Challan {
 
 export default function ChallanListPage() {
   const [challans, setChallans] = useState<Challan[]>([]);
-  const [filteredChallans, setFilteredChallans] = useState<Challan[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedChallans, setSelectedChallans] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   useEffect(() => {
     fetchChallans();
   }, []);
 
-  useEffect(() => {
-    const filtered = challans.filter(
-      (challan) =>
-        challan.challanNo.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (challan.truckNo && challan.truckNo.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (challan.truckOwnerName && challan.truckOwnerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (challan.from && challan.from.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (challan.to && challan.to.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-    setFilteredChallans(filtered);
-  }, [searchTerm, challans]);
-
   const fetchChallans = async () => {
     try {
-      const response = await fetch('/api/challan', {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache'
-        }
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch challans');
-      }
-      const challanData = await response.json();
-      setChallans(challanData);
-      setFilteredChallans(challanData);
+      const response = await fetch('/api/challan', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Failed to fetch challans');
+      const data = await response.json();
+      setChallans(data);
     } catch (error) {
       console.error('Error fetching challans:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch challans",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to fetch data", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
 
+  const filteredChallans = useMemo(() => {
+    return challans.filter((c) =>
+      c.challanNo.toString().includes(searchTerm) ||
+      (c.truckNo && c.truckNo.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (c.truckOwnerName && c.truckOwnerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (c.from && c.from.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (c.to && c.to.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [challans, searchTerm]);
+
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this challan?")) {
-      try {
-        const response = await fetch(`/api/challan/${id}`, {
-          method: 'DELETE',
-        });
+    if (!confirm("Permanently delete this manifest?")) return;
+    try {
+      const response = await fetch(`/api/challan/${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to delete');
 
-        if (!response.ok) {
-          throw new Error('Failed to delete challan');
-        }
-
-        toast({
-          title: "Success",
-          description: "Challan deleted successfully",
-        });
-        fetchChallans();
-      } catch (error) {
-        console.error('Error deleting challan:', error);
-        toast({
-          title: "Error",
-          description: "Failed to delete challan",
-          variant: "destructive",
-        });
-      }
+      setChallans(prev => prev.filter(c => c.id !== id));
+      toast({ title: "Success", description: "Manifest record deleted" });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete record", variant: "destructive" });
     }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedChallans.size === filteredChallans.length) {
+      setSelectedChallans(new Set());
+    } else {
+      setSelectedChallans(new Set(filteredChallans.map(c => c.id)));
+    }
+  };
+
+  const toggleSelectChallan = (id: string) => {
+    const newSelected = new Set(selectedChallans);
+    if (newSelected.has(id)) newSelected.delete(id);
+    else newSelected.add(id);
+    setSelectedChallans(newSelected);
   };
 
   const formatDate = (dateValue: any) => {
     if (!dateValue) return "N/A";
-    
     try {
-      // Handle Firestore Timestamp object
-      if (dateValue?.seconds) {
-        return new Date(dateValue.seconds * 1000).toLocaleDateString('en-GB');
-      }
-      // Handle ISO string or other date formats
-      const date = new Date(dateValue);
-      if (isNaN(date.getTime())) return "N/A";
-      return date.toLocaleDateString('en-GB');
-    } catch {
-      return "N/A";
-    }
+      // Handle Firestore Timestamp or string
+      const d = dateValue?.seconds ? new Date(dateValue.seconds * 1000) : new Date(dateValue);
+      if (isNaN(d.getTime())) return "N/A";
+      return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch { return "N/A"; }
   };
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen bg-gray-50">
-        <Sidebar />
-        <div className="flex-1 flex flex-col">
-          <Header title="Challans" subtitle="Manage delivery challans" />
-          <main className="flex-1 p-6">
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center space-y-4">
-                <div className="relative">
-                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-indigo-200 border-t-indigo-600 mx-auto"></div>
-                  <div className="absolute inset-0 rounded-full bg-indigo-400/20 blur-xl animate-pulse"></div>
-                </div>
-                <p className="text-sm text-gray-600 font-medium">Loading challans...</p>
-              </div>
-            </div>
-          </main>
+  if (loading) return (
+    <div className="flex flex-col justify-center items-center h-screen bg-[#FAFAFA] gap-4">
+      <div className="relative">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-slate-200 border-t-indigo-600"></div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="h-4 w-4 bg-indigo-600 rounded-full animate-pulse"></div>
         </div>
       </div>
-    );
-  }
+      <p className="text-gray-400 font-medium tracking-wide text-sm animate-pulse">LOADING FLEET DATA...</p>
+    </div>
+  );
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row bg-gray-50">
+    <div className="flex min-h-screen flex-col md:flex-row bg-[#FAFAFA]">
       <Sidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <Header title="Challans" subtitle="Manage delivery challans" />
-        <main className="flex-1 p-3 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
-          {/* Main Table Card */}
-          <Card className="shadow-lg border-0 ring-0 bg-white/80 backdrop-blur-sm slide-up">
-            <CardHeader className="bg-gradient-to-r from-indigo-50/30 to-transparent border-b border-gray-100/50 pb-4 sm:pb-6 px-4 sm:px-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-                <div>
-                  <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
-                    <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" />
-                    Delivery Challans
-                  </CardTitle>
-                  <CardDescription className="text-xs sm:text-sm text-gray-500 mt-1">
-                    {filteredChallans.length} of {challans.length} challans
-                    {searchTerm && ` matching "${searchTerm}"`}
-                  </CardDescription>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-                  <div className="relative flex-1 sm:flex-initial">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="Search challans..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 w-full sm:w-60 lg:w-80 h-9 sm:h-10 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white border-gray-200"
-                    />
-                  </div>
-                  <Link href="/challan/create">
-                    <Button className="w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Challan
-                    </Button>
-                  </Link>
-                </div>
+        <Header title="Trip Manifests" subtitle="Active fleet and delivery tracking" />
+
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 overflow-y-auto pb-24">
+
+          {/* Controls */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="relative w-full sm:w-96 group">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
               </div>
-            </CardHeader>
-            <CardContent className="p-0">
+              <Input
+                placeholder="Search Manifest, Truck, or Route..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-12 bg-white border-gray-200 focus:border-indigo-300 focus:ring-4 focus:ring-indigo-50 rounded-xl shadow-sm text-base transition-all"
+              />
+            </div>
+
+            <Link href="/challan/create">
+              <Button className="bg-[#1E1B4B] text-white hover:bg-[#2A275E] h-12 px-6 rounded-xl font-bold shadow-lg shadow-indigo-900/20 active:scale-95 transition-all">
+                <Plus className="h-4 w-4 mr-2" />
+                New Manifest
+              </Button>
+            </Link>
+          </div>
+
+          {/* Operational List */}
+          <div className="space-y-4">
+            {/* Header Row */}
+            <div className="grid grid-cols-[auto_100px_1fr_1.5fr_1fr_120px_40px] gap-4 px-6 py-3 bg-[#1E1B4B]/5 rounded-xl border border-[#1E1B4B]/10 text-xs font-bold text-[#1E1B4B] uppercase tracking-wider items-center">
+              <div className="flex justify-center w-8">
+                <Checkbox
+                  checked={filteredChallans.length > 0 && selectedChallans.size === filteredChallans.length}
+                  onCheckedChange={toggleSelectAll}
+                  className="border-indigo-300 data-[state=checked]:bg-[#1E1B4B] data-[state=checked]:border-[#1E1B4B]"
+                />
+              </div>
+              <div>ID</div>
+              <div>Manifest Date</div>
+              <div>Route Details</div>
+              <div>Vehicle & Owner</div>
+              <div className="text-right">Freight</div>
+              <div></div>
+            </div>
+
+            {/* Rows */}
+            <div className="space-y-3">
               {filteredChallans.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Truck className="h-10 w-10 text-gray-300" />
+                <div className="p-16 text-center bg-white rounded-[2rem] border border-dashed border-gray-200">
+                  <div className="h-20 w-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Truck className="h-8 w-8 text-gray-300" />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">
-                    {searchTerm ? "No matching challans found" : "No challans created yet"}
-                  </h3>
-                  <p className="text-gray-500 mb-8 max-w-sm mx-auto">
-                    {searchTerm
-                      ? "Try adjusting your search terms or clear the search"
-                      : "Get started by creating your first challan"
-                    }
-                  </p>
-                  {!searchTerm && (
-                    <Link href="/challan/create">
-                      <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create First Challan
-                      </Button>
-                    </Link>
-                  )}
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">No Active Manifests</h3>
+                  <p className="text-gray-500 max-w-sm mx-auto">Create a new trip manifest to start tracking your fleet movements.</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-gray-50/50 hover:bg-gray-50/50 border-b border-gray-100">
-                        <TableHead className="font-semibold text-gray-700">Challan No</TableHead>
-                        <TableHead className="font-semibold text-gray-700">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-indigo-400" />
-                            Date
-                          </div>
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-700">
-                          <div className="flex items-center gap-2">
-                            <Truck className="h-4 w-4 text-gray-400" />
-                            Truck No
-                          </div>
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-700">
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-gray-400" />
-                            Route
-                          </div>
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-700">
-                          <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4 text-gray-400" />
-                            Owner
-                          </div>
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-700">Freight</TableHead>
-                        <TableHead className="font-semibold text-gray-700 text-center">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredChallans.map((challan) => (
-                        <TableRow
-                          key={challan.id}
-                          className="hover:bg-indigo-50/30 transition-all duration-200 border-b border-gray-50 group"
-                        >
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.5)]"></div>
-                              <span className="text-gray-900 font-mono">#{challan.challanNo}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-gray-600 font-medium">
-                              {formatDate(challan.date)}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="font-mono bg-gray-100 text-gray-700 hover:bg-gray-200 border-0">
-                              {challan.truckNo}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1 text-sm">
-                              <span className="font-medium text-indigo-600">{challan.from}</span>
-                              <span className="text-gray-300">→</span>
-                              <span className="font-medium text-purple-600">{challan.to}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="max-w-[150px] truncate font-medium text-gray-900">
-                              {challan.truckOwnerName}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="font-bold text-gray-900">
-                              ₹{challan.totalFreight?.toFixed(2) || "0.00"}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  className="h-8 w-8 p-0 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-48 shadow-xl border-gray-100 rounded-xl p-1">
-                                <DropdownMenuItem
-                                  onClick={() => window.open(`/challan/view/${challan.id}`, "_blank")}
-                                  className="hover:bg-indigo-50 rounded-lg focus:bg-indigo-50 cursor-pointer"
-                                >
-                                  <Eye className="mr-2 h-4 w-4 text-indigo-600" />
-                                  View
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => (window.location.href = `/challan/edit/${challan.id}`)}
-                                  className="hover:bg-indigo-50 rounded-lg focus:bg-indigo-50 cursor-pointer"
-                                >
-                                  <Edit className="mr-2 h-4 w-4 text-indigo-600" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => window.open(`/api/challan/${challan.id}/pdf`, "_blank")}
-                                  className="hover:bg-indigo-50 rounded-lg focus:bg-indigo-50 cursor-pointer"
-                                >
-                                  <Download className="mr-2 h-4 w-4 text-indigo-600" />
-                                  Download PDF
-                                </DropdownMenuItem>
-                                <div className="h-px bg-gray-100 my-1"></div>
-                                <DropdownMenuItem
-                                  onClick={() => handleDelete(challan.id)}
-                                  className="hover:bg-red-50 text-red-600 focus:bg-red-50 focus:text-red-700 rounded-lg cursor-pointer"
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                <AnimatePresence>
+                  {filteredChallans.map((challan, index) => (
+                    <motion.div
+                      key={challan.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05, duration: 0.3 }}
+                      className={cn(
+                        "group grid grid-cols-[auto_100px_1fr_1.5fr_1fr_120px_40px] gap-4 p-5 bg-white rounded-2xl border border-gray-100 hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-900/5 transition-all cursor-default items-center relative overflow-hidden",
+                        selectedChallans.has(challan.id) && "bg-indigo-50/50 border-indigo-200 ring-1 ring-indigo-200"
+                      )}
+                    >
+                      {/* Hover Gradient Bar */}
+                      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-indigo-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                      {/* Checkbox */}
+                      <div className="flex justify-center w-8">
+                        <Checkbox
+                          checked={selectedChallans.has(challan.id)}
+                          onCheckedChange={() => toggleSelectChallan(challan.id)}
+                          className={cn(
+                            "border-gray-200",
+                            selectedChallans.has(challan.id) ? "data-[state=checked]:bg-[#1E1B4B] data-[state=checked]:border-[#1E1B4B] opacity-100" : "opacity-0 group-hover:opacity-100 transition-opacity"
+                          )}
+                        />
+                      </div>
+
+                      {/* ID */}
+                      <div className="font-black text-gray-900 text-lg tracking-tight group-hover:text-indigo-700 transition-colors">
+                        #{challan.challanNo}
+                      </div>
+
+                      {/* Date */}
+                      <div className="flex items-center gap-2 text-xs text-gray-500 font-medium">
+                        <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                        {formatDate(challan.date)}
+                      </div>
+
+                      {/* Route */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-gray-900 leading-none">{challan.from}</span>
+                          <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mt-1">Origin</span>
+                        </div>
+                        <ArrowRight className="h-3.5 w-3.5 text-gray-300" />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-indigo-900 leading-none">{challan.to}</span>
+                          <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mt-1">Dest</span>
+                        </div>
+                      </div>
+
+                      {/* Truck & Owner */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold font-mono tracking-tight px-2">
+                            <Truck className="h-3 w-3 mr-1.5" />
+                            {challan.truckNo}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500 ml-1">
+                          <UserCircle className="h-3.5 w-3.5 text-gray-400" />
+                          <span className="truncate max-w-[140px]" title={challan.truckOwnerName}>{challan.truckOwnerName || "Unknown Owner"}</span>
+                        </div>
+                      </div>
+
+                      {/* Freight */}
+                      <div className="text-right">
+                        <div className="font-black text-gray-900 text-base tracking-tight group-hover:text-[#1E1B4B] transition-colors">
+                          ₹{challan.totalFreight?.toLocaleString('en-IN') || "0"}
+                        </div>
+                        <div className="text-[10px] text-gray-400 uppercase font-bold tracking-wide mt-0.5">Freight</div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex justify-end">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 text-gray-400 hover:text-[#1E1B4B] hover:bg-indigo-50 rounded-full opacity-0 group-hover:opacity-100 transition-all data-[state=open]:opacity-100 data-[state=open]:bg-indigo-50 data-[state=open]:text-[#1E1B4B]">
+                              <MoreHorizontal className="h-5 w-5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56 p-2 rounded-xl shadow-xl border-gray-100">
+                            <DropdownMenuItem onClick={() => window.open(`/challan/view/${challan.id}`, "_blank")} className="cursor-pointer rounded-lg py-2.5 font-medium text-gray-700 focus:text-indigo-700 focus:bg-indigo-50">
+                              <div className="h-8 w-8 rounded-lg bg-gray-50 flex items-center justify-center mr-3 text-gray-500 border border-gray-200">
+                                <Eye className="h-4 w-4" />
+                              </div>
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => window.location.href = `/challan/edit/${challan.id}`} className="cursor-pointer rounded-lg py-2.5 font-medium text-gray-700 focus:text-indigo-700 focus:bg-indigo-50">
+                              <div className="h-8 w-8 rounded-lg bg-gray-50 flex items-center justify-center mr-3 text-gray-500 border border-gray-200">
+                                <Edit className="h-4 w-4" />
+                              </div>
+                              Edit Manifest
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator className="my-1" />
+                            <DropdownMenuItem onClick={() => window.open(`/api/challan/${challan.id}/pdf`, "_blank")} className="cursor-pointer rounded-lg py-2.5 font-medium text-gray-700 focus:text-indigo-700 focus:bg-indigo-50">
+                              <div className="h-8 w-8 rounded-lg bg-gray-50 flex items-center justify-center mr-3 text-gray-500 border border-gray-200">
+                                <FileText className="h-4 w-4" />
+                              </div>
+                              View PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = `/api/challan/${challan.id}/pdf`;
+                              link.download = `challan_${challan.challanNo}.pdf`;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }} className="cursor-pointer rounded-lg py-2.5 font-medium text-gray-700 focus:text-indigo-700 focus:bg-indigo-50">
+                              <div className="h-8 w-8 rounded-lg bg-gray-50 flex items-center justify-center mr-3 text-gray-500 border border-gray-200">
+                                <Download className="h-4 w-4" />
+                              </div>
+                              Download PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator className="my-1" />
+                            <DropdownMenuItem onClick={() => handleDelete(challan.id)} className="text-red-600 focus:text-red-700 focus:bg-red-50 cursor-pointer rounded-lg py-2.5 font-medium">
+                              <div className="h-8 w-8 rounded-lg bg-red-50 flex items-center justify-center mr-3 text-red-500 border border-red-100">
+                                <Trash2 className="h-4 w-4" />
+                              </div>
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </main>
       </div>
     </div>
   );
-} 
+}

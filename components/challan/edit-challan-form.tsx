@@ -54,7 +54,7 @@ export default function EditChallanForm({ challan }: EditChallanFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  
+
   // Initialize form with challan data
   const [form, setForm] = useState({
     date: challan.date ? new Date(challan.date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
@@ -65,6 +65,8 @@ export default function EditChallanForm({ challan }: EditChallanFormProps) {
     items: challan.items?.length > 0 ? challan.items : [{ ...defaultItem }],
   });
   const [totalFreight, setTotalFreight] = useState(challan.totalFreight || 0);
+  const [dateBiltyCount, setDateBiltyCount] = useState<number>(0);
+  const [loadingBilties, setLoadingBilties] = useState(false);
 
   // Autocomplete states
   const [truckSuggestions, setTruckSuggestions] = useState<string[]>([]);
@@ -73,12 +75,54 @@ export default function EditChallanForm({ challan }: EditChallanFormProps) {
   const [showOwnerDropdown, setShowOwnerDropdown] = useState(false);
   const truckDropdownRef = useRef<HTMLDivElement>(null);
   const ownerDropdownRef = useRef<HTMLDivElement>(null);
+  const biltyFetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Calculate total freight when items change
   useEffect(() => {
     const newTotal = form.items.reduce((sum, item) => sum + (item.total || 0), 0);
     setTotalFreight(newTotal);
   }, [form.items]);
+
+  // Initial bilty count fetch for the challan date
+  useEffect(() => {
+    if (form.date) {
+      fetchBiltiesByDate(form.date);
+    }
+  }, []);
+
+  // Fetch bilties by date - for count display only (no auto-populate in edit mode)
+  const fetchBiltiesByDate = async (selectedDate: string) => {
+    if (!selectedDate) return;
+
+    setLoadingBilties(true);
+    try {
+      const response = await fetch('/api/bilty');
+      if (response.ok) {
+        const bilties = await response.json();
+
+        // Filter bilties by selected date
+        const filteredBilties = bilties.filter((bilty: any) => {
+          const biltyDate = bilty.biltyDate?.toDate
+            ? bilty.biltyDate.toDate().toISOString().split("T")[0]
+            : new Date(bilty.biltyDate).toISOString().split("T")[0];
+          return biltyDate === selectedDate;
+        });
+
+        // Update bilty count for selected date
+        setDateBiltyCount(filteredBilties.length);
+      }
+    } catch (error) {
+      console.error("Error fetching bilties by date:", error);
+    } finally {
+      setLoadingBilties(false);
+    }
+  };
+
+  // Handle date change - detect bilties for selected date
+  const handleDateChange = (newDate: string) => {
+    setForm(f => ({ ...f, date: newDate }));
+    fetchBiltiesByDate(newDate);
+  };
 
   // Fetch suggestions for autocomplete
   const fetchSuggestions = async (type: 'truck' | 'owner', searchTerm: string) => {
@@ -118,6 +162,15 @@ export default function EditChallanForm({ challan }: EditChallanFormProps) {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (biltyFetchTimeoutRef.current) {
+        clearTimeout(biltyFetchTimeoutRef.current);
+      }
+    };
   }, []);
 
   // Auto-fetch bilty details when bilty number is entered
@@ -170,11 +223,21 @@ export default function EditChallanForm({ challan }: EditChallanFormProps) {
     setForm(f => ({ ...f, items }));
   };
 
-  // Handle bilty number change with auto-fetch
+  // Handle bilty number change with auto-fetch and debouncing
   const handleBiltyNumberChange = (idx: number, biltyNo: string) => {
     updateItem(idx, "biltyNo", biltyNo);
+
+    // Clear any pending timeout
+    if (biltyFetchTimeoutRef.current) {
+      clearTimeout(biltyFetchTimeoutRef.current);
+    }
+
+    // Only fetch if bilty number is not empty
     if (biltyNo.trim()) {
-      fetchBiltyDetails(biltyNo, idx);
+      // Debounce: wait 500ms after user stops typing before fetching
+      biltyFetchTimeoutRef.current = setTimeout(() => {
+        fetchBiltyDetails(biltyNo, idx);
+      }, 500);
     }
   };
 
@@ -294,9 +357,25 @@ export default function EditChallanForm({ challan }: EditChallanFormProps) {
                 id="date"
                 type="date"
                 value={form.date}
-                onChange={(e) => setForm(f => ({ ...f, date: e.target.value }))}
+                onChange={(e) => handleDateChange(e.target.value)}
                 required
               />
+              {/* Bilty count indicator */}
+              <div className="flex items-center gap-2">
+                {loadingBilties ? (
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span>Detecting...</span>
+                  </div>
+                ) : (
+                  <div className={`text-xs font-medium px-2 py-0.5 rounded-full ${dateBiltyCount > 0
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-gray-100 text-gray-500'
+                    }`}>
+                    {dateBiltyCount} bilty(s) on this date
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Truck Number */}

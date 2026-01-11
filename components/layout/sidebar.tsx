@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { signOut } from "firebase/auth"
 import { auth } from "@/lib/firebase"
@@ -9,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useToast } from "@/hooks/use-toast"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   LayoutDashboard,
   FileText,
@@ -26,18 +28,39 @@ import {
   ChevronRight,
 } from "lucide-react"
 
-const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Create Bilty", href: "/bilty/create", icon: FileText },
-  { name: "View Bilties", href: "/bilty/view", icon: FileText },
-  { name: "View Challans", href: "/challan", icon: Truck },
-  { name: "Parties", href: "/parties", icon: Building2 },
-  { name: "Payment Reminder", href: "/payment-reminder", icon: Bell },
-  { name: "Payment Entry", href: "/payments", icon: CreditCard },
-  { name: "E-way Bill", href: "https://ewaybillgst.gov.in/mainmenu.aspx", icon: Receipt, external: true },
-  { name: "Ledger", href: "/ledger", icon: BookOpen },
-  { name: "Statement", href: "/statements", icon: BarChart3 },
-  { name: "Export Data", href: "/export", icon: Download },
+// Grouped Navigation Structure
+const navigationGroups = [
+  {
+    title: "Overview",
+    items: [
+      { name: "Dashboard", href: "/", icon: LayoutDashboard },
+    ]
+  },
+  {
+    title: "Operations",
+    items: [
+      { name: "Create Bilty", href: "/bilty/create", icon: FileText },
+      { name: "View Bilties", href: "/bilty/view", icon: FileText },
+      { name: "Truck Challans", href: "/challan", icon: Truck },
+      { name: "E-way Bill", href: "https://ewaybillgst.gov.in/mainmenu.aspx", icon: Receipt, external: true },
+    ]
+  },
+  {
+    title: "Finance & CRM",
+    items: [
+      { name: "Parties", href: "/parties", icon: Building2 },
+      { name: "Payment Entry", href: "/payments", icon: CreditCard },
+      { name: "Payment Reminder", href: "/payment-reminder", icon: Bell },
+      { name: "Ledger", href: "/ledger", icon: BookOpen },
+      { name: "Statement", href: "/statements", icon: BarChart3 },
+    ]
+  },
+  {
+    title: "Data",
+    items: [
+      { name: "Export Data", href: "/export", icon: Download },
+    ]
+  }
 ]
 
 export function Sidebar() {
@@ -55,8 +78,8 @@ export function Sidebar() {
     try {
       await signOut(auth)
       toast({
-        title: "Success",
-        description: "Logged out successfully!",
+        title: "Session Ended",
+        description: "Logged out successfully.",
       })
     } catch (error) {
       toast({
@@ -68,17 +91,12 @@ export function Sidebar() {
   }
 
   const isItemActive = (item: any) => {
-    // Return false during SSR to prevent hydration mismatch
     if (!mounted) return false
-
     if (item.href === "/") return pathname === "/"
     if (item.external) return false
-
-    // Specific handling for Challan pages
     if (item.href === "/challan") {
       return pathname === "/challan" || pathname.startsWith("/challan/view") || pathname.startsWith("/challan/edit")
     }
-
     return pathname.startsWith(item.href)
   }
 
@@ -88,149 +106,142 @@ export function Sidebar() {
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-50 md:hidden bg-white/80 backdrop-blur-md shadow-sm border border-gray-200"
+        className="fixed top-3 left-3 z-50 md:hidden bg-white shadow-md border border-gray-100 rounded-xl"
         onClick={() => setIsOpen(!isOpen)}
       >
-        {isOpen ? <X className="h-6 w-6 text-gray-700" /> : <Menu className="h-6 w-6 text-gray-700" />}
+        {isOpen ? <X className="h-5 w-5 text-gray-700" /> : <Menu className="h-5 w-5 text-gray-700" />}
       </Button>
 
       {/* Mobile Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-gray-900/60 z-40 md:hidden backdrop-blur-sm"
+            onClick={() => setIsOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-72 shrink-0 transform transition-all duration-300 ease-in-out md:translate-x-0 md:static md:inset-0",
+          "fixed inset-y-0 left-0 z-50 w-[280px] shrink-0 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:inset-0",
           isOpen ? "translate-x-0" : "-translate-x-full",
-          "bg-white/95 backdrop-blur-xl border-r border-indigo-50/50 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]"
+          "bg-white border-r border-gray-100 shadow-xl shadow-gray-200/50 md:shadow-none flex flex-col font-sans"
         )}
       >
-        <div className="flex flex-col h-full bg-gradient-to-b from-white via-white to-indigo-50/30">
-          {/* Logo Section */}
-          <div className="relative h-28 flex items-center justify-center px-6 border-b border-indigo-50">
-            {/* Decorative Elements */}
-            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-indigo-100 to-transparent opacity-50" />
-            <div className="absolute -left-4 top-10 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl" />
-            <div className="absolute -right-4 top-4 w-20 h-20 bg-purple-500/5 rounded-full blur-2xl" />
-
-            <div className="relative flex items-center gap-4 w-full group">
-              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl shadow-lg ring-4 ring-white transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3">
-                <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600 to-purple-600 opacity-0 group-hover:opacity-20 transition-opacity duration-300" />
-                <img
-                  src="/images/truck.jpeg"
-                  alt="JBRC Logo"
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <div className="flex flex-col min-w-0 py-1">
-                <h1 className="text-lg font-black bg-gradient-to-r from-indigo-900 via-purple-800 to-indigo-900 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient tracking-tight truncate">
-                  Jodhpur Bombay
-                </h1>
-                <p className="text-[10px] font-bold text-indigo-400/90 uppercase tracking-[0.2em] truncate leading-tight">
-                  Road Carrier
-                </p>
-              </div>
+        {/* Brand Section */}
+        <div className="h-24 flex items-center px-6 border-b border-dashed border-gray-200 bg-white/50 backdrop-blur-sm sticky top-0 z-10 w-full">
+          <div className="flex items-center gap-4 w-full group cursor-default">
+            <div className="relative h-[3.25rem] w-[3.25rem] rounded-2xl overflow-hidden shadow-sm border border-gray-100 shrink-0 group-hover:shadow-md transition-shadow">
+              <Image
+                src="/images/truck.jpeg"
+                alt="JBRC Logistics"
+                fill
+                className="object-cover"
+                sizes="52px"
+              />
             </div>
-          </div>
-
-          {/* Navigation */}
-          <ScrollArea className="flex-1 px-4 py-4">
-            <nav className="space-y-1">
-              {navigation.map((item) => {
-                const isActive = isItemActive(item)
-                const isExternal = item.external
-
-                if (isExternal) {
-                  return (
-                    <a
-                      key={item.name}
-                      href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setIsOpen(false)}
-                      className={cn(
-                        "group flex items-center px-4 py-2.5 text-sm font-medium rounded-2xl transition-all duration-300",
-                        "text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 hover:shadow-sm hover:translate-x-1"
-                      )}
-                    >
-                      <item.icon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-indigo-500 transition-colors" />
-                      {item.name}
-                    </a>
-                  )
-                }
-
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setIsOpen(false)}
-                    className={cn(
-                      "group flex items-center px-4 py-2.5 text-sm font-medium rounded-2xl transition-all duration-300 relative overflow-hidden",
-                      isActive
-                        ? "text-white shadow-lg shadow-indigo-500/30 translate-x-1 scale-[1.02]"
-                        : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-700 hover:translate-x-1"
-                    )}
-                  >
-                    {/* Active Background Gradient */}
-                    {isActive && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-600 animate-gradient-x" />
-                    )}
-
-                    {/* Content */}
-                    <div className="relative flex items-center w-full z-10">
-                      <item.icon className={cn(
-                        "mr-3 h-5 w-5 transition-colors duration-300",
-                        isActive ? "text-white" : "text-gray-400 group-hover:text-indigo-600"
-                      )} />
-                      <span className="flex-1 font-semibold tracking-wide">{item.name}</span>
-
-                      {/* Active Indicator */}
-                      {isActive && (
-                        <ChevronRight className="h-4 w-4 text-white/80 animate-pulse" />
-                      )}
-                    </div>
-                  </Link>
-                )
-              })}
-            </nav>
-          </ScrollArea>
-
-          {/* Footer */}
-          <div className="p-5 border-t border-indigo-50 bg-gradient-to-b from-transparent to-indigo-50/30">
-            <Button
-              variant="ghost"
-              onClick={handleLogout}
-              className="w-full justify-start text-gray-500 hover:text-red-600 hover:bg-red-50 mb-4 group transition-all duration-300 rounded-2xl h-11"
-            >
-              <LogOut className="mr-3 h-5 w-5 text-gray-400 group-hover:text-red-500 transition-colors" />
-              <span className="font-medium">Logout</span>
-            </Button>
-
-            <div className="relative rounded-2xl bg-white/60 p-4 border border-indigo-100/50 shadow-sm backdrop-blur-sm">
-              <div className="flex flex-col items-center gap-2 text-center">
-                <p className="text-[10px] font-bold text-indigo-300 uppercase tracking-wider">Powered by</p>
-                <span className="text-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent hover:scale-105 transition-transform cursor-default">
-                  Shivkara Digital
-                </span>
-                <p className="text-[10px] text-gray-400">© 2025 All Rights Reserved</p>
-              </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-xl font-black text-[#1E1B4B] tracking-tight leading-none truncate group-hover:text-violet-900 transition-colors">JBRC</span>
+              <span className="text-[10px] text-gray-400 font-bold tracking-[0.2em] uppercase mt-1.5 truncate">Logistics OS</span>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm md:hidden transition-opacity duration-300"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+        {/* Navigation */}
+        <ScrollArea className="flex-1 px-4 py-6">
+          <div className="space-y-8">
+            {navigationGroups.map((group, groupIdx) => (
+              <div key={groupIdx} className="space-y-2">
+                <h4 className="px-4 text-[10px] uppercase tracking-widest font-black text-gray-300 select-none">
+                  {group.title}
+                </h4>
+                <nav className="space-y-1">
+                  {group.items.map((item) => {
+                    const isActive = isItemActive(item)
+
+                    if (item.external) {
+                      return (
+                        <a
+                          key={item.name}
+                          href={item.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setIsOpen(false)}
+                          className="group flex items-center px-4 py-3 text-[13px] font-semibold text-gray-500 rounded-xl hover:bg-gray-50 hover:text-[#1E1B4B] transition-all duration-200"
+                        >
+                          <item.icon className="mr-3 h-[1.1rem] w-[1.1rem] text-gray-400 group-hover:text-[#1E1B4B] transition-colors" />
+                          {item.name}
+                        </a>
+                      )
+                    }
+
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        onClick={() => setIsOpen(false)}
+                        className={cn(
+                          "group flex items-center px-4 py-3 text-[13px] font-semibold rounded-xl transition-all duration-300 relative",
+                          isActive ? "text-[#1E1B4B]" : "text-gray-500 hover:text-[#1E1B4B]"
+                        )}
+                      >
+                        {isActive && (
+                          <motion.div
+                            layoutId="activeTab"
+                            className="absolute inset-0 bg-[#1E1B4B]/5 rounded-xl border border-[#1E1B4B]/10"
+                            initial={false}
+                            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                          />
+                        )}
+
+                        <div className="relative z-10 flex items-center w-full">
+                          <item.icon className={cn(
+                            "mr-3 h-[1.1rem] w-[1.1rem] transition-all duration-300",
+                            isActive ? "text-[#1E1B4B] stroke-[2.5px]" : "text-gray-400 group-hover:text-[#1E1B4B] group-hover:stroke-[2.5px]"
+                          )} />
+                          <span className="truncate">{item.name}</span>
+
+                          {isActive && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="ml-auto"
+                            >
+                              <ChevronRight className="h-3.5 w-3.5 text-[#1E1B4B]/50" />
+                            </motion.div>
+                          )}
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </nav>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+
+        {/* Footer */}
+        <div className="p-5 border-t border-gray-100 bg-gray-50/50">
+          <Button
+            variant="outline"
+            onClick={handleLogout}
+            className="w-full justify-start text-gray-600 hover:text-red-600 hover:bg-red-50 hover:border-red-100 h-11 px-4 text-[13px] font-semibold rounded-xl bg-white border-gray-200 shadow-sm transition-all group"
+          >
+            <LogOut className="mr-3 h-4 w-4 group-hover:text-red-600 transition-colors" />
+            Sign Out
+          </Button>
+
+          <div className="mt-5 flex items-center justify-between text-[10px] px-1 opacity-60 hover:opacity-100 transition-opacity">
+            <span className="text-gray-400 font-mono">v4.2.0</span>
+            <span className="font-bold text-gray-400 hover:text-[#1E1B4B] transition-colors cursor-default">Shivkara Digital</span>
+          </div>
+        </div>
+      </div>
     </>
   )
 }
