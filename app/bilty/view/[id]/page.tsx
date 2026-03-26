@@ -20,6 +20,7 @@ interface BiltyData {
   ewayDate?: string;
   grossValue?: string;
   totalPackages?: string;
+  paymentMethod?: string;
   specialInstruction?: string;
   items?: Array<{
     quantity?: string;
@@ -138,8 +139,14 @@ export default async function ViewSingleBiltyPage({ params }: { params: { id: st
                 </div>
                 <div>
                   <div className="text-sm font-medium text-gray-600 mb-1">E-way Bill Date</div>
-                  <div className="text-gray-900 text-sm bg-blue-50 px-2 py-1 rounded border border-blue-200">
+                  <div className="text-gray-900 text-sm bg-blue-50 px-2 py-1 rounded border border-blue-200 inline-block">
                     {bilty.ewayDate ? new Date(bilty.ewayDate).toLocaleDateString('en-IN') : 'N/A'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-600 mb-1">Payment Method</div>
+                  <div className="text-gray-900 text-sm bg-purple-50 px-2 py-1 rounded border border-purple-200 inline-block font-medium">
+                    {bilty.paymentMethod || 'Cash'}
                   </div>
                 </div>
                 <div>

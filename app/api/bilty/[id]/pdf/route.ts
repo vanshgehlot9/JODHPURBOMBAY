@@ -221,6 +221,12 @@ async function drawBiltyCopy(
     safeText(pdf, `G.V. ${bilty.grossValue}`, tableX + 18, currentY);
     currentY += 4;
   }
+
+  // Add Payment Method check
+  if (bilty.paymentMethod && currentY <= yOffset + 85) {
+    safeText(pdf, `Pay: ${bilty.paymentMethod}`, tableX + 18, currentY);
+    currentY += 4;
+  }
   
   // Fill G.V. section in the unified bottom section
   if (bilty.goodsValue) {

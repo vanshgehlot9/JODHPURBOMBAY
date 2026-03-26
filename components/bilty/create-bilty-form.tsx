@@ -30,6 +30,7 @@ import { Card } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 // --- Types ---
 
@@ -101,6 +102,7 @@ export function CreateBiltyForm() {
     ewayDate: "",
     grossValue: 0,
     totalPackages: "",
+    paymentMethod: "Cash",
     specialInstruction: "",
   })
 
@@ -576,14 +578,34 @@ export function CreateBiltyForm() {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Remarks / Special Instructions</Label>
-                <textarea
-                  value={formData.specialInstruction}
-                  onChange={e => setFormData({ ...formData, specialInstruction: e.target.value })}
-                  placeholder="Any handling instructions or notes..."
-                  className="flex min-h-[120px] w-full rounded-md border border-transparent bg-gray-50 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-teal-200 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-50 disabled:cursor-not-allowed disabled:opacity-50 transition-all resize-none"
-                />
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Payment Method</Label>
+                  <Select
+                    value={formData.paymentMethod}
+                    onValueChange={(value) => setFormData({ ...formData, paymentMethod: value })}
+                  >
+                    <SelectTrigger className="bg-gray-50 border-transparent focus:bg-white focus:border-teal-200 focus:ring-4 focus:ring-teal-50 transition-all font-medium h-10 py-2">
+                      <SelectValue placeholder="Select Method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Cash">Cash</SelectItem>
+                      <SelectItem value="Online">Online</SelectItem>
+                      <SelectItem value="NEFT">NEFT</SelectItem>
+                      <SelectItem value="RTGS">RTGS</SelectItem>
+                      <SelectItem value="NFTs">NFTs</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Remarks / Special Instructions</Label>
+                  <textarea
+                    value={formData.specialInstruction}
+                    onChange={e => setFormData({ ...formData, specialInstruction: e.target.value })}
+                    placeholder="Any handling instructions or notes..."
+                    className="flex min-h-[120px] w-full rounded-md border border-transparent bg-gray-50 px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus:border-teal-200 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-50 disabled:cursor-not-allowed disabled:opacity-50 transition-all resize-none"
+                  />
+                </div>
               </div>
             </div>
           </div>

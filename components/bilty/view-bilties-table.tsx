@@ -45,6 +45,7 @@ interface Bilty {
   from: string
   to: string
   truckNo?: string
+  paymentMethod?: string
   charges: {
     grandTotal: number
   }
@@ -324,7 +325,7 @@ export function ViewBiltiesTable() {
                       ₹{bilty.charges?.grandTotal?.toLocaleString('en-IN') || "0"}
                     </div>
                     <Badge variant="outline" className="mt-1 bg-amber-50 text-amber-700 border-amber-200 text-[10px] uppercase font-bold tracking-wide">
-                      Receivable
+                      Receivable ({bilty.paymentMethod || "Cash"})
                     </Badge>
                   </div>
 

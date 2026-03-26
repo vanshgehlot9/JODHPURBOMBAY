@@ -72,6 +72,7 @@ export interface Bilty {
   charges: BiltyCharges
   specialInstruction?: string
   totalPackages?: string
+  paymentMethod?: string
   status?: string
   createdAt: Date | Timestamp
 }

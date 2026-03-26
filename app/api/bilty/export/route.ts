@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
       "Tot. Amt.",
       "SGST",
       "CGST",
+      "Payment Method",
       "Paid by",
     ])
     const headerRow = worksheet.lastRow
@@ -77,12 +78,13 @@ export async function GET(request: NextRequest) {
         bilty.charges ? bilty.charges.grandTotal : 0,
         bilty.charges ? bilty.charges.sgst : 0,
         bilty.charges ? bilty.charges.cgst : 0,
+        bilty.paymentMethod || "Cash",
         "consignee",
       ])
     })
 
     // Set column widths
-    const widths = [12, 10, 20, 18, 20, 18, 12, 10, 10, 12]
+    const widths = [12, 10, 20, 18, 20, 18, 12, 10, 10, 15, 12]
     widths.forEach((w, i) => {
       const column = worksheet.getColumn(i + 1)
       if (column) column.width = w

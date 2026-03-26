@@ -176,6 +176,9 @@ export default function PaymentEntryPage() {
         Cash: <Banknote className="h-4 w-4" />,
         Cheque: <Receipt className="h-4 w-4" />,
         Online: <Wallet className="h-4 w-4" />,
+        NEFT: <Building2 className="h-4 w-4" />,
+        RTGS: <Building2 className="h-4 w-4" />,
+        NFTs: <Building2 className="h-4 w-4" />,
         "Bank Transfer": <Building2 className="h-4 w-4" />,
     };
 
@@ -418,8 +421,10 @@ export default function PaymentEntryPage() {
                                                 <SelectContent>
                                                     <SelectItem value="Cash"><div className="flex items-center gap-2"><Banknote className="h-4 w-4 text-green-600" />Cash</div></SelectItem>
                                                     <SelectItem value="Cheque"><div className="flex items-center gap-2"><Receipt className="h-4 w-4 text-blue-600" />Cheque</div></SelectItem>
-                                                    <SelectItem value="Online"><div className="flex items-center gap-2"><Wallet className="h-4 w-4 text-purple-600" />Online / UPI</div></SelectItem>
-                                                    <SelectItem value="Bank Transfer"><div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-gray-600" />Bank Transfer</div></SelectItem>
+                                                    <SelectItem value="Online"><div className="flex items-center gap-2"><Wallet className="h-4 w-4 text-purple-600" />Online</div></SelectItem>
+                                                    <SelectItem value="NEFT"><div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-indigo-600" />NEFT</div></SelectItem>
+                                                    <SelectItem value="RTGS"><div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-teal-600" />RTGS</div></SelectItem>
+                                                    <SelectItem value="NFTs"><div className="flex items-center gap-2"><Building2 className="h-4 w-4 text-gray-600" />NFTs</div></SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>

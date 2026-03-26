@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Plus,
   Minus,
@@ -65,6 +66,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
     ewayDate: bilty.ewayDate || "",
     grossValue: bilty.grossValue || 0,
     totalPackages: bilty.totalPackages || "",
+    paymentMethod: bilty.paymentMethod || "Cash",
     specialInstruction: bilty.specialInstruction || "",
   })
 
@@ -164,6 +166,7 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
         ewayDate: formData.ewayDate,
         grossValue: Number(formData.grossValue),
         totalPackages: formData.totalPackages,
+        paymentMethod: formData.paymentMethod,
         specialInstruction: formData.specialInstruction,
         items,
         charges,
@@ -417,6 +420,24 @@ export function EditBiltyForm({ bilty }: EditBiltyFormProps) {
                   onChange={handleInputChange}
                   className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="paymentMethod">Payment Method</Label>
+                <Select
+                  value={formData.paymentMethod}
+                  onValueChange={(value) => setFormData({ ...formData, paymentMethod: value })}
+                >
+                  <SelectTrigger className="focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white">
+                    <SelectValue placeholder="Select Method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Cash">Cash</SelectItem>
+                    <SelectItem value="Online">Online</SelectItem>
+                    <SelectItem value="NEFT">NEFT</SelectItem>
+                    <SelectItem value="RTGS">RTGS</SelectItem>
+                    <SelectItem value="NFTs">NFTs</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="specialInstruction">Special Instructions</Label>
